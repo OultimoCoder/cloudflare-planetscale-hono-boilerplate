@@ -1,0 +1,14 @@
+/target
+/dist
+**/*.rs.bk
+bin/
+pkg/
+wasm-pack.log
+worker/
+node_modules/
+.vscode
+.env*
+.mf
+fauna/temp
+package-lock.json
+.faunarc

@@ -1,0 +1,17 @@
+name = "cf-workers-hono-fauna-app"
+type = "javascript"
+main = 'dist/index.js'
+
+workers_dev = true
+compatibility_date = '2022-05-05'
+account_id=''
+
+[miniflare]
+kv_persist = false
+env_path = '.env.test'
+
+[vars]
+ENV = 'development'
+
+[build]
+command = "npm run build"

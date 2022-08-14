@@ -1,0 +1,7 @@
+version: '3'
+
+services:
+  faunadb:
+    image: fauna/faunadb:latest
+    ports:
+      - '8443:8443'
