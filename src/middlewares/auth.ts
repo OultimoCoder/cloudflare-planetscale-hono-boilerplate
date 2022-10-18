@@ -1,6 +1,6 @@
 import httpStatus from 'http-status'
 import { roleRights, Permission, Role } from '../config/roles'
-import ApiError from '../utils/ApiError'
+import { ApiError } from '../utils/ApiError'
 import { Context } from 'hono';
 import jwt from '@tsndr/cloudflare-worker-jwt'
 import { tokenTypes } from '../config/tokens';

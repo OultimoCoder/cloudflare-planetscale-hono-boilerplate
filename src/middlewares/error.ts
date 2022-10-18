@@ -20,8 +20,6 @@ const errorHandler = (err: any, c: Context) => {
     message = httpStatus[httpStatus.INTERNAL_SERVER_ERROR]
   }
 
-  c.set('errorMessage', err.message)
-
   const response = {
     code: statusCode,
     message,
