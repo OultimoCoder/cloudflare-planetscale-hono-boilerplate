@@ -1,20 +1,25 @@
 {
   "compilerOptions": {
-      "allowJs": true,
-      "target": "ES2020",
-      "moduleResolution": "node",
-      "resolveJsonModule": true,
-      "inlineSourceMap": true,
-      "module": "ES2020",
-      "esModuleInterop": true,
-      "experimentalDecorators": true,
-      "emitDecoratorMetadata": true,
-      "strict": true,
-      "noImplicitAny": true,
-      "noEmit": true,
+    "allowJs": true,
+    "target": "esnext",
+    "lib": ["esnext"],
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "inlineSourceMap": true,
+    "module": "esnext",
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "noEmit": true,
+    "types": [
+      "@cloudflare/workers-types",
+      "@types/bcryptjs"
+    ]
   },
   "ts-node": {
-      "transpileOnly": true,
+    "transpileOnly": true
   },
-  "include": ["./src/**/*", "./tests/**/*"]
+  "include": ["./src/**/*", "bindings.d.ts"]
 }

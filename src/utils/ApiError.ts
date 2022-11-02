@@ -8,8 +8,6 @@ class ApiError extends Error {
     this.isOperational = isOperational
     if (stack) {
       this.stack = stack
-    } else {
-      Error.captureStackTrace(this, this.constructor)
     }
   }
 }

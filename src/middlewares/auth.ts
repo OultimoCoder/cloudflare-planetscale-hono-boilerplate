@@ -50,4 +50,6 @@ const auth = (...requiredRights: Permission[]) => async (c: Context, next: Funct
   await next()
 }
 
-export default auth
+export {
+  auth
+}
