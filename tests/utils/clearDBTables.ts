@@ -9,7 +9,6 @@ const clearDBTables = (tables: Array<TableReference<Database>>) => {
       const deleteResult = await client
         .deleteFrom(table)
         .executeTakeFirst()
-      console.log(deleteResult.numDeletedRows)
     }
   })
 }

@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { Bindings } from 'hono/dist/types';
 
 const envVarsSchema = z.object({
   ENV: z.union([z.literal('production'), z.literal('development'), z.literal('test')]),

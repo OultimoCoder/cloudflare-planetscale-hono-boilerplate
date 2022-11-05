@@ -9,7 +9,7 @@ import type { StatusCode } from 'hono/utils/http-status';
 import { Bindings } from '../../bindings';
 
 const register: Handler<{ Bindings: Bindings }> = async (c) => {
-  const bodyParse = await c.req.parseBody()
+  const bodyParse = await c.req.json()
   const body = await authValidation.register.parseAsync(bodyParse)
   const user = await userService.createUser(body)
   const tokens = await tokenService.generateAuthTokens(user);
@@ -17,7 +17,7 @@ const register: Handler<{ Bindings: Bindings }> = async (c) => {
 };
 
 const login: Handler<{ Bindings: Bindings }> = async (c) => {
-  const bodyParse = await c.req.parseBody()
+  const bodyParse = await c.req.json()
   const { email, password } = authValidation.login.parse(bodyParse)
   const user = await authService.loginUserWithEmailAndPassword(email, password);
   const tokens = await tokenService.generateAuthTokens(user);
@@ -25,7 +25,7 @@ const login: Handler<{ Bindings: Bindings }> = async (c) => {
 };
 
 const refreshTokens: Handler<{ Bindings: Bindings }> = async (c) => {
-  const bodyParse = await c.req.parseBody()
+  const bodyParse = await c.req.json()
   const { refresh_token } = authValidation.refreshTokens.parse(bodyParse)
   const tokens = await authService.refreshAuth(refresh_token);
   return c.json({ ...tokens }, httpStatus.OK as StatusCode);

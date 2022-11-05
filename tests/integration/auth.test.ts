@@ -28,9 +28,7 @@ describe('Auth routes', () => {
       const res = await request('/api/v1/auth/register', {
         method: 'POST',
         body: JSON.stringify(newUser),
-        headers: new Headers({
-          'Content-Type': 'application/json',
-        })
+        headers: { 'Content-Type': 'application/json' }
       })
       expect(res.status).toBe(httpStatus.CREATED)
       const body = await res.json<{user: UserResponse, tokens: TokenResponse}>()
@@ -41,7 +39,7 @@ describe('Auth routes', () => {
         last_name: newUser.last_name,
         email: newUser.email,
         role: 'user',
-        isEmailVerified: false
+        is_email_verified: 0
       });
 
       const dbUser = await client
@@ -60,7 +58,7 @@ describe('Auth routes', () => {
         password: expect.anything(),
         email: newUser.email,
         role: 'user',
-        isEmailVerified: false
+        is_email_verified: 0
       });
 
       expect(body.tokens).toEqual({
