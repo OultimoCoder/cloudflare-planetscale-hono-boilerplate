@@ -6,8 +6,8 @@ import { Bindings } from '../../bindings'
 const route = new Hono<{ Bindings: Bindings }>()
 
 route.post('/register', authController.register)
-// route.post('/login', authController.login)
-// route.post('/refresh-tokens', authController.refreshTokens)
+route.post('/login', authController.login)
+route.post('/refresh-tokens', authController.refreshTokens)
 // route.post('/forgot-password', authController.forgotPassword)
 // route.post('/reset-password', authController.resetPassword)
 // route.post('/change-password', authController.changePassword)

@@ -1,19 +1,26 @@
 import { Kysely } from 'kysely'
-import { User } from '../models/user.model'
+import { UserTable } from '../models/user.model'
 import { PlanetScaleDialect } from 'kysely-planetscale'
 import { config } from './config'
 
 let dbClient: Kysely<Database>
 
 interface Database {
-  user: User
+  user: UserTable
 }
 
 const getDBClient = () => {
   dbClient = dbClient || new Kysely<Database>({
-    dialect: new PlanetScaleDialect({url: config.mysql.url})
+    dialect: new PlanetScaleDialect({
+      username: config.database.username,
+      password: config.database.password,
+      host: config.database.host
+    })
   })
   return dbClient
 }
 
-export { getDBClient }
+export {
+  getDBClient,
+  Database
+}

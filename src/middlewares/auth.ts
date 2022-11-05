@@ -42,7 +42,7 @@ const auth = (...requiredRights: Permission[]) => async (c: Context, next: Funct
     const hasRequiredRights = requiredRights.every(
       (requiredRight) => (userRights as unknown as string[]).includes(requiredRight)
     )
-    if (!hasRequiredRights && c.req.param('userId') !== payload.user) {
+    if (!hasRequiredRights && c.req.param('userId') !== payload.sub) {
       throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden')
     }
   }

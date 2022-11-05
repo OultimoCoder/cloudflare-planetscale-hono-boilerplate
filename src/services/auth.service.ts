@@ -1,35 +1,30 @@
 import httpStatus from 'http-status';
-// import * as tokenService from './token.service';
+import * as tokenService from './token.service';
 import * as userService from './user.service';
 import { ApiError } from '../utils/ApiError';
 import { tokenTypes } from '../config/tokens';
-import { compare } from 'bcryptjs'
 
-const isPasswordMatch = (userPassword: string, dbPassword: string) => {
- return compare(userPassword, dbPassword)
-}
 
 const loginUserWithEmailAndPassword = async (email: string, password: string) => {
   const user = await userService.getUserByEmail(email);
-  if (!user || !isPasswordMatch(password, user.password)) {
+  if (!user || !(await user.isPasswordMatch(password))) {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
   }
   return user;
 };
 
-// const refreshAuth = async (refreshToken: string) => {
-//   try {
-//     const refreshTokenDoc = await tokenService.verifyToken(refreshToken, tokenTypes.REFRESH);
-//     const user = await userService.getUserById(refreshTokenDoc.user);
-//     if (!user) {
-//       throw new Error();
-//     }
-//     await refreshTokenDoc.remove();
-//     return tokenService.generateAuthTokens(user);
-//   } catch (error) {
-//     throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate');
-//   }
-// };
+const refreshAuth = async (refreshToken: string) => {
+  try {
+    const refreshTokenDoc = await tokenService.verifyToken(refreshToken, tokenTypes.REFRESH);
+    const user = await userService.getUserById(Number(refreshTokenDoc.sub))
+    if (!user) {
+      throw new Error();
+    }
+    return tokenService.generateAuthTokens(user);
+  } catch (error) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate');
+  }
+};
 
 // const resetPassword = async (resetPasswordToken: string, newPassword: string) => {
 //   try {
@@ -60,5 +55,6 @@ const loginUserWithEmailAndPassword = async (email: string, password: string) =>
 // };
 
 export {
-  loginUserWithEmailAndPassword
+  loginUserWithEmailAndPassword,
+  refreshAuth
 }

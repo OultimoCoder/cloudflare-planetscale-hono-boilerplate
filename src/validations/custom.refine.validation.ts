@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { hash } from 'bcryptjs'
 
 const password = async (value: string, ctx: z.RefinementCtx) => {
   if (value.length < 8) {
@@ -16,7 +15,6 @@ const password = async (value: string, ctx: z.RefinementCtx) => {
     });
     return;
   }
-  return hash(value, 8);
 };
 
 export {

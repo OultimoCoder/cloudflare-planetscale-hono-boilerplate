@@ -1,42 +1,35 @@
 import httpStatus from 'http-status';
-// import * as authService from '../services/auth.service';
+import * as authService from '../services/auth.service';
 // import * as emailService from '../services/email.service';
 import * as tokenService from '../services/token.service';
 import * as userService from '../services/user.service';
 import * as authValidation from '../validations/auth.validation';
-import { Context } from 'hono';
+import { Handler } from 'hono';
 import type { StatusCode } from 'hono/utils/http-status';
+import { Bindings } from '../../bindings';
 
-const register = async (c: Context) => {
-  let body = await c.req.parseBody()
-  body = await authValidation.register.parseAsync(body);
-  console.log(body)
-  const user = await userService.createUser(body);
+const register: Handler<{ Bindings: Bindings }> = async (c) => {
+  const bodyParse = await c.req.parseBody()
+  const body = await authValidation.register.parseAsync(bodyParse)
+  const user = await userService.createUser(body)
   const tokens = await tokenService.generateAuthTokens(user);
-  return c.json({ user, tokens }, httpStatus.CREATED as StatusCode);
+  return c.json({user, tokens}, httpStatus.CREATED as StatusCode);
 };
 
-// const login = async (c: Context) => {
-//   const {
-//     body: { email, password },
-//   } = authValidation.login.parse(c.req.parseBody());
-//   const user = await authService.loginUserWithEmailAndPassword(email, password);
-//   const tokens = await tokenService.generateAuthTokens(user);
-//   return c.json({ user, tokens }, httpStatus.OK as StatusCode);
-// };
+const login: Handler<{ Bindings: Bindings }> = async (c) => {
+  const bodyParse = await c.req.parseBody()
+  const { email, password } = authValidation.login.parse(bodyParse)
+  const user = await authService.loginUserWithEmailAndPassword(email, password);
+  const tokens = await tokenService.generateAuthTokens(user);
+  return c.json({ user, tokens }, httpStatus.OK as StatusCode);
+};
 
-// const logout = async (c: Context) => {
-//   const { body } = authValidation.logout.parse(req);
-//   await authService.logout(body.refreshToken);
-//   c.status(httpStatus.NO_CONTENT as StatusCode);
-//   return c.body(null)
-// };
-
-// const refreshTokens = async (c: Context) => {
-//   const { body } = authValidation.refreshTokens.parse(c.req.parseBody());
-//   const tokens = await authService.refreshAuth(body.refreshToken);
-//   return c.json({ ...tokens }, httpStatus.OK as StatusCode);
-// };
+const refreshTokens: Handler<{ Bindings: Bindings }> = async (c) => {
+  const bodyParse = await c.req.parseBody()
+  const { refresh_token } = authValidation.refreshTokens.parse(bodyParse)
+  const tokens = await authService.refreshAuth(refresh_token);
+  return c.json({ ...tokens }, httpStatus.OK as StatusCode);
+};
 
 // const forgotPassword = async (c: Context) => {
 //   const { body } = authValidation.forgotPassword.parse(c.req.parseBody());
@@ -70,9 +63,8 @@ const register = async (c: Context) => {
 
 export {
   register,
-  // login,
-  // logout,
-  // refreshTokens,
+  login,
+  refreshTokens,
   // forgotPassword,
   // resetPassword,
   // sendVerificationEmail,

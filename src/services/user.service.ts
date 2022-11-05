@@ -2,18 +2,25 @@ import httpStatus from 'http-status';
 import { getDBClient } from '../config/database';
 import { ApiError } from '../utils/ApiError';
 import { CreateUser, UpdateUser } from '../validations/user.validation';
+import { User } from '../models/user.model';
+import { InsertResult } from 'kysely';
 
 const db = getDBClient()
 
 const createUser = async (userBody: CreateUser) => {
-  const result = await db
-    .insertInto('user')
-    .values(userBody)
-    .executeTakeFirstOrThrow()
-  if (!result.insertId) {
+  let result: InsertResult
+  try {
+    result = await db
+      .insertInto('user')
+      .values(userBody)
+      .executeTakeFirstOrThrow()
+  } catch (error) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'User already exists');
   }
   const user = await getUserById(Number(result.insertId))
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User already exists');
+  }
   return user
 };
 
@@ -30,8 +37,8 @@ const getUserById = async (id: number) => {
     .selectFrom('user')
     .selectAll()
     .where('user.id', '=', id)
-    .executeTakeFirstOrThrow()
-  return user
+    .executeTakeFirst()
+  return user ? new User(user) : user
 };
 
 const getUserByEmail = async (email: string) => {
@@ -40,16 +47,17 @@ const getUserByEmail = async (email: string) => {
     .selectAll()
     .where('user.email', '=', email)
     .executeTakeFirst()
-  return user
+  return user ? new User(user) : user
 };
 
 const updateUserById = async (userId: number, updateBody: Partial<UpdateUser>) => {
-  const user = await db
+  await db
     .updateTable('user')
     .set(updateBody)
     .where('id', '=', userId)
     .executeTakeFirstOrThrow()
-  return user;
+  const user = await getUserById(userId)
+  return user
 };
 
 const deleteUserById = async (userId: number) => {

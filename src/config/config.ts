@@ -3,8 +3,14 @@ import { Bindings } from 'hono/dist/types';
 
 const envVarsSchema = z.object({
   ENV: z.union([z.literal('production'), z.literal('development'), z.literal('test')]),
-  // MYSQL DB url
-  MYSQL_URL: z.string(),
+  // MYSQL Database name
+  DATABASE_NAME: z.string(),
+  // MYSQL Database username
+  DATABASE_USERNAME: z.string(),
+  // MYSQL Database password
+  DATABASE_PASSWORD: z.string(),
+  // MYSQL Database host
+  DATABASE_HOST: z.string(),
   // JWT secret key
   JWT_SECRET: z.string(),
   // Minutes after which access tokens expire
@@ -23,22 +29,17 @@ const envVarsSchema = z.object({
     .transform((str) => parseInt(str, 10)),
 });
 
-const env = {
-  ENV,
-  MYSQL_URL,
-  JWT_SECRET,
-  JWT_ACCESS_EXPIRATION_MINUTES,
-  JWT_REFRESH_EXPIRATION_DAYS,
-  JWT_RESET_PASSWORD_EXPIRATION_MINUTES,
-  JWT_VERIFY_EMAIL_EXPIRATION_MINUTES
-} as Bindings;
+const env = getMiniflareBindings()
 
 const envVars = envVarsSchema.parse(env);
 
 export const config = {
   env: envVars.ENV,
-  mysql: {
-    url: envVars.MYSQL_URL + (envVars.ENV === 'development' ? '-development' : '')
+  database: {
+    name: envVars.DATABASE_NAME,
+    username: envVars.DATABASE_USERNAME,
+    password: envVars.DATABASE_PASSWORD,
+    host: envVars.DATABASE_HOST
   },
   jwt: {
     secret: envVars.JWT_SECRET,

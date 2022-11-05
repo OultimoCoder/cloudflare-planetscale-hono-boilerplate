@@ -1,19 +1,32 @@
 import * as dotenv from 'dotenv'
 import * as path from 'path'
 import { promises as fs } from 'fs'
-import { Migrator, FileMigrationProvider } from 'kysely'
+import { Migrator, FileMigrationProvider, NO_MIGRATIONS } from 'kysely'
 import { fileURLToPath } from 'url';
 import { Kysely } from 'kysely'
 import { PlanetScaleDialect } from 'kysely-planetscale'
 import { User } from '../src/models/user.model'
 
-dotenv.config()
+const envFile = {
+  'dev': '.env',
+  'prod': '.prod.env',
+  'test': '.test.env'
+}
+
+const __filename = fileURLToPath(import.meta.url);
+
+dotenv.config({'path': path.join(path.dirname(__filename), `../${envFile[process.argv[2]]}`)})
+
 interface Database {
   user: User
 }
-const __filename = fileURLToPath(import.meta.url);
+
 const db = new Kysely<Database>({
-  dialect: new PlanetScaleDialect({url: process.env.MYSQL_URL})
+  dialect: new PlanetScaleDialect({
+    username: process.env.DATABASE_USERNAME,
+    password: process.env.DATABASE_PASSWORD,
+    host: process.env.DATABASE_HOST
+  })
 })
 
 const migrator = new Migrator({
@@ -62,10 +75,32 @@ async function migrateDown() {
 
   await db.destroy()
 }
-const myArgs = process.argv[2];
+
+async function migrateNone() {
+  const { error, results } = await migrator.migrateTo(NO_MIGRATIONS)
+  results?.forEach((it) => {
+    if (it.status === 'Success') {
+      console.log(`migration '${it.migrationName}' was reverted successfully`)
+    } else if (it.status === 'Error') {
+      console.error(`failed to execute migration "${it.migrationName}"`)
+    }
+  })
+
+  if (error) {
+    console.error('failed to migrate')
+    console.error(error)
+    process.exit(1)
+  }
+
+  await db.destroy()
+}
+
+const myArgs = process.argv[3];
 
 if (myArgs === 'down') {
   migrateDown()
 } else if (myArgs === 'latest') {
   migrateToLatest()
+} else if (myArgs === 'none') {
+  migrateNone()
 }

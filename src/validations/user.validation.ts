@@ -1,14 +1,16 @@
 import { z } from 'zod';
-import { password } from './custom.validation';
+import { password } from './custom.refine.validation';
+import { Role } from '../config/roles';
+import { hashPassword } from './custom.transform.validation';
 
 export const createUser = z.object({
   body: z.object({
     email: z.string().email(),
-    password: z.string().superRefine(password),
+    password: z.string().superRefine(password).transform(hashPassword),
     first_name: z.string(),
     last_name: z.string(),
-    role: z.union([z.literal('admin'), z.literal('user')]),
-    is_email_verified: z.boolean().optional().transform(() => false)
+    is_email_verified: z.any().optional().transform(() => false),
+    role: z.any().optional().transform(() => 'user' as Role)
   })
 });
 

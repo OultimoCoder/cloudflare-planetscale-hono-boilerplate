@@ -39,7 +39,21 @@ const generateAuthTokens = async (user: Selectable<User>) => {
   }
 }
 
+const verifyToken = async (token: string, type: TokenType) => {
+  const isValid = await jwt.verify(token, config.jwt.secret)
+  if (!isValid) {
+    throw new Error('Token not valid')
+  }
+  const decoded = jwt.decode(token)
+  const payload = decoded.payload
+  if (type !== payload.type) {
+    throw new Error('Token not valid')
+  }
+  return payload
+}
+
 export {
   generateToken,
-  generateAuthTokens
+  generateAuthTokens,
+  verifyToken
 }

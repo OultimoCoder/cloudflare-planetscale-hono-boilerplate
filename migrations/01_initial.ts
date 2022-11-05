@@ -11,6 +11,12 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn('is_email_verified', 'boolean', (col) => col.defaultTo(false))
     .addColumn('role', 'varchar(255)', (col) => col.defaultTo('user'))
     .execute()
+
+  await db.schema
+    .createIndex('user_email_index')
+    .on('user')
+    .column('email')
+    .execute()
 }
 
 export async function down(db: Kysely<any>): Promise<void> {

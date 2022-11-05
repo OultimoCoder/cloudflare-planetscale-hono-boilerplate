@@ -1,7 +1,6 @@
 import httpStatus from 'http-status'
 import { config } from '../config/config'
 import { ApiError } from '../utils/ApiError'
-import { Context } from 'hono';
 
 const errorConverter = (err: any) => {
   let error = err
@@ -13,7 +12,7 @@ const errorConverter = (err: any) => {
   return error
 }
 
-const errorHandler = (err: any, c: Context) => {
+const errorHandler = (err, c) => {
   let { statusCode, message } = errorConverter(err)
   if (config.env === 'production' && !err.isOperational) {
     statusCode = httpStatus.INTERNAL_SERVER_ERROR
@@ -30,5 +29,6 @@ const errorHandler = (err: any, c: Context) => {
 }
 
 export {
-  errorHandler
+  errorHandler,
+  errorConverter
 }

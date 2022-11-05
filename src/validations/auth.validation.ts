@@ -1,30 +1,24 @@
 import { z } from 'zod';
-import { password } from './custom.validation';
+import { Role } from '../config/roles';
+import { password } from './custom.refine.validation';
+import { hashPassword } from './custom.transform.validation';
 
 export const register = z.object({
   email: z.string().email(),
-  password: z.string().superRefine(password),
+  password: z.string().superRefine(password).transform(hashPassword),
   first_name: z.string(),
-  last_name: z.string()
+  last_name: z.string(),
+  is_email_verified: z.any().optional().transform(() => false),
+  role: z.any().optional().transform(() => 'user' as Role)
 });
 
 export const login = z.object({
-  body: z.object({
-    email: z.string(),
-    password: z.string()
-  })
-});
-
-export const logout = z.object({
-  body: z.object({
-    refreshToken: z.string()
-  })
+  email: z.string(),
+  password: z.string()
 });
 
 export const refreshTokens = z.object({
-  body: z.object({
-    refreshToken: z.string()
-  })
+  refresh_token: z.string()
 });
 
 export const forgotPassword = z.object({
