@@ -20,7 +20,7 @@ interface UserResponse {
   isEmailVerified: boolean
 }
 
-const userOne: MockUser = {
+let userOne: MockUser = {
   first_name: faker.name.firstName(),
   last_name: faker.name.lastName(),
   email: faker.internet.email().toLowerCase(),
@@ -29,7 +29,7 @@ const userOne: MockUser = {
   is_email_verified: false
 };
 
-const userTwo: MockUser = {
+let userTwo: MockUser = {
   first_name: faker.name.firstName(),
   last_name: faker.name.lastName(),
   email: faker.internet.email().toLowerCase(),
@@ -38,7 +38,7 @@ const userTwo: MockUser = {
   is_email_verified: false
 };
 
-const admin: MockUser = {
+let admin: MockUser = {
   first_name: faker.name.firstName(),
   last_name: faker.name.lastName(),
   email: faker.internet.email().toLowerCase(),
@@ -52,10 +52,11 @@ const insertUsers = async (
 ) => {
   const hashedUsers = users.map((user) => ({ ...user, password: hashedPassword }))
   const client = getDBClient(databaseConfig)
-  await client
+  const results = await client
     .insertInto('user')
     .values(hashedUsers)
     .execute()
+  return results
 };
 
 export {

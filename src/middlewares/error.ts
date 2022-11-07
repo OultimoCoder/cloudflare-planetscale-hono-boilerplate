@@ -3,7 +3,7 @@ import { getConfig } from '../config/config'
 import { ApiError } from '../utils/ApiError'
 import { ZodError } from 'zod'
 import { generateErrorMessage, ErrorMessageOptions } from 'zod-error';
-import type { ErrorHandler } from 'hono';
+import type { ErrorHandler } from 'hono'
 
 const zodErrorOptions: ErrorMessageOptions = {
   transform: ({ errorMessage, index }) => `Error #${index + 1}: ${errorMessage}`
@@ -33,7 +33,7 @@ const errorHandler: ErrorHandler<{ Bindings: Bindings }> = (err, c) => {
   const response = {
     code: error.statusCode,
     message: error.message,
-    ...(config.env !== 'production' && { stack: err.stack }),
+    ...(config.env === 'development' && { stack: err.stack }),
   }
 
   return c.json(response, error.statusCode)
