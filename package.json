@@ -2,13 +2,13 @@
   "name": "cf-hono-app",
   "version": "0.0.1",
   "description": "Create a Cloudflare workers app for building production ready RESTful APIs using Hono",
-  "main": "dist/index.js",
+  "main": "dist/index.mjs",
   "engines": {
     "node": ">=12.0.0"
   },
   "scripts": {
-    "build": "rimraf dist && node ./build.js",
-    "dev": "miniflare --live-reload --debug --env .env",
+    "build": "node ./build.js",
+    "dev": "miniflare --live-reload --debug --env .env --modules dist/index.mjs",
     "tests": "jest -i --colors --verbose --detectOpenHandles",
     "migrate:dev:latest": "node --experimental-specifier-resolution=node --loader ts-node/esm ./scripts/migrate.ts dev latest",
     "migrate:dev:down": "node --experimental-specifier-resolution=node --loader ts-node/esm ./scripts/migrate.ts dev down",
@@ -48,6 +48,7 @@
     "http-status": "^1.5.3",
     "kysely": "^0.22.0",
     "kysely-planetscale": "^1.1.0",
-    "zod": "^3.19.1"
+    "zod": "^3.19.1",
+    "zod-error": "^1.0.5"
   }
 }

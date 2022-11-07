@@ -6,28 +6,31 @@ import * as userService from '../services/user.service';
 import * as authValidation from '../validations/auth.validation';
 import { Handler } from 'hono';
 import type { StatusCode } from 'hono/utils/http-status';
-import { Bindings } from '../../bindings';
+import { getConfig } from '../config/config';
 
 const register: Handler<{ Bindings: Bindings }> = async (c) => {
+  const config = getConfig(c.env)
   const bodyParse = await c.req.json()
   const body = await authValidation.register.parseAsync(bodyParse)
-  const user = await userService.createUser(body)
-  const tokens = await tokenService.generateAuthTokens(user);
+  const user = await userService.createUser(body, config.database)
+  const tokens = await tokenService.generateAuthTokens(user, config.jwt);
   return c.json({user, tokens}, httpStatus.CREATED as StatusCode);
 };
 
 const login: Handler<{ Bindings: Bindings }> = async (c) => {
+  const config = getConfig(c.env)
   const bodyParse = await c.req.json()
   const { email, password } = authValidation.login.parse(bodyParse)
-  const user = await authService.loginUserWithEmailAndPassword(email, password);
-  const tokens = await tokenService.generateAuthTokens(user);
+  const user = await authService.loginUserWithEmailAndPassword(email, password, config.database);
+  const tokens = await tokenService.generateAuthTokens(user, config.jwt);
   return c.json({ user, tokens }, httpStatus.OK as StatusCode);
 };
 
 const refreshTokens: Handler<{ Bindings: Bindings }> = async (c) => {
+  const config = getConfig(c.env)
   const bodyParse = await c.req.json()
   const { refresh_token } = authValidation.refreshTokens.parse(bodyParse)
-  const tokens = await authService.refreshAuth(refresh_token);
+  const tokens = await authService.refreshAuth(refresh_token, config)
   return c.json({ ...tokens }, httpStatus.OK as StatusCode);
 };
 

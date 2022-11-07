@@ -1,9 +1,3 @@
-import dotenv from 'dotenv'
-
-dotenv.config({
-	path: '.env.test'
-})
-
 export default {
   preset: 'ts-jest/presets/js-with-ts',
   clearMocks: true,
@@ -16,9 +10,8 @@ export default {
   },
   testEnvironment: 'miniflare',
   testEnvironmentOptions: {
-    scriptPath: "dist/index.js",
+    scriptPath: "dist/index.mjs",
     modules: true
   },
-  transformIgnorePatterns: ["node_modules/(?!(@planetscale/database|@planetscale/database|@planetscale|planetscale|kysely-planetscale))"],
-  moduleFileExtensions: ["ts", "js", "mjs", "cjs", "jsx", "tsx", "json", "node"]
+  transformIgnorePatterns: ["node_modules/(?!(@planetscale|kysely-planetscale))"],
 }

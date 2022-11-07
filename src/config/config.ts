@@ -28,23 +28,50 @@ const envVarsSchema = z.object({
     .transform((str) => parseInt(str, 10)),
 });
 
-const env = getMiniflareBindings()
-
-const envVars = envVarsSchema.parse(env);
-
-export const config = {
-  env: envVars.ENV,
+interface Config {
+  env: 'production' | 'development' | 'test'
   database: {
-    name: envVars.DATABASE_NAME,
-    username: envVars.DATABASE_USERNAME,
-    password: envVars.DATABASE_PASSWORD,
-    host: envVars.DATABASE_HOST
-  },
-  jwt: {
-    secret: envVars.JWT_SECRET,
-    accessExpirationMinutes: envVars.JWT_ACCESS_EXPIRATION_MINUTES,
-    refreshExpirationDays: envVars.JWT_REFRESH_EXPIRATION_DAYS,
-    resetPasswordExpirationMinutes: envVars.JWT_RESET_PASSWORD_EXPIRATION_MINUTES,
-    verifyEmailExpirationMinutes: envVars.JWT_VERIFY_EMAIL_EXPIRATION_MINUTES
+    name: string
+    username: string
+    password: string
+    host: string
   }
-};
+  jwt: {
+    secret: string
+    accessExpirationMinutes: number
+    refreshExpirationDays: number
+    resetPasswordExpirationMinutes: number
+    verifyEmailExpirationMinutes: number
+  }
+}
+
+let config: Config
+
+const getConfig = (env: Bindings) => {
+  if (config) {
+    return config
+  }
+  const envVars = envVarsSchema.parse(env);
+  config = {
+    env: envVars.ENV,
+    database: {
+      name: envVars.DATABASE_NAME,
+      username: envVars.DATABASE_USERNAME,
+      password: envVars.DATABASE_PASSWORD,
+      host: envVars.DATABASE_HOST
+    },
+    jwt: {
+      secret: envVars.JWT_SECRET,
+      accessExpirationMinutes: envVars.JWT_ACCESS_EXPIRATION_MINUTES,
+      refreshExpirationDays: envVars.JWT_REFRESH_EXPIRATION_DAYS,
+      resetPasswordExpirationMinutes: envVars.JWT_RESET_PASSWORD_EXPIRATION_MINUTES,
+      verifyEmailExpirationMinutes: envVars.JWT_VERIFY_EMAIL_EXPIRATION_MINUTES
+    }
+  }
+  return config
+}
+
+export {
+  getConfig,
+  Config
+}

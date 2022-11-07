@@ -3,24 +3,30 @@ import * as tokenService from './token.service';
 import * as userService from './user.service';
 import { ApiError } from '../utils/ApiError';
 import { tokenTypes } from '../config/tokens';
+import { Config } from '../config/config';
 
-
-const loginUserWithEmailAndPassword = async (email: string, password: string) => {
-  const user = await userService.getUserByEmail(email);
+const loginUserWithEmailAndPassword = async (
+  email: string, password: string, databaseConfig: Config['database']
+) => {
+  const user = await userService.getUserByEmail(email, databaseConfig);
   if (!user || !(await user.isPasswordMatch(password))) {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
   }
   return user;
 };
 
-const refreshAuth = async (refreshToken: string) => {
+const refreshAuth = async (refreshToken: string, config: Config) => {
   try {
-    const refreshTokenDoc = await tokenService.verifyToken(refreshToken, tokenTypes.REFRESH);
-    const user = await userService.getUserById(Number(refreshTokenDoc.sub))
+    const refreshTokenDoc = await tokenService.verifyToken(
+      refreshToken,
+      tokenTypes.REFRESH,
+      config.jwt.secret
+    );
+    const user = await userService.getUserById(Number(refreshTokenDoc.sub), config.database);
     if (!user) {
       throw new Error();
     }
-    return tokenService.generateAuthTokens(user);
+    return tokenService.generateAuthTokens(user, config.jwt);
   } catch (error) {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate');
   }

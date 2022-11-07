@@ -1,13 +1,15 @@
 import bcrypt from 'bcryptjs';
 import { faker } from '@faker-js/faker';
-import { User } from '../../src/models/user.model';
+import { UserTable } from '../../src/models/user.model';
 import { Selectable } from 'kysely'
+import { Config } from '../../src/config/config';
+import { getDBClient } from '../../src/config/database';
 
 const password = 'password1';
-const salt = await bcrypt.genSalt(8);
-const hashedPassword = await bcrypt.hash(password, salt);
+const salt = bcrypt.genSaltSync(8);
+const hashedPassword = bcrypt.hashSync(password, salt);
 
-type MockUser = Selectable<User> | Partial<Omit<Selectable<User>, 'id'>>
+type MockUser = Selectable<UserTable> | Partial<Omit<Selectable<UserTable>, 'id'>>
 
 interface UserResponse {
   id: number,
@@ -45,8 +47,15 @@ const admin: MockUser = {
   is_email_verified: false
 };
 
-const insertUsers = async (users: MockUser[]) => {
-  await User.insertMany(users.map((user) => ({ ...user, password: hashedPassword })));
+const insertUsers = async (
+  users: Omit<Selectable<UserTable>, 'id'>[], databaseConfig: Config['database']
+) => {
+  const hashedUsers = users.map((user) => ({ ...user, password: hashedPassword }))
+  const client = getDBClient(databaseConfig)
+  await client
+    .insertInto('user')
+    .values(hashedUsers)
+    .execute()
 };
 
 export {

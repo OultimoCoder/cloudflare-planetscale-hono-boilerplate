@@ -1,7 +1,6 @@
 import { Hono } from 'hono'
 import * as authController from '../controllers/auth.controller'
 import { auth } from '../middlewares/auth'
-import { Bindings } from '../../bindings'
 
 const route = new Hono<{ Bindings: Bindings }>()
 

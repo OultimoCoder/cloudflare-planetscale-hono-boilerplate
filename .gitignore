@@ -12,3 +12,4 @@ node_modules/
 fauna/temp
 package-lock.json
 .faunarc
+wrangler.toml

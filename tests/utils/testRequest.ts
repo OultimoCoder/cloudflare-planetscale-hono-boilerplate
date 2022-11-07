@@ -1,4 +1,4 @@
-import app from '../../src/app'
+import app from '../../src'
 import '../../src/routes'
 
 const devUrl = 'http://localhost'

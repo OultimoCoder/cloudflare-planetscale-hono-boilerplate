@@ -1,12 +1,15 @@
 import { TableReference } from 'kysely/dist/cjs/parser/table-parser.js'
 import { getDBClient, Database } from '../../src/config/database'
+import { Config } from '../../src/config/config'
 
-const client = getDBClient()
 
-const clearDBTables = (tables: Array<TableReference<Database>>) => {
+const clearDBTables = (
+  tables: Array<TableReference<Database>>, databaseConfig: Config['database']
+) => {
+  const client = getDBClient(databaseConfig)
   beforeEach(async () => {
     for (const table of tables) {
-      const deleteResult = await client
+      await client
         .deleteFrom(table)
         .executeTakeFirst()
     }

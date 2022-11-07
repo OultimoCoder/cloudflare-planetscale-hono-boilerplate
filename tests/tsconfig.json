@@ -4,9 +4,9 @@
     "types": [
       "@cloudflare/workers-types",
       "@types/bcryptjs",
-      "jest",
-      "../bindings"
+      "@types/jest",
+      "miniflare"
     ]
   },
-  "include": ["../src/**/*", "**/*"]
+  "include": ["../src/**/*", "**/*", "../bindings.d.ts"]
 }

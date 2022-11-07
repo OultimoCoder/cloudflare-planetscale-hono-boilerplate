@@ -4,13 +4,13 @@ import { ApiError } from '../utils/ApiError'
 import { Context } from 'hono';
 import jwt from '@tsndr/cloudflare-worker-jwt'
 import { tokenTypes } from '../config/tokens';
-import { config } from '../config/config'
+import { getConfig } from '../config/config'
 
-const authenticate = async (jwtToken: string) => {
+const authenticate = async (jwtToken: string, secret: string) => {
   let authorized = false
   let payload
   try {
-    authorized = await jwt.verify(jwtToken, config.jwt.secret)
+    authorized = await jwt.verify(jwtToken, secret)
     const decoded = jwt.decode(jwtToken);
     payload = decoded.payload
     authorized = authorized && (payload.type === tokenTypes.ACCESS)
@@ -18,9 +18,9 @@ const authenticate = async (jwtToken: string) => {
   return {authorized, payload}
 }
 
-const auth = (...requiredRights: Permission[]) => async (c: Context, next: Function) => {
+const auth = (...requiredRights: Permission[]) => async (c: any, next: Function) => {
   const credentials = c.req.headers.get('Authorization')
-
+  const config = getConfig(c.env)
   if (!credentials) {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
   }
@@ -31,7 +31,7 @@ const auth = (...requiredRights: Permission[]) => async (c: Context, next: Funct
   }
 
   const jwtToken = parts[1]
-  const {authorized, payload} = await authenticate(jwtToken)
+  const {authorized, payload} = await authenticate(jwtToken, config.jwt.secret)
 
   if (!authorized || !payload ) {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')

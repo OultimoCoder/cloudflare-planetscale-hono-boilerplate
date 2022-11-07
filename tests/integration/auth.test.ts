@@ -6,11 +6,14 @@ import { MockUser, UserResponse } from '../fixtures/user.fixture';
 import { TokenResponse } from '../fixtures/token.fixture';
 import { Database, getDBClient } from '../../src/config/database'
 import { TableReference } from 'kysely/dist/cjs/parser/table-parser';
+import { userOne, insertUsers } from '../fixtures/user.fixture';
+import { getConfig } from '../../src/config/config'
 
-getMiniflareBindings()
+const env = getMiniflareBindings()
+const config = getConfig(env)
+const client = getDBClient(config.database)
 
-clearDBTables(['user' as TableReference<Database>]);
-const client = getDBClient()
+clearDBTables(['user' as TableReference<Database>], config.database);
 
 describe('Auth routes', () => {
   describe('POST /v1/auth/register', () => {
@@ -25,7 +28,7 @@ describe('Auth routes', () => {
     });
 
     test('should return 201 and successfully register user if request data is ok', async () => {
-      const res = await request('/api/v1/auth/register', {
+      const res = await request('/v1/auth/register', {
         method: 'POST',
         body: JSON.stringify(newUser),
         headers: { 'Content-Type': 'application/json' }
@@ -67,34 +70,59 @@ describe('Auth routes', () => {
       });
     });
 
-    // test('should return 400 error if email is invalid', async () => {
-    //   newUser.email = 'invalidEmail';
+    test('should return 400 error if email is invalid', async () => {
+      newUser.email = 'invalidEmail';
 
-    //   await request(app).post('/v1/auth/register').send(newUser).expect(httpStatus.BAD_REQUEST);
-    // });
+      const res = await request('/v1/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(newUser),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    });
 
-    // test('should return 400 error if email is already used', async () => {
-    //   await insertUsers([userOne]);
-    //   newUser.email = userOne.email;
+    test('should return 400 error if email is already used', async () => {
+      await insertUsers([userOne]);
+      newUser.email = userOne.email;
 
-    //   await request(app).post('/v1/auth/register').send(newUser).expect(httpStatus.BAD_REQUEST);
-    // });
+      const res = await request('/v1/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(newUser),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    });
 
-    // test('should return 400 error if password length is less than 8 characters', async () => {
-    //   newUser.password = 'passwo1';
+    test('should return 400 error if password length is less than 8 characters', async () => {
+      newUser.password = 'passwo1';
 
-    //   await request(app).post('/v1/auth/register').send(newUser).expect(httpStatus.BAD_REQUEST);
-    // });
+      const res = await request('/v1/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(newUser),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    });
 
-    // test('should return 400 error if password does not contain both letters and numbers', async () => {
-    //   newUser.password = 'password';
+    test('should return 400 error if password does not contain both letters and numbers', async () => {
+      newUser.password = 'password';
 
-    //   await request(app).post('/v1/auth/register').send(newUser).expect(httpStatus.BAD_REQUEST);
+      const res = await request('/v1/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(newUser),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
 
-    //   newUser.password = '11111111';
+      newUser.password = '11111111';
 
-    //   await request(app).post('/v1/auth/register').send(newUser).expect(httpStatus.BAD_REQUEST);
-    // });
+      const res2 = await request('/v1/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(newUser),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      expect(res2.status).toBe(httpStatus.BAD_REQUEST)
+    });
   });
 
   // describe('POST /v1/auth/login', () => {
