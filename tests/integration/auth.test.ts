@@ -85,7 +85,7 @@ describe('Auth routes', () => {
     });
 
     test('should return 400 error if email is already used', async () => {
-      await insertUsers([userOne]);
+      await insertUsers([userOne], config.database);
       newUser.email = userOne.email;
 
       const res = await request('/v1/auth/register', {
@@ -179,7 +179,7 @@ describe('Auth routes', () => {
     });
 
     test('should return 401 error if password is wrong', async () => {
-      await insertUsers([userOne]);
+      await insertUsers([userOne], config.database);
       const loginCredentials = {
         email: userOne.email,
         password: 'wrongPassword1',
@@ -201,7 +201,7 @@ describe('Auth routes', () => {
 
   describe('POST /v1/auth/refresh-tokens', () => {
     test('should return 200 and new auth tokens if refresh token is valid', async () => {
-      const results = await insertUsers([userOne]);
+      const results = await insertUsers([userOne], config.database);
       const userId = Number(results[0].insertId)
       const expires = dayjs().add(config.jwt.refreshExpirationDays, 'days');
       const refreshToken = await tokenService.generateToken(
@@ -236,7 +236,7 @@ describe('Auth routes', () => {
     });
 
     test('should return 401 error if refresh token is signed using an invalid secret', async () => {
-      const results = await insertUsers([userOne]);
+      const results = await insertUsers([userOne], config.database);
       const userId = Number(results[0].insertId)
       const expires = dayjs().add(config.jwt.refreshExpirationDays, 'days');
       const refreshToken = await tokenService.generateToken(
@@ -256,7 +256,7 @@ describe('Auth routes', () => {
     });
 
     test('should return 401 error if refresh token is expired', async () => {
-      const results = await insertUsers([userOne]);
+      const results = await insertUsers([userOne], config.database);
       const userId = Number(results[0].insertId)
       const expires = dayjs().subtract(1, 'minutes')
       const refreshToken = await tokenService.generateToken(
