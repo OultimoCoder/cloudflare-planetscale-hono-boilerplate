@@ -1,6 +1,6 @@
-import jwt, { JwtPayload } from '@tsndr/cloudflare-worker-jwt'
+import jwt from '@tsndr/cloudflare-worker-jwt'
 import dayjs, { Dayjs } from 'dayjs'
-import { config, Config } from '../config/config'
+import { Config } from '../config/config'
 import { TokenType, tokenTypes } from '../config/tokens'
 import { Role } from '../config/roles'
 import { User } from '../models/user.model'
