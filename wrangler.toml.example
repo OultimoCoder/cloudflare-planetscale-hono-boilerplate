@@ -1,4 +1,4 @@
-name = "cf-workers-hono-fauna-app"
+name = "cf-workers-hono-planetscale-app"
 main = 'dist/index.mjs'
 
 workers_dev = true
