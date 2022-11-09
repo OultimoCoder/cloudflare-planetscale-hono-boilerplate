@@ -8,25 +8,26 @@ import { getConfig } from '../config/config';
 
 const createUser: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
-  const { body } = userValidation.createUser.parse(c.req.parseBody());
+  const bodyParse = await c.req.json()
+  const body = await userValidation.createUser.parseAsync(bodyParse);
   const user = await userService.createUser(body, config.database);
   return c.json(user, httpStatus.CREATED as StatusCode);
 };
 
 const getUsers: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
-  const { query } = userValidation.getUsers.parse(c.req.parseBody());
-
-  const filter = { name: query.name, role: query.role };
-  const options = { sortBy: query.sortBy, limit: query.limit, page: query.page };
-
-  const result = await userService.queryUsers(config.database);
+  const queryParse = c.req.query()
+  const query = userValidation.getUsers.parse(queryParse);
+  const filter = { email: query.email };
+  const options = { sortBy: query.sort_by, limit: query.limit, page: query.page };
+  const result = await userService.queryUsers(filter, options, config.database);
   return c.json(result, httpStatus.OK as StatusCode);
 };
 
 const getUser: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
-  const { params } = userValidation.getUser.parse(c.req.parseBody());
+  const paramsParse = c.req.param()
+  const params = userValidation.getUser.parse(paramsParse);
   const user = await userService.getUserById(params.userId, config.database);
   if (!user) {
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
@@ -36,14 +37,17 @@ const getUser: Handler<{ Bindings: Bindings }> = async (c) => {
 
 const updateUser: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
-  const { params, body } = userValidation.updateUser.parse(c.req.parseBody());
+  const paramsParse = c.req.param()
+  const bodyParse = await c.req.json()
+  const { params, body } = userValidation.updateUser.parse({params: paramsParse, body: bodyParse});
   const user = await userService.updateUserById(params.userId, body, config.database);
   return c.json(user, httpStatus.OK as StatusCode);
 };
 
 const deleteUser: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
-  const { params } = userValidation.deleteUser.parse(c.req.parseBody());
+  const paramsParse = c.req.param()
+  const params = userValidation.deleteUser.parse(paramsParse);
   await userService.deleteUserById(params.userId, config.database);
   c.status(httpStatus.NO_CONTENT as StatusCode);
   return c.body(null)

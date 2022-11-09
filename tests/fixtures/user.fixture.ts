@@ -17,7 +17,7 @@ interface UserResponse {
   last_name: string,
   email: string,
   role: string,
-  isEmailVerified: boolean
+  is_email_verified: boolean
 }
 
 let userOne: MockUser = {
@@ -52,10 +52,14 @@ const insertUsers = async (
 ) => {
   const hashedUsers = users.map((user) => ({ ...user, password: hashedPassword }))
   const client = getDBClient(databaseConfig)
-  const results = await client
-    .insertInto('user')
-    .values(hashedUsers)
-    .execute()
+  let results: number[] = []
+  for await (const user of hashedUsers) {
+    const result = await client
+      .insertInto('user')
+      .values(user)
+      .executeTakeFirst()
+    results.push(Number(result.insertId))
+  }
   return results
 };
 

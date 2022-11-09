@@ -2,9 +2,20 @@ import httpStatus from 'http-status';
 import { getDBClient } from '../config/database';
 import { ApiError } from '../utils/ApiError';
 import { CreateUser, UpdateUser } from '../validations/user.validation';
-import { User } from '../models/user.model';
-import { InsertResult } from 'kysely';
+import { User, UserTable } from '../models/user.model';
+import { InsertResult, UpdateResult } from 'kysely';
 import { Config } from '../config/config';
+
+interface getUsersFilter {
+  email: string | undefined
+}
+
+interface getUsersOptions {
+  sortBy: string
+  limit: number
+  page: number
+}
+
 
 const createUser = async (userBody: CreateUser, databaseConfig: Config['database']) => {
   const db = getDBClient(databaseConfig)
@@ -19,18 +30,27 @@ const createUser = async (userBody: CreateUser, databaseConfig: Config['database
   }
   const user = await getUserById(Number(result.insertId), databaseConfig)
   if (!user) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'User already exists');
+    throw new ApiError(httpStatus.BAD_REQUEST, 'User already exists');
   }
   return user
 };
 
-const queryUsers = async (databaseConfig: Config['database']) => {
+const queryUsers = async (
+  filter: getUsersFilter, options: getUsersOptions, databaseConfig: Config['database']
+) => {
   const db = getDBClient(databaseConfig)
-  const users = await db
+  const [ sortField, direction ] = options.sortBy.split(':') as [keyof UserTable, 'asc' | 'desc']
+  let usersQuery = db
     .selectFrom('user')
     .selectAll()
-    .execute()
-  return users
+    .orderBy(`user.${sortField}`, direction)
+    .limit(options.limit)
+    .offset(options.limit * options.page)
+  if (filter.email) {
+    usersQuery = usersQuery.where('user.email', '=', filter.email)
+  }
+  const users = await usersQuery.execute()
+  return User.convert(users)
 };
 
 const getUserById = async (id: number, databaseConfig: Config['database']) => {
@@ -40,7 +60,7 @@ const getUserById = async (id: number, databaseConfig: Config['database']) => {
     .selectAll()
     .where('user.id', '=', id)
     .executeTakeFirst()
-  return user ? new User(user) : user
+  return user ? User.convert(user) : user
 };
 
 const getUserByEmail = async (email: string, databaseConfig: Config['database']) => {
@@ -50,18 +70,26 @@ const getUserByEmail = async (email: string, databaseConfig: Config['database'])
     .selectAll()
     .where('user.email', '=', email)
     .executeTakeFirst()
-  return user ? new User(user) : user
+  return user ? User.convert(user) : user
 };
 
 const updateUserById = async (
   userId: number, updateBody: Partial<UpdateUser>, databaseConfig: Config['database']
 ) => {
   const db = getDBClient(databaseConfig)
-  await db
-    .updateTable('user')
-    .set(updateBody)
-    .where('id', '=', userId)
-    .executeTakeFirstOrThrow()
+  let result: UpdateResult
+  try {
+    result = await db
+      .updateTable('user')
+      .set(updateBody)
+      .where('id', '=', userId)
+      .executeTakeFirst()
+  } catch (error) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'User already exists');
+  }
+  if (!result.numUpdatedRows || Number(result.numUpdatedRows) < 1) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
   const user = await getUserById(userId, databaseConfig)
   return user
 };
@@ -72,7 +100,8 @@ const deleteUserById = async (userId: number, databaseConfig: Config['database']
     .deleteFrom('user')
     .where('user.id', '=', userId)
     .executeTakeFirst()
-  if (result.numDeletedRows < 1) {
+
+  if (!result.numDeletedRows || Number(result.numDeletedRows) < 1) {
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
   }
 };

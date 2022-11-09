@@ -201,8 +201,8 @@ describe('Auth routes', () => {
 
   describe('POST /v1/auth/refresh-tokens', () => {
     test('should return 200 and new auth tokens if refresh token is valid', async () => {
-      const results = await insertUsers([userOne], config.database);
-      const userId = Number(results[0].insertId)
+      const ids = await insertUsers([userOne], config.database);
+      const userId = ids[0]
       const expires = dayjs().add(config.jwt.refreshExpirationDays, 'days');
       const refreshToken = await tokenService.generateToken(
         userId,
@@ -236,8 +236,8 @@ describe('Auth routes', () => {
     });
 
     test('should return 401 error if refresh token is signed using an invalid secret', async () => {
-      const results = await insertUsers([userOne], config.database);
-      const userId = Number(results[0].insertId)
+      const ids = await insertUsers([userOne], config.database);
+      const userId = ids[0]
       const expires = dayjs().add(config.jwt.refreshExpirationDays, 'days');
       const refreshToken = await tokenService.generateToken(
         userId,
@@ -256,8 +256,8 @@ describe('Auth routes', () => {
     });
 
     test('should return 401 error if refresh token is expired', async () => {
-      const results = await insertUsers([userOne], config.database);
-      const userId = Number(results[0].insertId)
+      const ids = await insertUsers([userOne], config.database);
+      const userId = ids[0]
       const expires = dayjs().subtract(1, 'minutes')
       const refreshToken = await tokenService.generateToken(
         userId,
