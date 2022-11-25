@@ -10,7 +10,7 @@ route.post('/refresh-tokens', authController.refreshTokens)
 // route.post('/forgot-password', authController.forgotPassword)
 // route.post('/reset-password', authController.resetPassword)
 // route.post('/change-password', authController.changePassword)
-// route.post('/send-verification-email', auth(), authController.sendVerificationEmail)
+route.post('/send-verification-email', auth(), authController.sendVerificationEmail)
 // route.post('/verify-email', authController.verifyEmail)
 
 export {

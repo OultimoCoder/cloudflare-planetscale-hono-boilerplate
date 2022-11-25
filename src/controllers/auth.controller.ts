@@ -4,9 +4,11 @@ import * as authService from '../services/auth.service';
 import * as tokenService from '../services/token.service';
 import * as userService from '../services/user.service';
 import * as authValidation from '../validations/auth.validation';
+import * as emailService from '../services/email.service';
 import { Handler } from 'hono';
 import type { StatusCode } from 'hono/utils/http-status';
 import { getConfig } from '../config/config';
+import { JwtPayload } from '@tsndr/cloudflare-worker-jwt';
 
 const register: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
@@ -49,13 +51,24 @@ const refreshTokens: Handler<{ Bindings: Bindings }> = async (c) => {
 //   return c.body(null)
 // };
 
-// const sendVerificationEmail = async (c: Context) => {
-//   const user = c.get('payload').user
-//   const verifyEmailToken = await tokenService.generateVerifyEmailToken(user);
-//   await emailService.sendVerificationEmail(user.email, verifyEmailToken);
-//   c.status(httpStatus.NO_CONTENT as StatusCode);
-//   return c.body(null)
-// };
+const sendVerificationEmail: Handler<{ Bindings: Bindings }> = async (c) => {
+  const config = getConfig(c.env)
+  const payload = c.get('payload') as JwtPayload
+  const userId = Number(payload.sub)
+  const user = await userService.getUserById(userId, config.database)
+  const verifyEmailToken = await tokenService.generateVerifyEmailToken(user, config.jwt);
+  await emailService.sendVerificationEmail(
+    user.email,
+    {
+      firstName: user.first_name,
+      lastName: user.last_name,
+      token: verifyEmailToken
+    },
+    config
+  );
+  c.status(httpStatus.NO_CONTENT as StatusCode);
+  return c.body(null)
+};
 
 // const verifyEmail = async (c: Context) => {
 //   const { query } = authValidation.verifyEmail.parse(c.req.parseBody());
@@ -68,8 +81,8 @@ export {
   register,
   login,
   refreshTokens,
+  sendVerificationEmail
   // forgotPassword,
   // resetPassword,
-  // sendVerificationEmail,
   // verifyEmail
 }

@@ -26,6 +26,10 @@ const envVarsSchema = z.object({
     .string()
     .default('10')
     .transform((str) => parseInt(str, 10)),
+  AWS_ACCESS_KEY_ID: z.string(),
+  AWS_SECRET_ACCESS_KEY: z.string(),
+  AWS_REGION: z.string(),
+  EMAIL_SENDER: z.string(),
 });
 
 interface Config {
@@ -42,6 +46,14 @@ interface Config {
     refreshExpirationDays: number
     resetPasswordExpirationMinutes: number
     verifyEmailExpirationMinutes: number
+  },
+  aws: {
+    accessKeyId: string
+    secretAccessKey: string
+    region: string
+  },
+  email: {
+    sender: string
   }
 }
 
@@ -66,6 +78,14 @@ const getConfig = (env: Bindings) => {
       refreshExpirationDays: envVars.JWT_REFRESH_EXPIRATION_DAYS,
       resetPasswordExpirationMinutes: envVars.JWT_RESET_PASSWORD_EXPIRATION_MINUTES,
       verifyEmailExpirationMinutes: envVars.JWT_VERIFY_EMAIL_EXPIRATION_MINUTES
+    },
+    aws: {
+      accessKeyId: envVars.AWS_ACCESS_KEY_ID,
+      secretAccessKey: envVars.AWS_SECRET_ACCESS_KEY,
+      region: envVars.AWS_REGION
+    },
+    email: {
+      sender: envVars.EMAIL_SENDER
     }
   }
   return config

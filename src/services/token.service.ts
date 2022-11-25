@@ -61,8 +61,21 @@ const verifyToken = async (token: string, type: TokenType, secret: string) => {
   return payload
 }
 
+const generateVerifyEmailToken = async (user: Selectable<User>, jwtConfig: Config['jwt']) => {
+  const expires = dayjs().add(jwtConfig.verifyEmailExpirationMinutes, 'minutes');
+  const verifyEmailToken = await generateToken(
+    user.id,
+    tokenTypes.VERIFY_EMAIL,
+    user.role,
+    expires,
+    jwtConfig.secret
+  )
+  return verifyEmailToken;
+};
+
 export {
   generateToken,
   generateAuthTokens,
+  generateVerifyEmailToken,
   verifyToken
 }

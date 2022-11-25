@@ -40,6 +40,7 @@
     "wrangler": "^2.1.13"
   },
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.216.0",
     "@planetscale/database": "^1.4.0",
     "@tsndr/cloudflare-worker-jwt": "2.1.2",
     "bcryptjs": "^2.4.3",
