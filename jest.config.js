@@ -13,5 +13,5 @@ export default {
     scriptPath: "dist/index.mjs",
     modules: true
   },
-  transformIgnorePatterns: ["node_modules/(?!(@planetscale|kysely-planetscale))"],
+  transformIgnorePatterns: ["node_modules/(?!(@planetscale|kysely-planetscale|@aws-sdk|@aws-sdk|uuid))"],
 }

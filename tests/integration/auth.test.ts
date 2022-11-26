@@ -11,6 +11,9 @@ import { getConfig } from '../../src/config/config'
 import dayjs from 'dayjs';
 import * as tokenService from '../../src/services/token.service';
 import { tokenTypes } from '../../src/config/tokens';
+import { mockClient } from "aws-sdk-client-mock";
+import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
+import 'aws-sdk-client-mock-jest'
 
 const env = getMiniflareBindings()
 const config = getConfig(env)
@@ -291,6 +294,48 @@ describe('Auth routes', () => {
         headers: { 'Content-Type': 'application/json' }
       })
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
+    });
+  });
+
+  describe('POST /v1/auth/forgot-password', () => {
+    const sesMock = mockClient(SESClient);
+
+    beforeEach(() => {
+      sesMock.reset()
+    });
+
+    test('should return 204 and send reset password email to the user', async () => {
+      await insertUsers([userOne], config.database);
+      sesMock.on(SendEmailCommand).resolves({
+        MessageId: 'message-id'
+      })
+      const res = await request('/v1/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email: userOne.email }),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      expect(res.status).toBe(httpStatus.NO_CONTENT)
+      expect(sesMock).toHaveReceivedCommandTimes(SendEmailCommand, 1)
+    });
+
+    test('should return 400 if email is missing', async () => {
+      await insertUsers([userOne]);
+
+      const res = await request('/v1/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    });
+
+    test('should return 204 if email does not belong to any user', async () => {
+      const res = await request('/v1/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email: userOne.email }),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      expect(res.status).toBe(httpStatus.NO_CONTENT)
     });
   });
 });
