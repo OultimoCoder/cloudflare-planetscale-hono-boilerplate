@@ -36,53 +36,93 @@ const refreshTokens: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.json({ ...tokens }, httpStatus.OK as StatusCode);
 };
 
-// const forgotPassword = async (c: Context) => {
-//   const { body } = authValidation.forgotPassword.parse(c.req.parseBody());
-//   const resetPasswordToken = await tokenService.generateResetPasswordToken(body.email);
-//   await emailService.sendResetPasswordEmail(body.email, resetPasswordToken);
-//   c.status(httpStatus.NO_CONTENT as StatusCode);
-//   return c.body(null)
-// };
+const forgotPassword: Handler<{ Bindings: Bindings }> = async (c) => {
+  const bodyParse = await c.req.json()
+  const config = getConfig(c.env)
+  const { email } = authValidation.forgotPassword.parse(bodyParse);
+  const user = await userService.getUserByEmail(email, config.database);
+  // Don't let bad actors know if the email is registered by throwing if the user exists
+  if (user) {
+    const resetPasswordToken = await tokenService.generateResetPasswordToken(
+      user,
+      config.jwt,
+      email
+    );
+    await emailService.sendResetPasswordEmail(user.email,
+      {
+        firstName: user.first_name,
+        lastName: user.last_name,
+        token: resetPasswordToken
+      },
+      config
+    );
+  }
+  c.status(httpStatus.NO_CONTENT as StatusCode);
+  return c.body(null)
+};
 
-// const resetPassword = async (c: Context) => {
-//   const { body, query } = authValidation.resetPassword.parse(c.req.parseBody());
-//   await authService.resetPassword(query.token, req.body.password);
-//   c.status(httpStatus.NO_CONTENT as StatusCode);
-//   return c.body(null)
-// };
+const resetPassword: Handler<{ Bindings: Bindings }> = async (c) => {
+  const queryParse = c.req.query()
+  const bodyParse = await c.req.json()
+  const config = getConfig(c.env)
+  const { query, body } = authValidation.resetPassword.parse({query: queryParse, body: bodyParse});
+  await authService.resetPassword(query.token, body.password, config);
+  c.status(httpStatus.NO_CONTENT as StatusCode);
+  return c.body(null)
+};
 
 const sendVerificationEmail: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const payload = c.get('payload') as JwtPayload
   const userId = Number(payload.sub)
-  const user = await userService.getUserById(userId, config.database)
-  const verifyEmailToken = await tokenService.generateVerifyEmailToken(user, config.jwt);
-  await emailService.sendVerificationEmail(
-    user.email,
-    {
-      firstName: user.first_name,
-      lastName: user.last_name,
-      token: verifyEmailToken
-    },
-    config
-  );
+  // Don't let bad actors know if the email is registered by returning an error if the email
+  // is already verified
+  try {
+    const user = await userService.getUserById(userId, config.database)
+    if (user.is_email_verified) {
+      throw new Error()
+    }
+    const verifyEmailToken = await tokenService.generateVerifyEmailToken(user, config.jwt);
+    await emailService.sendVerificationEmail(
+      user.email,
+      {
+        firstName: user.first_name,
+        lastName: user.last_name,
+        token: verifyEmailToken
+      },
+      config
+    );
+  } catch (err) {}
   c.status(httpStatus.NO_CONTENT as StatusCode);
   return c.body(null)
 };
 
-// const verifyEmail = async (c: Context) => {
-//   const { query } = authValidation.verifyEmail.parse(c.req.parseBody());
-//   await authService.verifyEmail(query.token);
-//   c.status(httpStatus.NO_CONTENT as StatusCode);
-//   return c.body(null)
-// };
+const verifyEmail: Handler<{ Bindings: Bindings }> = async (c) => {
+  const config = getConfig(c.env)
+  const { token } = authValidation.verifyEmail.parse(c.req.parseBody());
+  await authService.verifyEmail(token, config);
+  c.status(httpStatus.NO_CONTENT as StatusCode);
+  return c.body(null)
+};
+
+const changePassword: Handler<{ Bindings: Bindings }> = async (c) => {
+  const config = getConfig(c.env)
+  const payload = c.get('payload') as JwtPayload
+  const bodyParse = await c.req.json()
+  const { oldPassword, newPassword } = authValidation.changePassword.parse(bodyParse);
+  const userId = Number(payload.sub)
+  await authService.changePassword(userId, oldPassword, newPassword, config.database);
+  c.status(httpStatus.NO_CONTENT as StatusCode);
+  return c.body(null)
+};
 
 export {
   register,
   login,
   refreshTokens,
-  sendVerificationEmail
-  // forgotPassword,
-  // resetPassword,
-  // verifyEmail
+  sendVerificationEmail,
+  forgotPassword,
+  resetPassword,
+  verifyEmail,
+  changePassword
 }

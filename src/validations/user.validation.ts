@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { password } from './custom.refine.validation';
-import { Role } from '../config/roles';
 import { hashPassword } from './custom.transform.validation';
 
 export const createUser = z.object({
@@ -47,7 +46,7 @@ export const updateUser = z.object({
     email: z.string().email().optional(),
     first_name: z.string().optional(),
     last_name: z.string().optional(),
-    role: z.union([z.literal('admin'), z.literal('user')]).optional(),
+    role: z.union([z.literal('admin'), z.literal('user')]).optional()
   })
   .refine(
     ({email, first_name, last_name, role}) =>
@@ -56,7 +55,8 @@ export const updateUser = z.object({
   )
 });
 
-export type UpdateUser = z.infer<typeof updateUser>['body'];
+export type UpdateUser = z.infer<typeof updateUser>['body'] | { password: string } |
+  { is_email_verified: boolean }
 
 export const deleteUser = z.object({
   userId: z.preprocess(

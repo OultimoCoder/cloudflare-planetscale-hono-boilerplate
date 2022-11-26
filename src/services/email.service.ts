@@ -3,7 +3,7 @@ import { Config } from '../config/config'
 
 let client: SESClient
 
-interface VerificationEmailData extends TemplateEmailData {
+interface EmailData {
   firstName: string
   lastName: string
   token: string
@@ -30,13 +30,32 @@ const sendEmail = async(to: string, sender: string, message: Message, awsConfig:
   await sesClient.send(command)
 }
 
-const sendResetPasswordEmail = async () => {
-
+const sendResetPasswordEmail = async (email: string, emailData: EmailData, config: Config) => {
+  const message = {
+    Subject: {
+      Data: 'Reset your password',
+      Charset: 'UTF-8'
+    },
+    Body: {
+      Text: {
+        Charset: 'UTF-8',
+        Data: `
+          Hello ${emailData.firstName} ${emailData.lastName}
+          Please reset your password by clicking the following link:
+          ${emailData.token}
+        `
+      }
+    }
+  }
+  await sendEmail(
+    email,
+    config.email.sender,
+    message,
+    config.aws
+  )
 }
 
-const sendVerificationEmail = async (
-  email: string, emailData: VerificationEmailData, config: Config
-) => {
+const sendVerificationEmail = async (email: string, emailData: EmailData, config: Config) => {
   const message = {
     Subject: {
       Data: 'Verify your email address',

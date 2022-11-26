@@ -22,9 +22,7 @@ export const refreshTokens = z.object({
 });
 
 export const forgotPassword = z.object({
-  body: z.object({
-    email: z.string().email()
-  })
+  email: z.string().email()
 });
 
 export const resetPassword = z.object({
@@ -37,7 +35,10 @@ export const resetPassword = z.object({
 });
 
 export const verifyEmail = z.object({
-  query: z.object({
-    token: z.string()
-  })
+  token: z.string()
+});
+
+export const changePassword = z.object({
+  oldPassword: z.string().superRefine(password),
+  newPassword: z.string().superRefine(password)
 });

@@ -32,35 +32,64 @@ const refreshAuth = async (refreshToken: string, config: Config) => {
   }
 };
 
-// const resetPassword = async (resetPasswordToken: string, newPassword: string) => {
-//   try {
-//     const resetPasswordTokenDoc = await tokenService.verifyToken(resetPasswordToken, tokenTypes.RESET_PASSWORD);
-//     const user = await userService.getUserById(resetPasswordTokenDoc.user);
-//     if (!user) {
-//       throw new Error();
-//     }
-//     await userService.updateUserById(user.id, { password: newPassword });
-//     await Token.deleteMany({ user: user.id, type: tokenTypes.RESET_PASSWORD });
-//   } catch (error) {
-//     throw new ApiError(httpStatus.UNAUTHORIZED, 'Password reset failed');
-//   }
-// };
+const resetPassword = async (resetPasswordToken: string, newPassword: string, config: Config) => {
+  try {
+    const resetPasswordTokenDoc = await tokenService.verifyToken(
+      resetPasswordToken,
+      tokenTypes.RESET_PASSWORD,
+      config.jwt.secret
+    );
+    const userId = Number(resetPasswordTokenDoc.sub);
+    const user = await userService.getUserById(userId, config.database);
+    if (!user) {
+      throw new Error();
+    }
+    await userService.updateUserById(user.id, { password: newPassword }, config.database);
+  } catch (error) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Password reset failed');
+  }
+};
 
-// const verifyEmail = async (verifyEmailToken: string) => {
-//   try {
-//     const verifyEmailTokenDoc = await tokenService.verifyToken(verifyEmailToken, tokenTypes.VERIFY_EMAIL);
-//     const user = await userService.getUserById(verifyEmailTokenDoc.user);
-//     if (!user) {
-//       throw new Error();
-//     }
-//     await Token.deleteMany({ user: user.id, type: tokenTypes.VERIFY_EMAIL });
-//     await userService.updateUserById(user.id, { isEmailVerified: true });
-//   } catch (error) {
-//     throw new ApiError(httpStatus.UNAUTHORIZED, 'Email verification failed');
-//   }
-// };
+const verifyEmail = async (verifyEmailToken: string, config: Config) => {
+  try {
+    const verifyEmailTokenDoc = await tokenService.verifyToken(
+      verifyEmailToken,
+      tokenTypes.VERIFY_EMAIL,
+      config.jwt.secret
+    );
+    const userId = Number(verifyEmailTokenDoc.sub)
+    const user = await userService.getUserById(userId, config.database);
+    if (!user) {
+      throw new Error();
+    }
+    await userService.updateUserById(user.id, { is_email_verified: true }, config.database);
+  } catch (error) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Email verification failed');
+  }
+};
+
+const changePassword = async (
+  userId: number, oldPassword: string, newPassword: string, databaseConfig: Config['database']
+) => {
+  try {
+    const user = await userService.getUserById(userId, config.database)
+    if (!(await user.isPasswordMatch(oldPassword))) {
+      throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect password');
+    }
+    await userService.updateUserById(
+      user.id,
+      { password: newPassword },
+      config.database
+    );
+  } catch (error) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Password change failed');
+  }
+};
 
 export {
   loginUserWithEmailAndPassword,
-  refreshAuth
+  refreshAuth,
+  resetPassword,
+  verifyEmail,
+  changePassword
 }
