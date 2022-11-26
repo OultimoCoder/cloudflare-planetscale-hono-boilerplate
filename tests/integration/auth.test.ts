@@ -3,7 +3,7 @@ import { clearDBTables } from '../utils/clearDBTables';
 import { faker } from '@faker-js/faker';
 import httpStatus from 'http-status';
 import { MockUser, UserResponse } from '../fixtures/user.fixture';
-import { TokenResponse } from '../fixtures/token.fixture';
+import { getAccessToken, TokenResponse } from '../fixtures/token.fixture';
 import { Database, getDBClient } from '../../src/config/database'
 import { TableReference } from 'kysely/dist/cjs/parser/table-parser';
 import { userOne, insertUsers } from '../fixtures/user.fixture';
@@ -14,6 +14,7 @@ import { tokenTypes } from '../../src/config/tokens';
 import { mockClient } from "aws-sdk-client-mock";
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 import 'aws-sdk-client-mock-jest'
+import { compare } from 'bcryptjs'
 
 const env = getMiniflareBindings()
 const config = getConfig(env)
@@ -338,4 +339,259 @@ describe('Auth routes', () => {
       expect(res.status).toBe(httpStatus.NO_CONTENT)
     });
   });
-});
+
+  describe('POST /v1/auth/send-verification-email', () => {
+    const sesMock = mockClient(SESClient);
+
+    beforeEach(() => {
+      sesMock.reset()
+    });
+
+    test('should return 204 and send verification email to the user', async () => {
+      const ids = await insertUsers([userOne], config.database);
+      const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt);
+
+      sesMock.on(SendEmailCommand).resolves({
+        MessageId: 'message-id'
+      })
+
+      const res = await request('/v1/auth/send-verification-email', {
+        method: 'POST',
+        body: JSON.stringify({ email: userOne.email }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.NO_CONTENT)
+      expect(sesMock).toHaveReceivedCommandTimes(SendEmailCommand, 1)
+    });
+
+    test('should return 401 error if access token is missing', async () => {
+      await insertUsers([userOne], config.database);
+
+      sesMock.on(SendEmailCommand).resolves({
+        MessageId: 'message-id'
+      })
+
+      const res = await request('/v1/auth/send-verification-email', {
+        method: 'POST',
+        body: JSON.stringify({ email: userOne.email }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      expect(res.status).toBe(httpStatus.UNAUTHORIZED)
+    });
+  });
+
+  describe('POST /v1/auth/reset-password', () => {
+    test('should return 204 and reset the password', async () => {
+      const ids = await insertUsers([userOne], config.database);
+      const newPassword = 'iamanewpassword123'
+      const expires = dayjs().add(config.jwt.resetPasswordExpirationMinutes, 'minutes')
+      const resetPasswordToken = await tokenService.generateToken(
+        ids[0],
+        tokenTypes.RESET_PASSWORD,
+        userOne.role,
+        expires,
+        config.jwt.secret
+      );
+      const res = await request(`/v1/auth/reset-password?token=${resetPasswordToken}`, {
+        method: 'POST',
+        body: JSON.stringify({ password: newPassword }),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+      expect(res.status).toBe(httpStatus.NO_CONTENT)
+      const dbUser = await client
+        .selectFrom('user')
+        .selectAll()
+        .where('user.id', '=', ids[0])
+        .executeTakeFirst()
+
+      expect(dbUser).toBeDefined();
+      if (!dbUser) return;
+
+      const isPasswordMatch = await compare(newPassword, dbUser.password);
+      expect(isPasswordMatch).toBe(true);
+    });
+
+    test('should return 400 if reset password token is missing', async () => {
+      const res = await request('/v1/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ password: 'iamanewpasword123' }),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    });
+
+    test('should return 401 if reset password token is expired', async () => {
+      const ids = await insertUsers([userOne], config.database);
+      const newPassword = 'iamanewpassword123'
+      const expires = dayjs().subtract(10, 'minutes')
+      const resetPasswordToken = await tokenService.generateToken(
+        ids[0],
+        tokenTypes.RESET_PASSWORD,
+        userOne.role,
+        expires,
+        config.jwt.secret
+      );
+      const res = await request(`/v1/auth/reset-password?token=${resetPasswordToken}`, {
+        method: 'POST',
+        body: JSON.stringify({ password: newPassword }),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+      expect(res.status).toBe(httpStatus.UNAUTHORIZED)
+    });
+
+    test('should return 401 if user is not found', async () => {
+      const newPassword = 'iamanewpassword123'
+      const expires = dayjs().add(config.jwt.resetPasswordExpirationMinutes, 'minutes')
+      const resetPasswordToken = await tokenService.generateToken(
+        123,
+        tokenTypes.RESET_PASSWORD,
+        userOne.role,
+        expires,
+        config.jwt.secret
+      );
+      const res = await request(`/v1/auth/reset-password?token=${resetPasswordToken}`, {
+        method: 'POST',
+        body: JSON.stringify({ password: newPassword }),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+      expect(res.status).toBe(httpStatus.UNAUTHORIZED)
+    });
+
+    test('should return 400 if password is missing or invalid', async () => {
+      const ids = await insertUsers([userOne], config.database);
+      const expires = dayjs().add(config.jwt.resetPasswordExpirationMinutes, 'minutes')
+      const resetPasswordToken = await tokenService.generateToken(
+        ids[0],
+        tokenTypes.RESET_PASSWORD,
+        userOne.role,
+        expires,
+        config.jwt.secret
+      );
+      const res = await request(`/v1/auth/reset-password?token=${resetPasswordToken}`, {
+        method: 'POST',
+        body: JSON.stringify({}),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+
+      const res2 = await request(`/v1/auth/reset-password?token=${resetPasswordToken}`, {
+        method: 'POST',
+        body: JSON.stringify({ password: 'short1' }),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+      expect(res2.status).toBe(httpStatus.BAD_REQUEST)
+
+      const res3 = await request(`/v1/auth/reset-password?token=${resetPasswordToken}`, {
+        method: 'POST',
+        body: JSON.stringify({ password: 'password' }),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+      expect(res3.status).toBe(httpStatus.BAD_REQUEST)
+
+      const res4 = await request(`/v1/auth/reset-password?token=${resetPasswordToken}`, {
+        method: 'POST',
+        body: JSON.stringify({ password: '11111111' }),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+      expect(res4.status).toBe(httpStatus.BAD_REQUEST)
+    });
+  })
+
+  describe('POST /v1/auth/verify-email', () => {
+    test('should return 204 and verify the email', async () => {
+      const ids = await insertUsers([userOne], config.database);
+      const expires = dayjs().add(config.jwt.verifyEmailExpirationMinutes, 'minutes')
+      const verifyEmailToken = await tokenService.generateToken(
+        ids[0],
+        tokenTypes.VERIFY_EMAIL,
+        userOne.role,
+        expires,
+        config.jwt.secret
+      );
+      const res = await request(`/v1/auth/verify-email?token=${verifyEmailToken}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+      expect(res.status).toBe(httpStatus.NO_CONTENT)
+      const dbUser = await client
+        .selectFrom('user')
+        .selectAll()
+        .where('user.id', '=', ids[0])
+        .executeTakeFirst()
+
+      expect(dbUser).toBeDefined();
+      if (!dbUser) return;
+      expect(dbUser.is_email_verified).toBe(1);
+    });
+
+    test('should return 400 if verify email token is missing', async () => {
+      const res = await request('/v1/auth/verify-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    });
+
+    test('should return 401 if verify email token is expired', async () => {
+      const ids = await insertUsers([userOne], config.database);
+      const expires = dayjs().subtract(10, 'minutes')
+      const verifyEmailToken = await tokenService.generateToken(
+        ids[0],
+        tokenTypes.VERIFY_EMAIL,
+        userOne.role,
+        expires,
+        config.jwt.secret
+      );
+      const res = await request(`/v1/auth/verify-email?token=${verifyEmailToken}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+      expect(res.status).toBe(httpStatus.UNAUTHORIZED)
+    });
+
+    test('should return 401 if user is not found', async () => {
+      const expires = dayjs().add(config.jwt.verifyEmailExpirationMinutes, 'minutes')
+      const verifyEmailToken = await tokenService.generateToken(
+        123,
+        tokenTypes.VERIFY_EMAIL,
+        userOne.role,
+        expires,
+        config.jwt.secret
+      );
+      const res = await request(`/v1/auth/verify-email?token=${verifyEmailToken}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+      expect(res.status).toBe(httpStatus.UNAUTHORIZED)
+    });
+  });
+})

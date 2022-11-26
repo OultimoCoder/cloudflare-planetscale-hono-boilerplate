@@ -65,7 +65,10 @@ const resetPassword: Handler<{ Bindings: Bindings }> = async (c) => {
   const queryParse = c.req.query()
   const bodyParse = await c.req.json()
   const config = getConfig(c.env)
-  const { query, body } = authValidation.resetPassword.parse({query: queryParse, body: bodyParse});
+  const { query, body } = await authValidation.resetPassword.parseAsync({
+    query: queryParse,
+    body: bodyParse
+  });
   await authService.resetPassword(query.token, body.password, config);
   c.status(httpStatus.NO_CONTENT as StatusCode);
   return c.body(null)
@@ -99,7 +102,8 @@ const sendVerificationEmail: Handler<{ Bindings: Bindings }> = async (c) => {
 
 const verifyEmail: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
-  const { token } = authValidation.verifyEmail.parse(c.req.parseBody());
+  const queryParse = c.req.query()
+  const { token } = authValidation.verifyEmail.parse(queryParse);
   await authService.verifyEmail(token, config);
   c.status(httpStatus.NO_CONTENT as StatusCode);
   return c.body(null)

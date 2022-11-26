@@ -30,7 +30,7 @@ export const resetPassword = z.object({
     token: z.string()
   }),
   body: z.object({
-    password: z.string().superRefine(password)
+    password: z.string().superRefine(password).transform(hashPassword)
   })
 });
 
@@ -39,6 +39,6 @@ export const verifyEmail = z.object({
 });
 
 export const changePassword = z.object({
-  oldPassword: z.string().superRefine(password),
-  newPassword: z.string().superRefine(password)
+  oldPassword: z.string().superRefine(password).transform(hashPassword),
+  newPassword: z.string().superRefine(password).transform(hashPassword)
 });
