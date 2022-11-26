@@ -72,14 +72,14 @@ const changePassword = async (
   userId: number, oldPassword: string, newPassword: string, databaseConfig: Config['database']
 ) => {
   try {
-    const user = await userService.getUserById(userId, config.database)
+    const user = await userService.getUserById(userId, databaseConfig)
     if (!(await user.isPasswordMatch(oldPassword))) {
       throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect password');
     }
     await userService.updateUserById(
       user.id,
       { password: newPassword },
-      config.database
+      databaseConfig
     );
   } catch (error) {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Password change failed');
