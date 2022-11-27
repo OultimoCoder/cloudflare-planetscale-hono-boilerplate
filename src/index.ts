@@ -4,6 +4,7 @@ import httpStatus from 'http-status'
 import { errorHandler } from './middlewares/error'
 import { ApiError } from './utils/ApiError'
 import { defaultRoutes } from './routes'
+export { RateLimiter } from './durable-objects/rateLimiter.do'
 
 const app = new Hono<{ Bindings: Bindings }>()
 

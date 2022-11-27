@@ -1,5 +1,6 @@
 export default {
-  preset: 'ts-jest/presets/js-with-ts',
+  preset: 'ts-jest/presets/default-esm',
+  extensionsToTreatAsEsm: ['.ts'],
   clearMocks: true,
   globals: {
     "ts-jest": {
@@ -14,4 +15,5 @@ export default {
     modules: true
   },
   transformIgnorePatterns: ["node_modules/(?!(@planetscale|kysely-planetscale|@aws-sdk|@aws-sdk|uuid))"],
+  moduleNameMapper:{"^uuid$": "uuid"}
 }

@@ -3,7 +3,17 @@ main = 'dist/index.mjs'
 
 workers_dev = true
 compatibility_date = '2022-05-05'
+compatibility_flags = ['durable_object_alarms']
 account_id=''
+
+[durable_objects]
+bindings = [
+  { name = 'RATE_LIMITER', class_name = 'RateLimiter' }
+]
+
+[[migrations]]
+tag = 'v1'
+new_classes = ['RateLimiter']
 
 [miniflare]
 kv_persist = false

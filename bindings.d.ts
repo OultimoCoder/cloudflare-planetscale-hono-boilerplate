@@ -22,6 +22,7 @@ interface Bindings {
   DATABASE_USERNAME: string
   DATABASE_PASSWORD: string
   DATABASE_HOST: string
+  RATE_LIMITER: DurableObjectNamespace
 }
 
 // export {

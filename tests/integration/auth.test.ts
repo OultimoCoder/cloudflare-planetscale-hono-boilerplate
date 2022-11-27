@@ -14,7 +14,7 @@ import { tokenTypes } from '../../src/config/tokens';
 import { mockClient } from "aws-sdk-client-mock";
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 import 'aws-sdk-client-mock-jest'
-import { compare } from 'bcryptjs'
+import bcrypt from 'bcryptjs'
 
 const env = getMiniflareBindings()
 const config = getConfig(env)
@@ -367,6 +367,36 @@ describe('Auth routes', () => {
       expect(sesMock).toHaveReceivedCommandTimes(SendEmailCommand, 1)
     });
 
+    test('should return 429 if a second request is sent in under 2 minutes', async () => {
+      const ids = await insertUsers([userOne], config.database);
+      const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt);
+
+      sesMock.on(SendEmailCommand).resolves({
+        MessageId: 'message-id'
+      })
+
+      const res = await request('/v1/auth/send-verification-email', {
+        method: 'POST',
+        body: JSON.stringify({ email: userOne.email }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.NO_CONTENT)
+
+      const res2 = await request('/v1/auth/send-verification-email', {
+        method: 'POST',
+        body: JSON.stringify({ email: userOne.email }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res2.status).toBe(httpStatus.TOO_MANY_REQUESTS)
+      expect(sesMock).toHaveReceivedCommandTimes(SendEmailCommand, 1)
+    });
+
     test('should return 401 error if access token is missing', async () => {
       await insertUsers([userOne], config.database);
 
@@ -414,7 +444,7 @@ describe('Auth routes', () => {
       expect(dbUser).toBeDefined();
       if (!dbUser) return;
 
-      const isPasswordMatch = await compare(newPassword, dbUser.password);
+      const isPasswordMatch = await bcrypt.compare(newPassword, dbUser.password);
       expect(isPasswordMatch).toBe(true);
     });
 

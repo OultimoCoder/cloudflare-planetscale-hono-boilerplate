@@ -8,5 +8,5 @@
       "miniflare"
     ]
   },
-  "include": ["../src/**/*", "**/*", "../bindings.d.ts"]
+  "include": ["../src/**/*", "**/*", "../bindings.d.ts"],
 }

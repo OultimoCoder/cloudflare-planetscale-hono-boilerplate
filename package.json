@@ -9,7 +9,7 @@
   "scripts": {
     "build": "node ./build.js",
     "dev": "miniflare --live-reload --debug --env .env --modules dist/index.mjs",
-    "tests": "npm run build && jest -i --colors --verbose --detectOpenHandles --runInBand",
+    "tests": "npm run build && NODE_OPTIONS=--experimental-vm-modules jest -i --colors --verbose --detectOpenHandles --runInBand",
     "migrate:dev:latest": "node --experimental-specifier-resolution=node --loader ts-node/esm ./scripts/migrate.ts dev latest",
     "migrate:dev:down": "node --experimental-specifier-resolution=node --loader ts-node/esm ./scripts/migrate.ts dev down",
     "migrate:test:latest": "node --experimental-specifier-resolution=node --loader ts-node/esm ./scripts/migrate.ts test latest",

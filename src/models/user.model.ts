@@ -1,7 +1,7 @@
 import { Generated, Selectable } from 'kysely'
 import { BaseModel } from './base.model'
 import { Role } from '../config/roles'
-import { compare } from 'bcryptjs'
+import bcrypt from 'bcryptjs'
 
 interface UserTable {
   id: Generated<number>
@@ -36,7 +36,7 @@ class User extends BaseModel implements Selectable<UserTable> {
   }
 
   isPasswordMatch = async(userPassword: string) => {
-    return compare(userPassword, this.password)
+    return bcrypt.compare(userPassword, this.password)
   }
 }
 
