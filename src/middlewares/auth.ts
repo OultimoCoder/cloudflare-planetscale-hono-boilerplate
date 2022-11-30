@@ -1,17 +1,17 @@
-import httpStatus from 'http-status'
-import { roleRights, Permission, Role } from '../config/roles'
-import { ApiError } from '../utils/ApiError'
-import { Context } from 'hono';
 import jwt from '@tsndr/cloudflare-worker-jwt'
-import { tokenTypes } from '../config/tokens';
+import { Context } from 'hono'
+import httpStatus from 'http-status'
 import { getConfig } from '../config/config'
+import { roleRights, Permission, Role } from '../config/roles'
+import { tokenTypes } from '../config/tokens'
+import { ApiError } from '../utils/ApiError'
 
 const authenticate = async (jwtToken: string, secret: string) => {
   let authorized = false
   let payload
   try {
     authorized = await jwt.verify(jwtToken, secret)
-    const decoded = jwt.decode(jwtToken);
+    const decoded = jwt.decode(jwtToken)
     payload = decoded.payload
     authorized = authorized && (payload.type === tokenTypes.ACCESS)
   } catch (e) {}

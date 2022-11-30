@@ -1,6 +1,6 @@
 import { TableReference } from 'kysely/dist/cjs/parser/table-parser.js'
-import { getDBClient, Database } from '../../src/config/database'
 import { Config } from '../../src/config/config'
+import { getDBClient, Database } from '../../src/config/database'
 
 
 const clearDBTables = (

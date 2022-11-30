@@ -1,6 +1,6 @@
 import { Kysely } from 'kysely'
-import { UserTable } from '../models/user.model'
 import { PlanetScaleDialect } from 'kysely-planetscale'
+import { UserTable } from '../models/user.model'
 import { Config } from './config'
 
 let dbClient: Kysely<Database>

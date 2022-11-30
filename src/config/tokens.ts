@@ -3,7 +3,7 @@ const tokenTypes = {
   REFRESH: 'refresh',
   RESET_PASSWORD: 'resetPassword',
   VERIFY_EMAIL: 'verifyEmail',
-} as const;
+} as const
 
 type TokenType = typeof tokenTypes[keyof typeof tokenTypes]
 export {

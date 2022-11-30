@@ -1,8 +1,8 @@
-import * as dotenv from 'dotenv'
-import * as path from 'path'
 import { promises as fs } from 'fs'
+import * as path from 'path'
+import { fileURLToPath } from 'url'
+import * as dotenv from 'dotenv'
 import { Migrator, FileMigrationProvider, NO_MIGRATIONS } from 'kysely'
-import { fileURLToPath } from 'url';
 import { Kysely } from 'kysely'
 import { PlanetScaleDialect } from 'kysely-planetscale'
 import { User } from '../src/models/user.model'
@@ -13,7 +13,7 @@ const envFile = {
   'test': '.test.env'
 }
 
-const __filename = fileURLToPath(import.meta.url);
+const __filename = fileURLToPath(import.meta.url)
 
 dotenv.config({'path': path.join(path.dirname(__filename), `../${envFile[process.argv[2]]}`)})
 
@@ -95,7 +95,7 @@ async function migrateNone() {
   await db.destroy()
 }
 
-const myArgs = process.argv[3];
+const myArgs = process.argv[3]
 
 if (myArgs === 'down') {
   migrateDown()

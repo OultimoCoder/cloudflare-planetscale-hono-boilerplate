@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 const envVarsSchema = z.object({
   ENV: z.union([z.literal('production'), z.literal('development'), z.literal('test')]),
@@ -30,7 +30,7 @@ const envVarsSchema = z.object({
   AWS_SECRET_ACCESS_KEY: z.string(),
   AWS_REGION: z.string(),
   EMAIL_SENDER: z.string(),
-});
+})
 
 interface Config {
   env: 'production' | 'development' | 'test'
@@ -63,7 +63,7 @@ const getConfig = (env: Bindings) => {
   if (config) {
     return config
   }
-  const envVars = envVarsSchema.parse(env);
+  const envVars = envVarsSchema.parse(env)
   config = {
     env: envVars.ENV,
     database: {

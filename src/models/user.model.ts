@@ -1,7 +1,7 @@
-import { Generated, Selectable } from 'kysely'
-import { BaseModel } from './base.model'
-import { Role } from '../config/roles'
 import bcrypt from 'bcryptjs'
+import { Generated, Selectable } from 'kysely'
+import { Role } from '../config/roles'
+import { BaseModel } from './base.model'
 
 interface UserTable {
   id: Generated<number>

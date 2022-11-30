@@ -1,8 +1,8 @@
-import dayjs from 'dayjs';
-import * as tokenService from '../../src/services/token.service';
-import { Config } from '../../src/config/config';
-import { tokenTypes, TokenType } from '../../src/config/tokens';
+import dayjs from 'dayjs'
+import { Config } from '../../src/config/config'
 import { Role } from '../../src/config/roles'
+import { tokenTypes, TokenType } from '../../src/config/tokens'
+import * as tokenService from '../../src/services/token.service'
 
 interface TokenResponse {
   access: {
@@ -26,7 +26,7 @@ const getAccessToken = async (
     role,
     expires,
     jwtConfig.secret
-  );
+  )
   return token
 }
 

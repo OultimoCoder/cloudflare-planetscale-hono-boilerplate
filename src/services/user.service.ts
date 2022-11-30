@@ -1,10 +1,10 @@
-import httpStatus from 'http-status';
-import { getDBClient } from '../config/database';
-import { ApiError } from '../utils/ApiError';
-import { CreateUser, UpdateUser } from '../validations/user.validation';
-import { User, UserTable } from '../models/user.model';
-import { InsertResult, UpdateResult } from 'kysely';
-import { Config } from '../config/config';
+import httpStatus from 'http-status'
+import { InsertResult, UpdateResult } from 'kysely'
+import { Config } from '../config/config'
+import { getDBClient } from '../config/database'
+import { User, UserTable } from '../models/user.model'
+import { ApiError } from '../utils/ApiError'
+import { CreateUser, UpdateUser } from '../validations/user.validation'
 
 interface getUsersFilter {
   email: string | undefined
@@ -26,14 +26,14 @@ const createUser = async (userBody: CreateUser, databaseConfig: Config['database
       .values(userBody)
       .executeTakeFirstOrThrow()
   } catch (error) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'User already exists');
+    throw new ApiError(httpStatus.BAD_REQUEST, 'User already exists')
   }
   const user = await getUserById(Number(result.insertId), databaseConfig)
   if (!user) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'User already exists');
+    throw new ApiError(httpStatus.BAD_REQUEST, 'User already exists')
   }
   return user
-};
+}
 
 const queryUsers = async (
   filter: getUsersFilter, options: getUsersOptions, databaseConfig: Config['database']
@@ -51,7 +51,7 @@ const queryUsers = async (
   }
   const users = await usersQuery.execute()
   return User.convert(users)
-};
+}
 
 const getUserById = async (id: number, databaseConfig: Config['database']) => {
   const db = getDBClient(databaseConfig)
@@ -61,7 +61,7 @@ const getUserById = async (id: number, databaseConfig: Config['database']) => {
     .where('user.id', '=', id)
     .executeTakeFirst()
   return user ? User.convert(user) : user
-};
+}
 
 const getUserByEmail = async (email: string, databaseConfig: Config['database']) => {
   const db = getDBClient(databaseConfig)
@@ -71,7 +71,7 @@ const getUserByEmail = async (email: string, databaseConfig: Config['database'])
     .where('user.email', '=', email)
     .executeTakeFirst()
   return user ? User.convert(user) : user
-};
+}
 
 const updateUserById = async (
   userId: number, updateBody: Partial<UpdateUser>, databaseConfig: Config['database']
@@ -85,14 +85,14 @@ const updateUserById = async (
       .where('id', '=', userId)
       .executeTakeFirst()
   } catch (error) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'User already exists');
+    throw new ApiError(httpStatus.BAD_REQUEST, 'User already exists')
   }
   if (!result.numUpdatedRows || Number(result.numUpdatedRows) < 1) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found')
   }
   const user = await getUserById(userId, databaseConfig)
   return user
-};
+}
 
 const deleteUserById = async (userId: number, databaseConfig: Config['database']) => {
   const db = getDBClient(databaseConfig)
@@ -102,9 +102,9 @@ const deleteUserById = async (userId: number, databaseConfig: Config['database']
     .executeTakeFirst()
 
   if (!result.numDeletedRows || Number(result.numDeletedRows) < 1) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found')
   }
-};
+}
 
 export {
   createUser,

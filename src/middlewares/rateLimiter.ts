@@ -1,7 +1,7 @@
-import { ApiError } from '../utils/ApiError'
 import httpStatus from 'http-status'
+import { ApiError } from '../utils/ApiError'
 
-const fakeDomain = 'http://rate-limiter.com';
+const fakeDomain = 'http://rate-limiter.com'
 
 const getRateLimitKey = (c: any) => {
   const ip = c.req.headers.get('cf-connecting-ip')
@@ -25,9 +25,9 @@ const rateLimit = (interval: number, limit: number) => async (c: any, next: Func
   const id = c.env.RATE_LIMITER.idFromName(key)
   const rateLimiter = c.env.RATE_LIMITER.get(id)
 
-  const cache = await caches.open('rate-limiter');
+  const cache = await caches.open('rate-limiter')
   const cacheKey = getCacheKey(endpoint, key, limit, interval)
-  const cached = await cache.match(cacheKey);
+  const cached = await cache.match(cacheKey)
 
   let res: Response
   if (!cached) {

@@ -1,7 +1,7 @@
-import httpStatus from 'http-status';
-import MockDate from 'mockdate'
 import dayjs from 'dayjs'
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
+import httpStatus from 'http-status'
+import MockDate from 'mockdate'
 
 dayjs.extend(isSameOrBefore)
 
@@ -15,10 +15,10 @@ describe('Durable Object RateLimiter', () => {
     let storage: DurableObjectStorage
 
     beforeEach(async () => {
-      storage = await getMiniflareDurableObjectStorage(id);
+      storage = await getMiniflareDurableObjectStorage(id)
       storage.deleteAll()
       MockDate.reset()
-    });
+    })
 
     test('should return 200 and not rate limit if limit not hit', async () => {
       const config = {
@@ -37,7 +37,7 @@ describe('Durable Object RateLimiter', () => {
       const body = await res.json()
       expect(res.status).toBe(httpStatus.OK)
       expect(body).toEqual({ blocked: false })
-    });
+    })
 
     test('should return 200 and rate limit if limit hit', async () => {
       const config = {
@@ -46,7 +46,7 @@ describe('Durable Object RateLimiter', () => {
         limit: 200,
         interval: 600
       }
-      const currentWindow = Math.floor(dayjs().unix() / config.interval);
+      const currentWindow = Math.floor(dayjs().unix() / config.interval)
       const storageKey = `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${currentWindow}`
 
@@ -69,16 +69,16 @@ describe('Durable Object RateLimiter', () => {
 
       const cacheControl = res.headers.get('cache-control')
       expect(cacheControl).toBeDefined()
-    });
+    })
 
     test('should return 200 and not rate limit if different endpoint hit', async () => {
-      let config = {
+      const config = {
         scope: '/v1/auth/send-verification-email',
         key,
         limit: 200,
         interval: 600
       }
-      const currentWindow = Math.floor(dayjs().unix() / config.interval);
+      const currentWindow = Math.floor(dayjs().unix() / config.interval)
       const storageKey = `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${currentWindow}`
 
@@ -105,16 +105,16 @@ describe('Durable Object RateLimiter', () => {
       const body2 = await res2.json()
       expect(res2.status).toBe(httpStatus.OK)
       expect(body2).toEqual({ blocked: false })
-    });
+    })
 
     test('should return 200 and not rate limit if different key used', async () => {
-      let config = {
+      const config = {
         scope: '/v1/auth/send-verification-email',
         key,
         limit: 200,
         interval: 600
       }
-      const currentWindow = Math.floor(dayjs().unix() / config.interval);
+      const currentWindow = Math.floor(dayjs().unix() / config.interval)
       const storageKey = `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${currentWindow}`
 
@@ -141,16 +141,16 @@ describe('Durable Object RateLimiter', () => {
       const body2 = await res2.json()
       expect(res2.status).toBe(httpStatus.OK)
       expect(body2).toEqual({ blocked: false })
-    });
+    })
 
     test('should return 200 and not rate limit if window expired', async () => {
-      let config = {
+      const config = {
         scope: '/v1/auth/send-verification-email',
         key,
         limit: 200,
         interval: 600
       }
-      const currentWindow = Math.floor(dayjs().unix() / config.interval);
+      const currentWindow = Math.floor(dayjs().unix() / config.interval)
       const storageKey = `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${currentWindow}`
 
@@ -177,16 +177,16 @@ describe('Durable Object RateLimiter', () => {
       const body2 = await res2.json()
       expect(res2.status).toBe(httpStatus.OK)
       expect(body2).toEqual({ blocked: false })
-    });
+    })
 
     test('should return 200 and rate limit if just before window expiry', async () => {
-      let config = {
+      const config = {
         scope: '/v1/auth/send-verification-email',
         key,
         limit: 200,
         interval: 600
       }
-      const currentWindow = Math.floor(dayjs().unix() / config.interval);
+      const currentWindow = Math.floor(dayjs().unix() / config.interval)
       const storageKey = `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${currentWindow}`
 
@@ -215,7 +215,7 @@ describe('Durable Object RateLimiter', () => {
       const body2 = await res2.json()
       expect(res2.status).toBe(httpStatus.OK)
       expect(body2).toEqual({ blocked: true })
-    });
+    })
 
     test('should return 400 if config is invalid', async () => {
       const config = {
@@ -231,7 +231,7 @@ describe('Durable Object RateLimiter', () => {
         })
       )
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
-    });
+    })
 
     test('should return 400 if limit is not an integer', async () => {
       const config = {
@@ -248,7 +248,7 @@ describe('Durable Object RateLimiter', () => {
         })
       )
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
-    });
+    })
 
     test('should return 400 if interval is not an integer', async () => {
       const config = {
@@ -265,16 +265,16 @@ describe('Durable Object RateLimiter', () => {
         })
       )
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
-    });
-  });
+    })
+  })
 
   describe('Alarm', () => {
     let storage: DurableObjectStorage
 
     beforeEach(async () => {
-      storage = await getMiniflareDurableObjectStorage(id);
+      storage = await getMiniflareDurableObjectStorage(id)
       MockDate.reset()
-    });
+    })
 
     test('should expire key after 2 intervals have passed', async () => {
       const config = {
@@ -284,7 +284,7 @@ describe('Durable Object RateLimiter', () => {
         interval: 60
       }
       const rateLimiter = env.RATE_LIMITER.get(id)
-      const currentWindow = Math.floor(dayjs().unix() / config.interval);
+      const currentWindow = Math.floor(dayjs().unix() / config.interval)
       const storageKey = `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${currentWindow}`
 
@@ -303,7 +303,7 @@ describe('Durable Object RateLimiter', () => {
       await flushMiniflareDurableObjectAlarms()
       const values2 = await storage.list()
       expect(values2.size).toBe(0)
-    });
+    })
 
     test('should not expire key if within 2 intervals', async () => {
       const config = {
@@ -313,7 +313,7 @@ describe('Durable Object RateLimiter', () => {
         interval: 60
       }
       const rateLimiter = env.RATE_LIMITER.get(id)
-      const currentWindow = Math.floor(dayjs().unix() / config.interval);
+      const currentWindow = Math.floor(dayjs().unix() / config.interval)
       const storageKey = `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${currentWindow}`
 
@@ -333,7 +333,7 @@ describe('Durable Object RateLimiter', () => {
       const values2 = await storage.list()
       expect(values2.size).toBe(1)
       expect(values2.get(storageKey)).toBe(1)
-    });
+    })
 
     test('should expire keys that are more than 2 intervals old and keep the others', async () => {
       const config = {
@@ -344,7 +344,7 @@ describe('Durable Object RateLimiter', () => {
       }
       const rateLimiter = env.RATE_LIMITER.get(id)
 
-      const currentWindow = Math.floor(dayjs().unix() / config.interval);
+      const currentWindow = Math.floor(dayjs().unix() / config.interval)
       const storageKey = `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${currentWindow}`
 
@@ -356,19 +356,19 @@ describe('Durable Object RateLimiter', () => {
       )
       expect(res.status).toBe(httpStatus.OK)
 
-      const expiredWindow = Math.floor(dayjs().unix() / config.interval - 3) ;
+      const expiredWindow = Math.floor(dayjs().unix() / config.interval - 3) 
       const expiredStorageKey = `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${expiredWindow}`
 
       await storage.put(expiredStorageKey, 45)
 
-      const expiredWindow2 = Math.floor(dayjs().unix() / config.interval - 7) ;
+      const expiredWindow2 = Math.floor(dayjs().unix() / config.interval - 7) 
       const expiredStorageKey2 = `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${expiredWindow2}`
 
       await storage.put(expiredStorageKey2, 33)
 
-      const expiredWindow3 = Math.floor(dayjs().unix() / config.interval - 4) ;
+      const expiredWindow3 = Math.floor(dayjs().unix() / config.interval - 4) 
       const expiredStorageKey3 = `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${expiredWindow3}`
 
@@ -392,6 +392,6 @@ describe('Durable Object RateLimiter', () => {
       expect(values2.get(expiredStorageKey3)).toBeUndefined()
       expect(values2.get(storageKey)).toBe(1)
       expect(values2.get(storageKey2)).toBe(12)
-    });
-  });
-});
+    })
+  })
+})

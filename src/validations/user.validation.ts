@@ -1,6 +1,6 @@
-import { z } from 'zod';
-import { password } from './custom.refine.validation';
-import { hashPassword } from './custom.transform.validation';
+import { z } from 'zod'
+import { password } from './custom.refine.validation'
+import { hashPassword } from './custom.transform.validation'
 
 export const createUser = z.object({
   email: z.string().email(),
@@ -9,7 +9,7 @@ export const createUser = z.object({
   last_name: z.string(),
   is_email_verified: z.any().optional().transform(() => false),
   role: z.union([z.literal('admin'), z.literal('user')]),
-});
+})
 
 export type CreateUser = z.infer<typeof createUser>;
 
@@ -26,14 +26,14 @@ export const getUsers = z.object({
     .transform((v) => parseInt(v, 10))
     .optional()
     .default('0')
-});
+})
 
 export const getUser = z.object({
   userId: z.preprocess(
       (v) => parseInt(z.string().parse(v), 10),
       z.number().positive().int()
   )
-});
+})
 
 export const updateUser = z.object({
   params: z.object({
@@ -51,9 +51,9 @@ export const updateUser = z.object({
   .refine(
     ({email, first_name, last_name, role}) =>
       email || first_name || last_name || role,
-    {message: "At least one field is required"}
+    {message: 'At least one field is required'}
   )
-});
+})
 
 export type UpdateUser = z.infer<typeof updateUser>['body'] | { password: string } |
   { is_email_verified: boolean }
@@ -63,4 +63,4 @@ export const deleteUser = z.object({
     (v) => parseInt(z.string().parse(v), 10),
     z.number().positive().int()
   )
-});
+})

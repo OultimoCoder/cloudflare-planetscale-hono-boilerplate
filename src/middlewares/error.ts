@@ -1,15 +1,15 @@
+import { getSentry } from '@honojs/sentry'
+import type { ErrorHandler } from 'hono'
 import httpStatus from 'http-status'
+import Toucan from 'toucan-js'
+import { ZodError } from 'zod'
+import { generateErrorMessage, ErrorMessageOptions } from 'zod-error'
 import { getConfig } from '../config/config'
 import { ApiError } from '../utils/ApiError'
-import { ZodError } from 'zod'
-import { generateErrorMessage, ErrorMessageOptions } from 'zod-error';
-import { getSentry } from '@honojs/sentry';
-import type { ErrorHandler } from 'hono'
-import Toucan from 'toucan-js';
 
 const zodErrorOptions: ErrorMessageOptions = {
   transform: ({ errorMessage, index }) => `Error #${index + 1}: ${errorMessage}`
-};
+}
 
 const errorConverter = (err: any, sentry: Toucan) => {
   let error = err

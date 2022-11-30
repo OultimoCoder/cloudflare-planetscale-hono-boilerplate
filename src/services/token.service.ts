@@ -1,10 +1,10 @@
 import jwt from '@tsndr/cloudflare-worker-jwt'
 import dayjs, { Dayjs } from 'dayjs'
-import { Config } from '../config/config'
-import { TokenType, tokenTypes } from '../config/tokens'
-import { Role } from '../config/roles'
-import { User } from '../models/user.model'
 import { Selectable } from 'kysely'
+import { Config } from '../config/config'
+import { Role } from '../config/roles'
+import { TokenType, tokenTypes } from '../config/tokens'
+import { User } from '../models/user.model'
 
 const generateToken = async (
   userId: number, type: TokenType, role: Role, expires: Dayjs, secret: string
@@ -62,7 +62,7 @@ const verifyToken = async (token: string, type: TokenType, secret: string) => {
 }
 
 const generateVerifyEmailToken = async (user: Selectable<User>, jwtConfig: Config['jwt']) => {
-  const expires = dayjs().add(jwtConfig.verifyEmailExpirationMinutes, 'minutes');
+  const expires = dayjs().add(jwtConfig.verifyEmailExpirationMinutes, 'minutes')
   const verifyEmailToken = await generateToken(
     user.id,
     tokenTypes.VERIFY_EMAIL,
@@ -70,13 +70,13 @@ const generateVerifyEmailToken = async (user: Selectable<User>, jwtConfig: Confi
     expires,
     jwtConfig.secret
   )
-  return verifyEmailToken;
-};
+  return verifyEmailToken
+}
 
 export const generateResetPasswordToken = async (
   user: Selectable<User>, jwtConfig: Config['jwt'], email: string
 ) => {
-  const expires = dayjs().add(jwtConfig.resetPasswordExpirationMinutes, 'minutes');
+  const expires = dayjs().add(jwtConfig.resetPasswordExpirationMinutes, 'minutes')
   const resetPasswordToken = await generateToken(
     user.id,
     tokenTypes.RESET_PASSWORD,
@@ -84,7 +84,7 @@ export const generateResetPasswordToken = async (
     expires,
     jwtConfig.secret
   )
-  return resetPasswordToken;
+  return resetPasswordToken
 }
 
 export {

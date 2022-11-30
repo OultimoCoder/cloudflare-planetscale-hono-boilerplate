@@ -22,7 +22,7 @@ class BaseModel {
   }
 
   toJSON() {
-    const properties = Object.getOwnPropertyNames(this);
+    const properties = Object.getOwnPropertyNames(this)
     const publicProperties = properties.filter(property => {
       return (
         (!this.private_fields.includes(property) || this.role === 'admin') &&
