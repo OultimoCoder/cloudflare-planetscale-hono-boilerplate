@@ -1,4 +1,6 @@
 import dayjs from 'dayjs'
+import { Context, Hono } from 'hono';
+import { StatusCode } from 'hono/utils/http-status';
 import httpStatus  from 'http-status'
 import { z } from 'zod';
 
@@ -19,10 +21,20 @@ const configValidation = z.object({
 class RateLimiter {
   state: DurableObjectState
   env: Bindings
+  app: Hono = new Hono()
 
   constructor(state: DurableObjectState, env: Bindings) {
       this.state = state
       this.env = env
+
+      this.app.post('/', async (c) => {
+        await this.setAlarm()
+        const config = await this.getConfig(c)
+        const rate = await this.calculateRate(config)
+        const blocked = this.isRateLimited(rate, config.limit)
+        const headers = this.getHeaders(blocked, rate, config)
+        return c.json({blocked}, httpStatus.OK as StatusCode, headers)
+      })
   }
 
   async alarm() {
@@ -30,7 +42,7 @@ class RateLimiter {
     for await (const [key, _value] of values) {
       const [_scope, _key, _limit, interval, timestamp] = key.split('|');
       const currentWindow = Math.floor(this.nowUnix() / parseInt(interval))
-      const timestampLessThan = currentWindow - 2 // expire all key after 2 intervals have passed
+      const timestampLessThan = currentWindow - 2 // expire all keys after 2 intervals have passed
       if (parseInt(timestamp) < timestampLessThan) {
         await this.state.storage.delete(key);
       }
@@ -44,8 +56,8 @@ class RateLimiter {
     }
   }
 
-  async getConfig(request: Request) {
-    const body = await request.clone().json<Config>()
+  async getConfig(c: Context) {
+    const body = await c.req.clone().json<Config>()
     const config = configValidation.parse(body);
     return config
   }
@@ -84,15 +96,16 @@ class RateLimiter {
   }
 
   getHeaders(blocked: boolean, rate: number, config: Config) {
-    const headers: Headers = new Headers()
-    headers.set('Content-Type', 'application/json')
+    let headers = {}
     if (!blocked) {
       return headers
     }
     const expires = this.expirySeconds(rate, config)
     const retryAfter = this.retryAfter(expires)
-    headers.set('Expires', retryAfter.toString());
-    headers.set('Cache-Control', `public, max-age=${expires}, s-maxage=${expires}, must-revalidate`)
+    headers = {
+      'expires': retryAfter.toString(),
+      'cache-control': `public, max-age=${expires}, s-maxage=${expires}, must-revalidate`
+    }
     return headers
   }
 
@@ -105,12 +118,7 @@ class RateLimiter {
   }
 
   async fetch(request: Request): Promise<Response> {
-    await this.setAlarm()
-    const config = await this.getConfig(request)
-    const rate = await this.calculateRate(config)
-    const blocked = this.isRateLimited(rate, config.limit)
-    const headers = this.getHeaders(blocked, rate, config)
-    return new Response(JSON.stringify({ blocked }), { status: httpStatus.OK, headers });
+    return this.app.fetch(request)
   }
 }
 

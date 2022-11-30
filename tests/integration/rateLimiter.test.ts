@@ -8,7 +8,7 @@ dayjs.extend(isSameOrBefore)
 const env = getMiniflareBindings()
 const key = '127.0.0.1'
 const id = env.RATE_LIMITER.idFromName(key)
-const fakeDomain = 'http://iamaratelimiter.com'
+const fakeDomain = 'http://iamaratelimiter.com/'
 
 describe('Durable Object RateLimiter', () => {
   describe('Fetch /', () => {
@@ -216,6 +216,24 @@ describe('Durable Object RateLimiter', () => {
       expect(res2.status).toBe(httpStatus.OK)
       expect(body2).toEqual({ blocked: true })
     });
+
+    // test('should return 400 if config is invalid', async () => {
+    //   const config = {
+    //     scope: '/v1/auth/send-verification-email',
+    //     key,
+    //     limit: 1,
+    //     interval: 60
+    //   }
+    //   const rateLimiter = env.RATE_LIMITER.get(id)
+    //   const res = await rateLimiter.fetch(
+    //     new Request(fakeDomain, {
+    //       method: 'POST',
+    //       body: JSON.stringify(config)
+    //     })
+    //   )
+    //   const body = await res.json()
+    //   expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    // });
   });
 
   describe('Alarm', () => {
