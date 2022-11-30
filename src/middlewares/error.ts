@@ -3,13 +3,15 @@ import { getConfig } from '../config/config'
 import { ApiError } from '../utils/ApiError'
 import { ZodError } from 'zod'
 import { generateErrorMessage, ErrorMessageOptions } from 'zod-error';
+import { getSentry } from '@honojs/sentry';
 import type { ErrorHandler } from 'hono'
+import Toucan from 'toucan-js';
 
 const zodErrorOptions: ErrorMessageOptions = {
   transform: ({ errorMessage, index }) => `Error #${index + 1}: ${errorMessage}`
 };
 
-const errorConverter = (err: any) => {
+const errorConverter = (err: any, sentry: Toucan) => {
   let error = err
   if (error instanceof ZodError) {
     const errorMessage = generateErrorMessage(error.issues, zodErrorOptions)
@@ -17,6 +19,11 @@ const errorConverter = (err: any) => {
   } else if (!(error instanceof ApiError)) {
     const statusCode = error.statusCode || httpStatus.INTERNAL_SERVER_ERROR
     const message = error.description || error.message || httpStatus[statusCode]
+    if (statusCode >= 500) {
+      console.log('here')
+      // Log any unhandled application error
+      sentry.captureException(error)
+    }
     error = new ApiError(statusCode, message, false, err.stack)
   }
   return error
@@ -24,7 +31,8 @@ const errorConverter = (err: any) => {
 
 const errorHandler: ErrorHandler<{ Bindings: Bindings }> = (err, c) => {
   const config = getConfig(c.env)
-  const error = errorConverter(err)
+  const sentry = getSentry(c)
+  const error = errorConverter(err, sentry)
   if (config.env === 'production' && !error.isOperational) {
     error.statusCode = httpStatus.INTERNAL_SERVER_ERROR
     error.message = httpStatus[httpStatus.INTERNAL_SERVER_ERROR]

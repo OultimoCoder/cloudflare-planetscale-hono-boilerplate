@@ -4,10 +4,12 @@ import httpStatus from 'http-status'
 import { errorHandler } from './middlewares/error'
 import { ApiError } from './utils/ApiError'
 import { defaultRoutes } from './routes'
+import { sentry } from '@honojs/sentry'
 export { RateLimiter } from './durable-objects/rateLimiter.do'
 
 const app = new Hono<{ Bindings: Bindings }>()
 
+app.use('*', sentry())
 app.use('*', cors())
 
 app.notFound(() => {

@@ -23,6 +23,7 @@ interface Bindings {
   DATABASE_PASSWORD: string
   DATABASE_HOST: string
   RATE_LIMITER: DurableObjectNamespace
+  SENTRY_DSN: string
 }
 
 // export {
