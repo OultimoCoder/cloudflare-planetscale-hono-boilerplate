@@ -28,7 +28,8 @@ JWT_VERIFY_EMAIL_EXPIRATION_MINUTES=15
 DATABASE_NAME='example'
 DATABASE_USERNAME='example'
 DATABASE_HOST='example'
-
+AWS_REGION='eu-west-1'
+EMAIL_SENDER='noreply@gmail.com'
 
 [build]
 command = "npm run build"
@@ -36,3 +37,7 @@ command = "npm run build"
 # [secrets]
 # JWT_SECRET
 # DATABASE_PASSWORD
+# AWS_ACCESS_KEY_ID
+# AWS_SECRET_ACCESS_KEY
+# SENTRY_DSN
+
