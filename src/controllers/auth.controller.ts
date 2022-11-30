@@ -42,11 +42,7 @@ const forgotPassword: Handler<{ Bindings: Bindings }> = async (c) => {
   const user = await userService.getUserByEmail(email, config.database)
   // Don't let bad actors know if the email is registered by throwing if the user exists
   if (user) {
-    const resetPasswordToken = await tokenService.generateResetPasswordToken(
-      user,
-      config.jwt,
-      email
-    )
+    const resetPasswordToken = await tokenService.generateResetPasswordToken(user, config.jwt)
     await emailService.sendResetPasswordEmail(
       user.email,
       {

@@ -1,20 +1,19 @@
-import { request } from '../utils/testRequest'
-import { clearDBTables } from '../utils/clearDBTables'
-import dayjs from 'dayjs'
-import { tokenTypes } from '../../src/config/tokens'
-import { mockClient } from 'aws-sdk-client-mock'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 import { faker } from '@faker-js/faker'
+import { mockClient } from 'aws-sdk-client-mock'
 import 'aws-sdk-client-mock-jest'
 import bcrypt from 'bcryptjs'
+import dayjs from 'dayjs'
 import httpStatus from 'http-status'
 import { TableReference } from 'kysely/dist/cjs/parser/table-parser'
 import { getConfig } from '../../src/config/config'
 import { Database, getDBClient } from '../../src/config/database'
+import { tokenTypes } from '../../src/config/tokens'
 import * as tokenService from '../../src/services/token.service'
 import { getAccessToken, TokenResponse } from '../fixtures/token.fixture'
-import { userOne, insertUsers } from '../fixtures/user.fixture'
-import { MockUser, UserResponse } from '../fixtures/user.fixture'
+import { userOne, insertUsers, MockUser, UserResponse } from '../fixtures/user.fixture'
+import { clearDBTables } from '../utils/clearDBTables'
+import { request } from '../utils/testRequest'
 
 const env = getMiniflareBindings()
 const config = getConfig(env)
@@ -111,7 +110,7 @@ describe('Auth routes', () => {
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
     })
 
-    test('should return 400 error if password does not contain both letters and numbers', async () => {
+    test('should return 400 if password does not contain both letters and numbers', async () => {
       newUser.password = 'password'
 
       const res = await request('/v1/auth/register', {

@@ -172,7 +172,7 @@ describe('User routes', () => {
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
     })
 
-    test('should return 400 error if password does not contain both letters and numbers', async () => {
+    test('should return 400 if password does not contain both letters and numbers', async () => {
       const ids = await insertUsers([admin], config.database)
       newUser.password = 'password'
       const adminAccessToken = await getAccessToken(ids[0], admin.role, config.jwt)
@@ -616,7 +616,7 @@ describe('User routes', () => {
       expect(res.status).toBe(httpStatus.FORBIDDEN)
     })
 
-    test('should return 200 and successfully update user if admin is updating another user', async () => {
+    test('should return 200 and update user if admin is updating another user', async () => {
       const ids = await insertUsers([userOne, admin], config.database)
       const adminAccessToken = await getAccessToken(ids[1], admin.role, config.jwt)
       const updateBody = { first_name: faker.name.firstName() }

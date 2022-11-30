@@ -20,7 +20,6 @@ const errorConverter = (err: any, sentry: Toucan) => {
     const statusCode = error.statusCode || httpStatus.INTERNAL_SERVER_ERROR
     const message = error.description || error.message || httpStatus[statusCode]
     if (statusCode >= 500) {
-      console.log('here')
       // Log any unhandled application error
       sentry.captureException(error)
     }

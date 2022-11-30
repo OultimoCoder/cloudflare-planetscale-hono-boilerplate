@@ -37,8 +37,8 @@ class RateLimiter {
       let config
       try {
         config = await this.getConfig(c)
-      } catch (err: any) {
-        let errorMessage = err.message
+      } catch (err: unknown) {
+        let errorMessage
         if (err instanceof ZodError) {
           errorMessage = generateErrorMessage(err.issues, zodErrorOptions)
         }
