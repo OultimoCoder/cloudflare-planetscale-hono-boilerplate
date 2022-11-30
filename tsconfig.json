@@ -3,7 +3,7 @@
     "allowJs": true,
     "target": "esnext",
     "lib": ["esnext"],
-    "moduleResolution": "nodenext",
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "inlineSourceMap": true,
     "module": "esnext",

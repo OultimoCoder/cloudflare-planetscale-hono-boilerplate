@@ -14,10 +14,9 @@ class RateLimiter {
     const values = await this.state.storage.list();
     for await (const [key, _value] of values) {
       const [_scope, _key, _limit, interval, timestamp] = key.split('|');
-      const now = dayjs().unix()
-      const currentWindow = Math.floor(now / parseInt(interval))
-      const timestampLessThan = currentWindow - (parseInt(interval) * 2)
-      console.log(timestampLessThan > parseInt(timestamp))
+      const unixTimestamp = dayjs().unix()
+      const currentWindow = Math.floor(unixTimestamp / parseInt(interval))
+      const timestampLessThan = currentWindow - 2 // expire all key after 2 intervals have passed
       if (parseInt(timestamp) < timestampLessThan) {
         await this.state.storage.delete(key);
       }
@@ -57,7 +56,6 @@ class RateLimiter {
     const distanceFromLastWindow = unixTimestamp % config.interval;
     const currentKey = `${keyPrefix}|${currentWindow}`;
     const previousKey = `${keyPrefix}|${currentWindow - 1}`;
-
     const currentCount = await this.getRequestCount(currentKey)
     const previousCount = await this.getRequestCount(previousKey) || config.limit
 
