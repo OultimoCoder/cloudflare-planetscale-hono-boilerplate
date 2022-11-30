@@ -46,7 +46,9 @@ const rateLimit = (interval: number, limit: number) => async (c: any, next: Func
   } else {
     res = cached
   }
-  if (await isRateLimited(res)) throw new ApiError(httpStatus.TOO_MANY_REQUESTS, 'Too many requests')
+  if (await isRateLimited(res)) throw new ApiError(
+    httpStatus.TOO_MANY_REQUESTS, 'Too many requests'
+  )
   await next()
 }
 

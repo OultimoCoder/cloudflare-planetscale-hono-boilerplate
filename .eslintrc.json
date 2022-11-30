@@ -5,8 +5,9 @@
     "browser": true,
     "serviceworker": true
   },
-  "extends": ["eslint:recommended", "plugin:node/recommended", "prettier"],
-  "plugins": ["import"],
+  "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "prettier"],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["import", "@typescript-eslint"],
   "globals": {
     "fetch": false,
     "Response": false,
