@@ -2,7 +2,8 @@ import dayjs from 'dayjs'
 import { Context, Hono } from 'hono';
 import { StatusCode } from 'hono/utils/http-status';
 import httpStatus  from 'http-status'
-import { z } from 'zod';
+import { z, ZodError } from 'zod';
+import { generateErrorMessage, ErrorMessageOptions } from 'zod-error';
 
 interface Config {
   scope: string
@@ -18,6 +19,10 @@ const configValidation = z.object({
   interval: z.number().int().positive()
 });
 
+const zodErrorOptions: ErrorMessageOptions = {
+  transform: ({ errorMessage, index }) => `Error #${index + 1}: ${errorMessage}`
+};
+
 class RateLimiter {
   state: DurableObjectState
   env: Bindings
@@ -29,7 +34,19 @@ class RateLimiter {
 
       this.app.post('/', async (c) => {
         await this.setAlarm()
-        const config = await this.getConfig(c)
+        let config
+        try {
+          config = await this.getConfig(c)
+        } catch (err: any) {
+          let errorMessage = err.message
+          if (err instanceof ZodError) {
+            errorMessage = generateErrorMessage(err.issues, zodErrorOptions)
+          }
+          return c.json({
+            statusCode: httpStatus.BAD_REQUEST,
+            error: errorMessage
+          }, httpStatus.BAD_REQUEST as StatusCode)
+        }
         const rate = await this.calculateRate(config)
         const blocked = this.isRateLimited(rate, config.limit)
         const headers = this.getHeaders(blocked, rate, config)

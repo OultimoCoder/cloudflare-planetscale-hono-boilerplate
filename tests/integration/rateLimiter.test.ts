@@ -217,23 +217,55 @@ describe('Durable Object RateLimiter', () => {
       expect(body2).toEqual({ blocked: true })
     });
 
-    // test('should return 400 if config is invalid', async () => {
-    //   const config = {
-    //     scope: '/v1/auth/send-verification-email',
-    //     key,
-    //     limit: 1,
-    //     interval: 60
-    //   }
-    //   const rateLimiter = env.RATE_LIMITER.get(id)
-    //   const res = await rateLimiter.fetch(
-    //     new Request(fakeDomain, {
-    //       method: 'POST',
-    //       body: JSON.stringify(config)
-    //     })
-    //   )
-    //   const body = await res.json()
-    //   expect(res.status).toBe(httpStatus.BAD_REQUEST)
-    // });
+    test('should return 400 if config is invalid', async () => {
+      const config = {
+        key,
+        limit: 1,
+        interval: 60
+      }
+      const rateLimiter = env.RATE_LIMITER.get(id)
+      const res = await rateLimiter.fetch(
+        new Request(fakeDomain, {
+          method: 'POST',
+          body: JSON.stringify(config)
+        })
+      )
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    });
+
+    test('should return 400 if limit is not an integer', async () => {
+      const config = {
+        scope: '/v1/auth/send-verification-email',
+        key,
+        limit: 'hi',
+        interval: 60
+      }
+      const rateLimiter = env.RATE_LIMITER.get(id)
+      const res = await rateLimiter.fetch(
+        new Request(fakeDomain, {
+          method: 'POST',
+          body: JSON.stringify(config)
+        })
+      )
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    });
+
+    test('should return 400 if interval is not an integer', async () => {
+      const config = {
+        scope: '/v1/auth/send-verification-email',
+        key,
+        limit: 1,
+        interval: 'hiiam interval'
+      }
+      const rateLimiter = env.RATE_LIMITER.get(id)
+      const res = await rateLimiter.fetch(
+        new Request(fakeDomain, {
+          method: 'POST',
+          body: JSON.stringify(config)
+        })
+      )
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    });
   });
 
   describe('Alarm', () => {
