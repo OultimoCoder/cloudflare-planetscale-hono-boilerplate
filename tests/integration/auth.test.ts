@@ -2,7 +2,7 @@ import { request } from '../utils/testRequest'
 import { clearDBTables } from '../utils/clearDBTables'
 import dayjs from 'dayjs'
 import { tokenTypes } from '../../src/config/tokens'
-import { mockClient } from 'aws-sdk-client-mock';
+import { mockClient } from 'aws-sdk-client-mock'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 import { faker } from '@faker-js/faker'
 import 'aws-sdk-client-mock-jest'
@@ -41,7 +41,7 @@ describe('Auth routes', () => {
         headers: { 'Content-Type': 'application/json' }
       })
       expect(res.status).toBe(httpStatus.CREATED)
-      const body = await res.json<{user: UserResponse, tokens: TokenResponse}>()
+      const body = await res.json<{ user: UserResponse; tokens: TokenResponse }>()
       expect(body.user).not.toHaveProperty('password')
       expect(body.user).toEqual({
         id: expect.anything(),
@@ -73,7 +73,7 @@ describe('Auth routes', () => {
 
       expect(body.tokens).toEqual({
         access: { token: expect.anything(), expires: expect.anything() },
-        refresh: { token: expect.anything(), expires: expect.anything() },
+        refresh: { token: expect.anything(), expires: expect.anything() }
       })
     })
 
@@ -137,7 +137,7 @@ describe('Auth routes', () => {
       await insertUsers([userOne], config.database)
       const loginCredentials = {
         email: userOne.email,
-        password: userOne.password,
+        password: userOne.password
       }
 
       const res = await request('/v1/auth/login', {
@@ -146,7 +146,7 @@ describe('Auth routes', () => {
         headers: { 'Content-Type': 'application/json' }
       })
       expect(res.status).toBe(httpStatus.OK)
-      const body = await res.json<{user: UserResponse, tokens: TokenResponse}>()
+      const body = await res.json<{ user: UserResponse; tokens: TokenResponse }>()
       expect(body.user).not.toHaveProperty('password')
       expect(body.user).toEqual({
         id: expect.anything(),
@@ -159,14 +159,14 @@ describe('Auth routes', () => {
 
       expect(body.tokens).toEqual({
         access: { token: expect.anything(), expires: expect.anything() },
-        refresh: { token: expect.anything(), expires: expect.anything() },
+        refresh: { token: expect.anything(), expires: expect.anything() }
       })
     })
 
     test('should return 401 error if there are no users with that email', async () => {
       const loginCredentials = {
         email: userOne.email,
-        password: userOne.password,
+        password: userOne.password
       }
 
       const res = await request('/v1/auth/login', {
@@ -186,7 +186,7 @@ describe('Auth routes', () => {
       await insertUsers([userOne], config.database)
       const loginCredentials = {
         email: userOne.email,
-        password: 'wrongPassword1',
+        password: 'wrongPassword1'
       }
 
       const res = await request('/v1/auth/login', {
@@ -221,12 +221,12 @@ describe('Auth routes', () => {
         body: JSON.stringify({ refresh_token: refreshToken }),
         headers: { 'Content-Type': 'application/json' }
       })
-      const body = await res.json<{tokens: TokenResponse}>()
+      const body = await res.json<{ tokens: TokenResponse }>()
 
       expect(res.status).toBe(httpStatus.OK)
       expect(body).toEqual({
         access: { token: expect.anything(), expires: expect.anything() },
-        refresh: { token: expect.anything(), expires: expect.anything() },
+        refresh: { token: expect.anything(), expires: expect.anything() }
       })
     })
 
@@ -360,7 +360,7 @@ describe('Auth routes', () => {
         body: JSON.stringify({ email: userOne.email }),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userOneAccessToken}`
+          Authorization: `Bearer ${userOneAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.NO_CONTENT)
@@ -380,7 +380,7 @@ describe('Auth routes', () => {
         body: JSON.stringify({ email: userOne.email }),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userOneAccessToken}`
+          Authorization: `Bearer ${userOneAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.NO_CONTENT)
@@ -390,7 +390,7 @@ describe('Auth routes', () => {
         body: JSON.stringify({ email: userOne.email }),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userOneAccessToken}`
+          Authorization: `Bearer ${userOneAccessToken}`
         }
       })
       expect(res2.status).toBe(httpStatus.TOO_MANY_REQUESTS)
@@ -432,7 +432,7 @@ describe('Auth routes', () => {
         body: JSON.stringify({ password: newPassword }),
         headers: {
           'Content-Type': 'application/json'
-        },
+        }
       })
       expect(res.status).toBe(httpStatus.NO_CONTENT)
       const dbUser = await client
@@ -454,7 +454,7 @@ describe('Auth routes', () => {
         body: JSON.stringify({ password: 'iamanewpasword123' }),
         headers: {
           'Content-Type': 'application/json'
-        },
+        }
       })
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
     })
@@ -475,7 +475,7 @@ describe('Auth routes', () => {
         body: JSON.stringify({ password: newPassword }),
         headers: {
           'Content-Type': 'application/json'
-        },
+        }
       })
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
     })
@@ -495,7 +495,7 @@ describe('Auth routes', () => {
         body: JSON.stringify({ password: newPassword }),
         headers: {
           'Content-Type': 'application/json'
-        },
+        }
       })
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
     })
@@ -515,7 +515,7 @@ describe('Auth routes', () => {
         body: JSON.stringify({}),
         headers: {
           'Content-Type': 'application/json'
-        },
+        }
       })
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
 
@@ -524,7 +524,7 @@ describe('Auth routes', () => {
         body: JSON.stringify({ password: 'short1' }),
         headers: {
           'Content-Type': 'application/json'
-        },
+        }
       })
       expect(res2.status).toBe(httpStatus.BAD_REQUEST)
 
@@ -533,7 +533,7 @@ describe('Auth routes', () => {
         body: JSON.stringify({ password: 'password' }),
         headers: {
           'Content-Type': 'application/json'
-        },
+        }
       })
       expect(res3.status).toBe(httpStatus.BAD_REQUEST)
 
@@ -542,7 +542,7 @@ describe('Auth routes', () => {
         body: JSON.stringify({ password: '11111111' }),
         headers: {
           'Content-Type': 'application/json'
-        },
+        }
       })
       expect(res4.status).toBe(httpStatus.BAD_REQUEST)
     })
@@ -563,7 +563,7 @@ describe('Auth routes', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
-        },
+        }
       })
       expect(res.status).toBe(httpStatus.NO_CONTENT)
       const dbUser = await client
@@ -582,7 +582,7 @@ describe('Auth routes', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
-        },
+        }
       })
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
     })
@@ -601,7 +601,7 @@ describe('Auth routes', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
-        },
+        }
       })
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
     })
@@ -619,7 +619,7 @@ describe('Auth routes', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
-        },
+        }
       })
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
     })

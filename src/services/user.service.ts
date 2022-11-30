@@ -16,15 +16,11 @@ interface getUsersOptions {
   page: number
 }
 
-
 const createUser = async (userBody: CreateUser, databaseConfig: Config['database']) => {
   const db = getDBClient(databaseConfig)
   let result: InsertResult
   try {
-    result = await db
-      .insertInto('user')
-      .values(userBody)
-      .executeTakeFirstOrThrow()
+    result = await db.insertInto('user').values(userBody).executeTakeFirstOrThrow()
   } catch (error) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'User already exists')
   }
@@ -36,10 +32,12 @@ const createUser = async (userBody: CreateUser, databaseConfig: Config['database
 }
 
 const queryUsers = async (
-  filter: getUsersFilter, options: getUsersOptions, databaseConfig: Config['database']
+  filter: getUsersFilter,
+  options: getUsersOptions,
+  databaseConfig: Config['database']
 ) => {
   const db = getDBClient(databaseConfig)
-  const [ sortField, direction ] = options.sortBy.split(':') as [keyof UserTable, 'asc' | 'desc']
+  const [sortField, direction] = options.sortBy.split(':') as [keyof UserTable, 'asc' | 'desc']
   let usersQuery = db
     .selectFrom('user')
     .selectAll()
@@ -55,11 +53,7 @@ const queryUsers = async (
 
 const getUserById = async (id: number, databaseConfig: Config['database']) => {
   const db = getDBClient(databaseConfig)
-  const user = await db
-    .selectFrom('user')
-    .selectAll()
-    .where('user.id', '=', id)
-    .executeTakeFirst()
+  const user = await db.selectFrom('user').selectAll().where('user.id', '=', id).executeTakeFirst()
   return user ? User.convert(user) : user
 }
 
@@ -74,7 +68,9 @@ const getUserByEmail = async (email: string, databaseConfig: Config['database'])
 }
 
 const updateUserById = async (
-  userId: number, updateBody: Partial<UpdateUser>, databaseConfig: Config['database']
+  userId: number,
+  updateBody: Partial<UpdateUser>,
+  databaseConfig: Config['database']
 ) => {
   const db = getDBClient(databaseConfig)
   let result: UpdateResult
@@ -96,21 +92,11 @@ const updateUserById = async (
 
 const deleteUserById = async (userId: number, databaseConfig: Config['database']) => {
   const db = getDBClient(databaseConfig)
-  const result = await db
-    .deleteFrom('user')
-    .where('user.id', '=', userId)
-    .executeTakeFirst()
+  const result = await db.deleteFrom('user').where('user.id', '=', userId).executeTakeFirst()
 
   if (!result.numDeletedRows || Number(result.numDeletedRows) < 1) {
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found')
   }
 }
 
-export {
-  createUser,
-  queryUsers,
-  getUserById,
-  getUserByEmail,
-  updateUserById,
-  deleteUserById
-}
+export { createUser, queryUsers, getUserById, getUserByEmail, updateUserById, deleteUserById }

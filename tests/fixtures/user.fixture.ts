@@ -12,11 +12,11 @@ const hashedPassword = bcrypt.hashSync(password, salt)
 type MockUser = Selectable<UserTable> | Partial<Omit<Selectable<UserTable>, 'id'>>
 
 interface UserResponse {
-  id: number,
-  first_name: string,
-  last_name: string,
-  email: string,
-  role: string,
+  id: number
+  first_name: string
+  last_name: string
+  email: string
+  role: string
   is_email_verified: boolean
 }
 
@@ -48,26 +48,17 @@ const admin: MockUser = {
 }
 
 const insertUsers = async (
-  users: Omit<Selectable<UserTable>, 'id'>[], databaseConfig: Config['database']
+  users: Omit<Selectable<UserTable>, 'id'>[],
+  databaseConfig: Config['database']
 ) => {
   const hashedUsers = users.map((user) => ({ ...user, password: hashedPassword }))
   const client = getDBClient(databaseConfig)
   const results: number[] = []
   for await (const user of hashedUsers) {
-    const result = await client
-      .insertInto('user')
-      .values(user)
-      .executeTakeFirst()
+    const result = await client.insertInto('user').values(user).executeTakeFirst()
     results.push(Number(result.insertId))
   }
   return results
 }
 
-export {
-  userOne,
-  userTwo,
-  admin,
-  insertUsers,
-  MockUser,
-  UserResponse
-}
+export { userOne, userTwo, admin, insertUsers, MockUser, UserResponse }

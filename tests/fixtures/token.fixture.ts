@@ -6,32 +6,24 @@ import * as tokenService from '../../src/services/token.service'
 
 interface TokenResponse {
   access: {
-    token: string,
+    token: string
     expires: string
-  },
+  }
   refresh: {
-    token: string,
+    token: string
     expires: string
   }
 }
 
-
 const getAccessToken = async (
-  userId: number, role: Role, jwtConfig: Config['jwt'], type: TokenType = tokenTypes.ACCESS
+  userId: number,
+  role: Role,
+  jwtConfig: Config['jwt'],
+  type: TokenType = tokenTypes.ACCESS
 ) => {
   const expires = dayjs().add(jwtConfig.accessExpirationMinutes, 'minutes')
-  const token = await tokenService.generateToken(
-    userId,
-    type,
-    role,
-    expires,
-    jwtConfig.secret
-  )
+  const token = await tokenService.generateToken(userId, type, role, expires, jwtConfig.secret)
   return token
 }
 
-
-export {
-  TokenResponse,
-  getAccessToken
-}
+export { TokenResponse, getAccessToken }

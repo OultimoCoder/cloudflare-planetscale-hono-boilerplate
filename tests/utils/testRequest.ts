@@ -13,12 +13,10 @@ class Context implements ExecutionContext {
   }
 }
 
-const request = async(path: string, options: RequestInit) => {
+const request = async (path: string, options: RequestInit) => {
   const formattedUrl = new URL(path, devUrl).href
   const request = new Request(formattedUrl, options)
   return app.fetch(request, env, new Context())
 }
 
-export {
-  request
-}
+export { request }

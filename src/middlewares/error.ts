@@ -41,13 +41,10 @@ const errorHandler: ErrorHandler<{ Bindings: Bindings }> = (err, c) => {
   const response = {
     code: error.statusCode,
     message: error.message,
-    ...(config.env === 'development' && { stack: err.stack }),
+    ...(config.env === 'development' && { stack: err.stack })
   }
 
   return c.json(response, error.statusCode)
 }
 
-export {
-  errorHandler,
-  errorConverter
-}
+export { errorHandler, errorConverter }

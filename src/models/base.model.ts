@@ -23,7 +23,7 @@ class BaseModel {
 
   toJSON() {
     const properties = Object.getOwnPropertyNames(this)
-    const publicProperties = properties.filter(property => {
+    const publicProperties = properties.filter((property) => {
       return (
         (!this.private_fields.includes(property) || this.role === 'admin') &&
         property !== 'private_fields'
@@ -37,6 +37,4 @@ class BaseModel {
   }
 }
 
-export {
-  BaseModel
-}
+export { BaseModel }

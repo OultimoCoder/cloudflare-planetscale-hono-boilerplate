@@ -47,10 +47,11 @@ describe('Durable Object RateLimiter', () => {
         interval: 600
       }
       const currentWindow = Math.floor(dayjs().unix() / config.interval)
-      const storageKey = `${config.scope}|${config.key.toString()}|${config.limit}|` +
+      const storageKey =
+        `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${currentWindow}`
 
-      await storage.put(storageKey, config.limit+1)
+      await storage.put(storageKey, config.limit + 1)
 
       const rateLimiter = env.RATE_LIMITER.get(id)
       const start = dayjs()
@@ -79,10 +80,11 @@ describe('Durable Object RateLimiter', () => {
         interval: 600
       }
       const currentWindow = Math.floor(dayjs().unix() / config.interval)
-      const storageKey = `${config.scope}|${config.key.toString()}|${config.limit}|` +
+      const storageKey =
+        `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${currentWindow}`
 
-      await storage.put(storageKey, config.limit+1)
+      await storage.put(storageKey, config.limit + 1)
 
       const rateLimiter = env.RATE_LIMITER.get(id)
       const res = await rateLimiter.fetch(
@@ -115,10 +117,11 @@ describe('Durable Object RateLimiter', () => {
         interval: 600
       }
       const currentWindow = Math.floor(dayjs().unix() / config.interval)
-      const storageKey = `${config.scope}|${config.key.toString()}|${config.limit}|` +
+      const storageKey =
+        `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${currentWindow}`
 
-      await storage.put(storageKey, config.limit+1)
+      await storage.put(storageKey, config.limit + 1)
 
       const rateLimiter = env.RATE_LIMITER.get(id)
       const res = await rateLimiter.fetch(
@@ -151,10 +154,11 @@ describe('Durable Object RateLimiter', () => {
         interval: 600
       }
       const currentWindow = Math.floor(dayjs().unix() / config.interval)
-      const storageKey = `${config.scope}|${config.key.toString()}|${config.limit}|` +
+      const storageKey =
+        `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${currentWindow}`
 
-      await storage.put(storageKey, config.limit+1)
+      await storage.put(storageKey, config.limit + 1)
 
       const rateLimiter = env.RATE_LIMITER.get(id)
       const res = await rateLimiter.fetch(
@@ -187,10 +191,11 @@ describe('Durable Object RateLimiter', () => {
         interval: 600
       }
       const currentWindow = Math.floor(dayjs().unix() / config.interval)
-      const storageKey = `${config.scope}|${config.key.toString()}|${config.limit}|` +
+      const storageKey =
+        `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${currentWindow}`
 
-      await storage.put(storageKey, config.limit+1)
+      await storage.put(storageKey, config.limit + 1)
 
       const rateLimiter = env.RATE_LIMITER.get(id)
       const res = await rateLimiter.fetch(
@@ -285,7 +290,8 @@ describe('Durable Object RateLimiter', () => {
       }
       const rateLimiter = env.RATE_LIMITER.get(id)
       const currentWindow = Math.floor(dayjs().unix() / config.interval)
-      const storageKey = `${config.scope}|${config.key.toString()}|${config.limit}|` +
+      const storageKey =
+        `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${currentWindow}`
 
       const res = await rateLimiter.fetch(
@@ -299,7 +305,11 @@ describe('Durable Object RateLimiter', () => {
       expect(values.size).toBe(1)
       expect(values.get(storageKey)).toBe(1)
 
-      MockDate.set(dayjs().add(config.interval * 3, 'seconds').toDate())
+      MockDate.set(
+        dayjs()
+          .add(config.interval * 3, 'seconds')
+          .toDate()
+      )
       await flushMiniflareDurableObjectAlarms()
       const values2 = await storage.list()
       expect(values2.size).toBe(0)
@@ -314,7 +324,8 @@ describe('Durable Object RateLimiter', () => {
       }
       const rateLimiter = env.RATE_LIMITER.get(id)
       const currentWindow = Math.floor(dayjs().unix() / config.interval)
-      const storageKey = `${config.scope}|${config.key.toString()}|${config.limit}|` +
+      const storageKey =
+        `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${currentWindow}`
 
       const res = await rateLimiter.fetch(
@@ -328,7 +339,11 @@ describe('Durable Object RateLimiter', () => {
       expect(values.size).toBe(1)
       expect(values.get(storageKey)).toBe(1)
 
-      MockDate.set(dayjs().add(config.interval * 1.5, 'seconds').toDate())
+      MockDate.set(
+        dayjs()
+          .add(config.interval * 1.5, 'seconds')
+          .toDate()
+      )
       await flushMiniflareDurableObjectAlarms()
       const values2 = await storage.list()
       expect(values2.size).toBe(1)
@@ -345,7 +360,8 @@ describe('Durable Object RateLimiter', () => {
       const rateLimiter = env.RATE_LIMITER.get(id)
 
       const currentWindow = Math.floor(dayjs().unix() / config.interval)
-      const storageKey = `${config.scope}|${config.key.toString()}|${config.limit}|` +
+      const storageKey =
+        `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${currentWindow}`
 
       const res = await rateLimiter.fetch(
@@ -356,26 +372,30 @@ describe('Durable Object RateLimiter', () => {
       )
       expect(res.status).toBe(httpStatus.OK)
 
-      const expiredWindow = Math.floor(dayjs().unix() / config.interval - 3) 
-      const expiredStorageKey = `${config.scope}|${config.key.toString()}|${config.limit}|` +
+      const expiredWindow = Math.floor(dayjs().unix() / config.interval - 3)
+      const expiredStorageKey =
+        `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${expiredWindow}`
 
       await storage.put(expiredStorageKey, 45)
 
-      const expiredWindow2 = Math.floor(dayjs().unix() / config.interval - 7) 
-      const expiredStorageKey2 = `${config.scope}|${config.key.toString()}|${config.limit}|` +
+      const expiredWindow2 = Math.floor(dayjs().unix() / config.interval - 7)
+      const expiredStorageKey2 =
+        `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${expiredWindow2}`
 
       await storage.put(expiredStorageKey2, 33)
 
-      const expiredWindow3 = Math.floor(dayjs().unix() / config.interval - 4) 
-      const expiredStorageKey3 = `${config.scope}|${config.key.toString()}|${config.limit}|` +
+      const expiredWindow3 = Math.floor(dayjs().unix() / config.interval - 4)
+      const expiredStorageKey3 =
+        `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${expiredWindow3}`
 
       await storage.put(expiredStorageKey3, 12)
 
       const window2 = Math.floor(dayjs().unix() / config.interval - 1.5)
-      const storageKey2 = `${config.scope}|${config.key.toString()}|${config.limit}|` +
+      const storageKey2 =
+        `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${window2}`
 
       await storage.put(storageKey2, 12)

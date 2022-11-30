@@ -8,8 +8,14 @@ export const register = z.object({
   password: z.string().superRefine(password).transform(hashPassword),
   first_name: z.string(),
   last_name: z.string(),
-  is_email_verified: z.any().optional().transform(() => false),
-  role: z.any().optional().transform(() => 'user' as Role)
+  is_email_verified: z
+    .any()
+    .optional()
+    .transform(() => false),
+  role: z
+    .any()
+    .optional()
+    .transform(() => 'user' as Role)
 })
 
 export const login = z.object({

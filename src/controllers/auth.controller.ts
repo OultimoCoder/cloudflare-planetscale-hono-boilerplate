@@ -4,7 +4,6 @@ import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
 import { getConfig } from '../config/config'
 import * as authService from '../services/auth.service'
-// import * as emailService from '../services/email.service';
 import * as emailService from '../services/email.service'
 import * as tokenService from '../services/token.service'
 import * as userService from '../services/user.service'
@@ -16,7 +15,7 @@ const register: Handler<{ Bindings: Bindings }> = async (c) => {
   const body = await authValidation.register.parseAsync(bodyParse)
   const user = await userService.createUser(body, config.database)
   const tokens = await tokenService.generateAuthTokens(user, config.jwt)
-  return c.json({user, tokens}, httpStatus.CREATED as StatusCode)
+  return c.json({ user, tokens }, httpStatus.CREATED as StatusCode)
 }
 
 const login: Handler<{ Bindings: Bindings }> = async (c) => {
@@ -48,7 +47,8 @@ const forgotPassword: Handler<{ Bindings: Bindings }> = async (c) => {
       config.jwt,
       email
     )
-    await emailService.sendResetPasswordEmail(user.email,
+    await emailService.sendResetPasswordEmail(
+      user.email,
       {
         firstName: user.first_name,
         lastName: user.last_name,

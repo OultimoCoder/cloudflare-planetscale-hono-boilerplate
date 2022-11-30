@@ -1,7 +1,7 @@
 import dayjs from 'dayjs'
 import { Context, Hono } from 'hono'
 import { StatusCode } from 'hono/utils/http-status'
-import httpStatus  from 'http-status'
+import httpStatus from 'http-status'
 import { z, ZodError } from 'zod'
 import { generateErrorMessage, ErrorMessageOptions } from 'zod-error'
 
@@ -29,29 +29,32 @@ class RateLimiter {
   app: Hono = new Hono()
 
   constructor(state: DurableObjectState, env: Bindings) {
-      this.state = state
-      this.env = env
+    this.state = state
+    this.env = env
 
-      this.app.post('/', async (c) => {
-        await this.setAlarm()
-        let config
-        try {
-          config = await this.getConfig(c)
-        } catch (err: any) {
-          let errorMessage = err.message
-          if (err instanceof ZodError) {
-            errorMessage = generateErrorMessage(err.issues, zodErrorOptions)
-          }
-          return c.json({
+    this.app.post('/', async (c) => {
+      await this.setAlarm()
+      let config
+      try {
+        config = await this.getConfig(c)
+      } catch (err: any) {
+        let errorMessage = err.message
+        if (err instanceof ZodError) {
+          errorMessage = generateErrorMessage(err.issues, zodErrorOptions)
+        }
+        return c.json(
+          {
             statusCode: httpStatus.BAD_REQUEST,
             error: errorMessage
-          }, httpStatus.BAD_REQUEST as StatusCode)
-        }
-        const rate = await this.calculateRate(config)
-        const blocked = this.isRateLimited(rate, config.limit)
-        const headers = this.getHeaders(blocked, rate, config)
-        return c.json({blocked}, httpStatus.OK as StatusCode, headers)
-      })
+          },
+          httpStatus.BAD_REQUEST as StatusCode
+        )
+      }
+      const rate = await this.calculateRate(config)
+      const blocked = this.isRateLimited(rate, config.limit)
+      const headers = this.getHeaders(blocked, rate, config)
+      return c.json({ blocked }, httpStatus.OK as StatusCode, headers)
+    })
   }
 
   async alarm() {
@@ -99,9 +102,9 @@ class RateLimiter {
     const currentKey = `${keyPrefix}|${currentWindow}`
     const previousKey = `${keyPrefix}|${currentWindow - 1}`
     const currentCount = await this.getRequestCount(currentKey)
-    const previousCount = await this.getRequestCount(previousKey) || config.limit
-    const rate = (previousCount * (config.interval - distanceFromLastWindow)) / config.interval
-      + currentCount
+    const previousCount = (await this.getRequestCount(previousKey)) || config.limit
+    const rate =
+      (previousCount * (config.interval - distanceFromLastWindow)) / config.interval + currentCount
     if (!this.isRateLimited(rate, config.limit)) {
       await this.incrementRequestCount(currentKey)
     }
@@ -120,14 +123,14 @@ class RateLimiter {
     const expires = this.expirySeconds(rate, config)
     const retryAfter = this.retryAfter(expires)
     headers = {
-      'expires': retryAfter.toString(),
+      expires: retryAfter.toString(),
       'cache-control': `public, max-age=${expires}, s-maxage=${expires}, must-revalidate`
     }
     return headers
   }
 
   expirySeconds(rate: number, config: Config) {
-    return Math.floor(((rate / config.limit) -1) * config.interval) || config.interval
+    return Math.floor((rate / config.limit - 1) * config.interval) || config.interval
   }
 
   retryAfter(expires: number) {
@@ -139,6 +142,4 @@ class RateLimiter {
   }
 }
 
-export {
-  RateLimiter
-}
+export { RateLimiter }

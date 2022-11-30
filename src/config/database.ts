@@ -10,17 +10,16 @@ interface Database {
 }
 
 const getDBClient = (databaseConfig: Config['database']) => {
-  dbClient = dbClient || new Kysely<Database>({
-    dialect: new PlanetScaleDialect({
-      username: databaseConfig.username,
-      password: databaseConfig.password,
-      host: databaseConfig.host
+  dbClient =
+    dbClient ||
+    new Kysely<Database>({
+      dialect: new PlanetScaleDialect({
+        username: databaseConfig.username,
+        password: databaseConfig.password,
+        host: databaseConfig.host
+      })
     })
-  })
   return dbClient
 }
 
-export {
-  getDBClient,
-  Database
-}
+export { getDBClient, Database }

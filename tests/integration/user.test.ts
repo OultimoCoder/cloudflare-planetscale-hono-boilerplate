@@ -37,7 +37,7 @@ describe('User routes', () => {
         body: JSON.stringify(newUser),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       const body = await res.json<UserResponse>()
@@ -81,7 +81,7 @@ describe('User routes', () => {
         body: JSON.stringify(newUser),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       const body = await res.json<UserResponse>()
@@ -121,7 +121,7 @@ describe('User routes', () => {
         body: JSON.stringify(newUser),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userOneAccessToken}`
+          Authorization: `Bearer ${userOneAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.FORBIDDEN)
@@ -136,7 +136,7 @@ describe('User routes', () => {
         body: JSON.stringify(newUser),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
@@ -151,7 +151,7 @@ describe('User routes', () => {
         body: JSON.stringify(newUser),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
@@ -166,7 +166,7 @@ describe('User routes', () => {
         body: JSON.stringify(newUser),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
@@ -181,7 +181,7 @@ describe('User routes', () => {
         body: JSON.stringify(newUser),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
@@ -193,22 +193,22 @@ describe('User routes', () => {
         body: JSON.stringify(newUser),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       expect(res2.status).toBe(httpStatus.BAD_REQUEST)
     })
 
     test('should return 400 error if role is neither user nor admin', async () => {
-      const ids = await insertUsers([admin], config.database);
-      (newUser as any).role = 'invalid'
+      const ids = await insertUsers([admin], config.database)
+      ;(newUser as any).role = 'invalid'
       const adminAccessToken = await getAccessToken(ids[0], admin.role, config.jwt)
       const res = await request('/v1/users', {
         method: 'POST',
         body: JSON.stringify(newUser),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
@@ -223,7 +223,7 @@ describe('User routes', () => {
         body: JSON.stringify(newUser),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.CREATED)
@@ -240,7 +240,7 @@ describe('User routes', () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       const body = await res.json<UserResponse[]>()
@@ -261,7 +261,7 @@ describe('User routes', () => {
       const res = await request('/v1/users', {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         }
       })
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
@@ -274,7 +274,7 @@ describe('User routes', () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userOneAccessToken}`
+          Authorization: `Bearer ${userOneAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.FORBIDDEN)
@@ -287,7 +287,7 @@ describe('User routes', () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       const body = await res.json<UserResponse[]>()
@@ -303,7 +303,7 @@ describe('User routes', () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       const body = await res.json<UserResponse[]>()
@@ -321,7 +321,7 @@ describe('User routes', () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       const body = await res.json<UserResponse[]>()
@@ -339,7 +339,7 @@ describe('User routes', () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       const body = await res.json<UserResponse[]>()
@@ -356,7 +356,7 @@ describe('User routes', () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       const body = await res.json<UserResponse[]>()
@@ -374,7 +374,7 @@ describe('User routes', () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userOneAccessToken}`
+          Authorization: `Bearer ${userOneAccessToken}`
         }
       })
       const body = await res.json<UserResponse[]>()
@@ -395,7 +395,7 @@ describe('User routes', () => {
       const res = await request(`/v1/users/${ids[0]}`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         }
       })
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
@@ -408,7 +408,7 @@ describe('User routes', () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userOneAccessToken}`
+          Authorization: `Bearer ${userOneAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.FORBIDDEN)
@@ -421,7 +421,7 @@ describe('User routes', () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.OK)
@@ -434,7 +434,7 @@ describe('User routes', () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
@@ -447,7 +447,7 @@ describe('User routes', () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.NOT_FOUND)
@@ -462,7 +462,7 @@ describe('User routes', () => {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userOneAccessToken}`
+          Authorization: `Bearer ${userOneAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.NO_CONTENT)
@@ -479,7 +479,7 @@ describe('User routes', () => {
       const res = await request(`/v1/users/${ids[0]}`, {
         method: 'DELETE',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         }
       })
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
@@ -492,7 +492,7 @@ describe('User routes', () => {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userOneAccessToken}`
+          Authorization: `Bearer ${userOneAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.FORBIDDEN)
@@ -505,7 +505,7 @@ describe('User routes', () => {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.NO_CONTENT)
@@ -518,7 +518,7 @@ describe('User routes', () => {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
@@ -531,7 +531,7 @@ describe('User routes', () => {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.NOT_FOUND)
@@ -545,7 +545,7 @@ describe('User routes', () => {
       const updateBody = {
         first_name: faker.name.firstName(),
         last_name: faker.name.lastName(),
-        email: faker.internet.email().toLowerCase(),
+        email: faker.internet.email().toLowerCase()
       }
 
       const res = await request(`/v1/users/${ids[0]}`, {
@@ -553,7 +553,7 @@ describe('User routes', () => {
         body: JSON.stringify(updateBody),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userOneAccessToken}`
+          Authorization: `Bearer ${userOneAccessToken}`
         }
       })
       const body = await res.json<UserResponse>()
@@ -595,7 +595,7 @@ describe('User routes', () => {
         method: 'PATCH',
         body: JSON.stringify(updateBody),
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         }
       })
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
@@ -610,7 +610,7 @@ describe('User routes', () => {
         body: JSON.stringify(updateBody),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userOneAccessToken}`
+          Authorization: `Bearer ${userOneAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.FORBIDDEN)
@@ -625,7 +625,7 @@ describe('User routes', () => {
         body: JSON.stringify(updateBody),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.OK)
@@ -640,7 +640,7 @@ describe('User routes', () => {
         body: JSON.stringify(updateBody),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.NOT_FOUND)
@@ -655,7 +655,7 @@ describe('User routes', () => {
         body: JSON.stringify(updateBody),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
@@ -670,7 +670,7 @@ describe('User routes', () => {
         body: JSON.stringify(updateBody),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminAccessToken}`
+          Authorization: `Bearer ${adminAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
@@ -685,7 +685,7 @@ describe('User routes', () => {
         body: JSON.stringify(updateBody),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userOneAccessToken}`
+          Authorization: `Bearer ${userOneAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
@@ -700,7 +700,7 @@ describe('User routes', () => {
         body: JSON.stringify(updateBody),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userOneAccessToken}`
+          Authorization: `Bearer ${userOneAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.OK)

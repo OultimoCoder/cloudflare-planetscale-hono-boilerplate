@@ -13,9 +13,15 @@ const envVarsSchema = z.object({
   // JWT secret key
   JWT_SECRET: z.string(),
   // Minutes after which access tokens expire
-  JWT_ACCESS_EXPIRATION_MINUTES: z.string().default('30').transform((str) => parseInt(str, 10)),
+  JWT_ACCESS_EXPIRATION_MINUTES: z
+    .string()
+    .default('30')
+    .transform((str) => parseInt(str, 10)),
   // Days after which refresh tokens expire
-  JWT_REFRESH_EXPIRATION_DAYS: z.string().default('30').transform((str) => parseInt(str, 10)),
+  JWT_REFRESH_EXPIRATION_DAYS: z
+    .string()
+    .default('30')
+    .transform((str) => parseInt(str, 10)),
   // Minutes after which reset password token expires
   JWT_RESET_PASSWORD_EXPIRATION_MINUTES: z
     .string()
@@ -29,7 +35,7 @@ const envVarsSchema = z.object({
   AWS_ACCESS_KEY_ID: z.string(),
   AWS_SECRET_ACCESS_KEY: z.string(),
   AWS_REGION: z.string(),
-  EMAIL_SENDER: z.string(),
+  EMAIL_SENDER: z.string()
 })
 
 interface Config {
@@ -46,12 +52,12 @@ interface Config {
     refreshExpirationDays: number
     resetPasswordExpirationMinutes: number
     verifyEmailExpirationMinutes: number
-  },
+  }
   aws: {
     accessKeyId: string
     secretAccessKey: string
     region: string
-  },
+  }
   email: {
     sender: string
   }
@@ -91,7 +97,4 @@ const getConfig = (env: Bindings) => {
   return config
 }
 
-export {
-  getConfig,
-  Config
-}
+export { getConfig, Config }

@@ -13,43 +13,43 @@ const authenticate = async (jwtToken: string, secret: string) => {
     authorized = await jwt.verify(jwtToken, secret)
     const decoded = jwt.decode(jwtToken)
     payload = decoded.payload
-    authorized = authorized && (payload.type === tokenTypes.ACCESS)
+    authorized = authorized && payload.type === tokenTypes.ACCESS
   } catch (e) {}
-  return {authorized, payload}
+  return { authorized, payload }
 }
 
-const auth = (...requiredRights: Permission[]) => async (c: any, next: Function) => {
-  const credentials = c.req.headers.get('Authorization')
-  const config = getConfig(c.env)
-  if (!credentials) {
-    throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
-  }
-
-  const parts = credentials.split(/\s+/)
-  if (parts.length !== 2) {
-    throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
-  }
-
-  const jwtToken = parts[1]
-  const {authorized, payload} = await authenticate(jwtToken, config.jwt.secret)
-
-  if (!authorized || !payload ) {
-    throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
-  }
-
-  if (requiredRights.length) {
-    const userRights = roleRights[payload.role as Role]
-    const hasRequiredRights = requiredRights.every(
-      (requiredRight) => (userRights as unknown as string[]).includes(requiredRight)
-    )
-    if (!hasRequiredRights && c.req.param('userId') !== payload.sub) {
-      throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden')
+const auth =
+  (...requiredRights: Permission[]) =>
+  async (c: any, next: Function) => {
+    const credentials = c.req.headers.get('Authorization')
+    const config = getConfig(c.env)
+    if (!credentials) {
+      throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
     }
-  }
-  c.set('payload', payload)
-  await next()
-}
 
-export {
-  auth
-}
+    const parts = credentials.split(/\s+/)
+    if (parts.length !== 2) {
+      throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
+    }
+
+    const jwtToken = parts[1]
+    const { authorized, payload } = await authenticate(jwtToken, config.jwt.secret)
+
+    if (!authorized || !payload) {
+      throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
+    }
+
+    if (requiredRights.length) {
+      const userRights = roleRights[payload.role as Role]
+      const hasRequiredRights = requiredRights.every((requiredRight) =>
+        (userRights as unknown as string[]).includes(requiredRight)
+      )
+      if (!hasRequiredRights && c.req.param('userId') !== payload.sub) {
+        throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden')
+      }
+    }
+    c.set('payload', payload)
+    await next()
+  }
+
+export { auth }

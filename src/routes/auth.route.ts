@@ -18,9 +18,7 @@ route.post(
   auth(),
   rateLimit(twoMinutes, oneRequest),
   authController.sendVerificationEmail
-  )
+)
 route.post('/verify-email', authController.verifyEmail)
 
-export {
-  route
-}
+export { route }

@@ -35,12 +35,9 @@ class User extends BaseModel implements Selectable<UserTable> {
     this.password = user.password
   }
 
-  isPasswordMatch = async(userPassword: string) => {
+  isPasswordMatch = async (userPassword: string) => {
     return bcrypt.compare(userPassword, this.password)
   }
 }
 
-export {
-  UserTable,
-  User
-}
+export { UserTable, User }

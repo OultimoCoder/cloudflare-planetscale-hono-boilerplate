@@ -7,7 +7,11 @@ import { TokenType, tokenTypes } from '../config/tokens'
 import { User } from '../models/user.model'
 
 const generateToken = async (
-  userId: number, type: TokenType, role: Role, expires: Dayjs, secret: string
+  userId: number,
+  type: TokenType,
+  role: Role,
+  expires: Dayjs,
+  secret: string
 ) => {
   const payload = {
     sub: userId.toString(),
@@ -39,12 +43,12 @@ const generateAuthTokens = async (user: Selectable<User>, jwtConfig: Config['jwt
   return {
     access: {
       token: accessToken,
-      expires: accessTokenExpires.toDate(),
+      expires: accessTokenExpires.toDate()
     },
     refresh: {
       token: refreshToken,
-      expires: refreshTokenExpires.toDate(),
-    },
+      expires: refreshTokenExpires.toDate()
+    }
   }
 }
 
@@ -74,7 +78,9 @@ const generateVerifyEmailToken = async (user: Selectable<User>, jwtConfig: Confi
 }
 
 export const generateResetPasswordToken = async (
-  user: Selectable<User>, jwtConfig: Config['jwt'], email: string
+  user: Selectable<User>,
+  jwtConfig: Config['jwt'],
+  email: string
 ) => {
   const expires = dayjs().add(jwtConfig.resetPasswordExpirationMinutes, 'minutes')
   const resetPasswordToken = await generateToken(
@@ -87,9 +93,4 @@ export const generateResetPasswordToken = async (
   return resetPasswordToken
 }
 
-export {
-  generateToken,
-  generateAuthTokens,
-  generateVerifyEmailToken,
-  verifyToken
-}
+export { generateToken, generateAuthTokens, generateVerifyEmailToken, verifyToken }

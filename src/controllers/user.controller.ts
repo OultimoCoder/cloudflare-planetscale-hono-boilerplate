@@ -39,7 +39,7 @@ const updateUser: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const paramsParse = c.req.param()
   const bodyParse = await c.req.json()
-  const { params, body } = userValidation.updateUser.parse({params: paramsParse, body: bodyParse})
+  const { params, body } = userValidation.updateUser.parse({ params: paramsParse, body: bodyParse })
   const user = await userService.updateUserById(params.userId, body, config.database)
   return c.json(user, httpStatus.OK as StatusCode)
 }
@@ -53,10 +53,4 @@ const deleteUser: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.body(null)
 }
 
-export {
-  createUser,
-  getUsers,
-  getUser,
-  updateUser,
-  deleteUser
-}
+export { createUser, getUsers, getUser, updateUser, deleteUser }

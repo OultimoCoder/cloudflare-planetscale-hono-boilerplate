@@ -5,6 +5,4 @@ const hashPassword = async (value: string) => {
   return hashedPassword
 }
 
-export {
-  hashPassword
-}
+export { hashPassword }

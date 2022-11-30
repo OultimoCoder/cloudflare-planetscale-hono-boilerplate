@@ -10,17 +10,24 @@ interface EmailData {
 }
 
 const getClient = (awsConfig: Config['aws']) => {
-  client = client || new SESClient({
-    credentials: {
-      accessKeyId: awsConfig.accessKeyId,
-      secretAccessKey: awsConfig.secretAccessKey
-    },
-    region: awsConfig.region
-  })
+  client =
+    client ||
+    new SESClient({
+      credentials: {
+        accessKeyId: awsConfig.accessKeyId,
+        secretAccessKey: awsConfig.secretAccessKey
+      },
+      region: awsConfig.region
+    })
   return client
 }
 
-const sendEmail = async(to: string, sender: string, message: Message, awsConfig: Config['aws']) => {
+const sendEmail = async (
+  to: string,
+  sender: string,
+  message: Message,
+  awsConfig: Config['aws']
+) => {
   const sesClient = getClient(awsConfig)
   const command = new SendEmailCommand({
     Destination: { ToAddresses: [to] },
@@ -47,12 +54,7 @@ const sendResetPasswordEmail = async (email: string, emailData: EmailData, confi
       }
     }
   }
-  await sendEmail(
-    email,
-    config.email.sender,
-    message,
-    config.aws
-  )
+  await sendEmail(email, config.email.sender, message, config.aws)
 }
 
 const sendVerificationEmail = async (email: string, emailData: EmailData, config: Config) => {
@@ -72,15 +74,7 @@ const sendVerificationEmail = async (email: string, emailData: EmailData, config
       }
     }
   }
-  await sendEmail(
-    email,
-    config.email.sender,
-    message,
-    config.aws
-  )
+  await sendEmail(email, config.email.sender, message, config.aws)
 }
 
-export {
-  sendResetPasswordEmail,
-  sendVerificationEmail
-}
+export { sendResetPasswordEmail, sendVerificationEmail }
