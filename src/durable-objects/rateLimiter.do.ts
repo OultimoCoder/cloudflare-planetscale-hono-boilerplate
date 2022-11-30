@@ -1,5 +1,20 @@
 import dayjs from 'dayjs'
 import httpStatus  from 'http-status'
+import { z } from 'zod';
+
+interface Config {
+  scope: string
+  key: string
+  limit: number
+  interval: number
+}
+
+const configValidation = z.object({
+  scope: z.string(),
+  key: z.string(),
+  limit: z.number().int().positive(),
+  interval: z.number().int().positive()
+});
 
 class RateLimiter {
   state: DurableObjectState
@@ -14,8 +29,7 @@ class RateLimiter {
     const values = await this.state.storage.list();
     for await (const [key, _value] of values) {
       const [_scope, _key, _limit, interval, timestamp] = key.split('|');
-      const unixTimestamp = dayjs().unix()
-      const currentWindow = Math.floor(unixTimestamp / parseInt(interval))
+      const currentWindow = Math.floor(this.nowUnix() / parseInt(interval))
       const timestampLessThan = currentWindow - 2 // expire all key after 2 intervals have passed
       if (parseInt(timestamp) < timestampLessThan) {
         await this.state.storage.delete(key);
@@ -31,11 +45,9 @@ class RateLimiter {
   }
 
   async getConfig(request: Request) {
-    return request.clone().json();
-  }
-
-  getKeyPrefix(config) {
-    return `${config.scope}|${config.key}|${config.limit}|${config.interval}`
+    const body = await request.clone().json<Config>()
+    const config = configValidation.parse(body);
+    return config
   }
 
   async incrementRequestCount(key: string) {
@@ -47,32 +59,57 @@ class RateLimiter {
     return parseInt((await this.state.storage.get(key)) as string) || 0
   }
 
-  async fetch(request: Request): Promise<Response> {
-    await this.setAlarm()
-    const config = await this.getConfig(request)
-    const keyPrefix = this.getKeyPrefix(config)
-    const unixTimestamp = dayjs().unix()
-    const currentWindow = Math.floor(unixTimestamp / config.interval);
-    const distanceFromLastWindow = unixTimestamp % config.interval;
+  nowUnix() {
+    return dayjs().unix()
+  }
+
+  async calculateRate(config: Config) {
+    const keyPrefix = `${config.scope}|${config.key}|${config.limit}|${config.interval}`
+    const currentWindow = Math.floor(this.nowUnix() / config.interval);
+    const distanceFromLastWindow = this.nowUnix() % config.interval;
     const currentKey = `${keyPrefix}|${currentWindow}`;
     const previousKey = `${keyPrefix}|${currentWindow - 1}`;
     const currentCount = await this.getRequestCount(currentKey)
     const previousCount = await this.getRequestCount(previousKey) || config.limit
-
-    const rate = (previousCount * (config.interval - distanceFromLastWindow)) / config.interval + currentCount;
-    const blocked = rate >= config.limit
-
-    const headers: Headers = new Headers();
-    headers.set('Content-Type', 'application/json');
-
-    if (!blocked) {
-      await this.incrementRequestCount(currentKey);
-      return new Response(JSON.stringify({ blocked }), { status: httpStatus.OK, headers });
+    const rate = (previousCount * (config.interval - distanceFromLastWindow)) / config.interval
+      + currentCount;
+    if (!this.isRateLimited(rate, config.limit)) {
+      await this.incrementRequestCount(currentKey)
     }
-    const expires = Math.floor(((rate / config.limit) -1) * config.interval) || config.interval
-    const retryAfter = dayjs().add(expires, 'seconds')
+    return rate
+  }
+
+  isRateLimited(rate: number, limit: number) {
+    return rate >= limit
+  }
+
+  getHeaders(blocked: boolean, rate: number, config: Config) {
+    const headers: Headers = new Headers()
+    headers.set('Content-Type', 'application/json')
+    if (!blocked) {
+      return headers
+    }
+    const expires = this.expirySeconds(rate, config)
+    const retryAfter = this.retryAfter(expires)
     headers.set('Expires', retryAfter.toString());
     headers.set('Cache-Control', `public, max-age=${expires}, s-maxage=${expires}, must-revalidate`)
+    return headers
+  }
+
+  expirySeconds(rate: number, config: Config) {
+    return Math.floor(((rate / config.limit) -1) * config.interval) || config.interval
+  }
+
+  retryAfter(expires: number) {
+    return dayjs().add(expires, 'seconds').toString()
+  }
+
+  async fetch(request: Request): Promise<Response> {
+    await this.setAlarm()
+    const config = await this.getConfig(request)
+    const rate = await this.calculateRate(config)
+    const blocked = this.isRateLimited(rate, config.limit)
+    const headers = this.getHeaders(blocked, rate, config)
     return new Response(JSON.stringify({ blocked }), { status: httpStatus.OK, headers });
   }
 }

@@ -16,6 +16,7 @@ describe('Durable Object RateLimiter', () => {
 
     beforeEach(async () => {
       storage = await getMiniflareDurableObjectStorage(id);
+      storage.deleteAll()
       MockDate.reset()
     });
 
@@ -165,10 +166,8 @@ describe('Durable Object RateLimiter', () => {
       const body = await res.json()
       expect(res.status).toBe(httpStatus.OK)
       expect(body).toEqual({ blocked: true })
-
       const expires = dayjs(res.headers.get('expires'))
       MockDate.set(expires.add(1, 'second').toDate())
-
       const res2 = await rateLimiter.fetch(
         new Request(fakeDomain, {
           method: 'POST',
