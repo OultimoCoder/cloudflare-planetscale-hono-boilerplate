@@ -10,8 +10,8 @@ import { User } from '../src/models/user.model'
 
 const envFile = {
   'dev': '.env',
-  'prod': '.prod.env',
-  'test': '.test.env'
+  'prod': '.env.prod',
+  'test': '.env.test'
 }
 
 const __filename = fileURLToPath(import.meta.url)
