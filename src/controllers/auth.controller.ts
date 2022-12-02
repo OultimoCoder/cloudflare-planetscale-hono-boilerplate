@@ -2,6 +2,7 @@ import { JwtPayload } from '@tsndr/cloudflare-worker-jwt'
 import { Handler } from 'hono'
 import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
+import { github, discord, spotify, google } from 'worker-auth-providers'
 import { getConfig } from '../config/config'
 import * as authService from '../services/auth.service'
 import * as emailService from '../services/email.service'
@@ -46,8 +47,7 @@ const forgotPassword: Handler<{ Bindings: Bindings }> = async (c) => {
     await emailService.sendResetPasswordEmail(
       user.email,
       {
-        firstName: user.first_name,
-        lastName: user.last_name,
+        name: user.name,
         token: resetPasswordToken
       },
       config
@@ -85,8 +85,7 @@ const sendVerificationEmail: Handler<{ Bindings: Bindings }> = async (c) => {
     await emailService.sendVerificationEmail(
       user.email,
       {
-        firstName: user.first_name,
-        lastName: user.last_name,
+        name: user.name,
         token: verifyEmailToken
       },
       config
@@ -116,6 +115,63 @@ const changePassword: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.body(null)
 }
 
+const githubRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
+  const config = getConfig(c.env)
+  const location = await github.redirect({
+    options: {
+      clientId: config.oauth.github.clientId
+    }
+  })
+  return c.redirect(location, httpStatus.FOUND as StatusCode)
+}
+
+const discordRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
+  const config = getConfig(c.env)
+  const location = await discord.redirect({
+    options: {
+      clientId: config.oauth.discord.clientId,
+      redirectUrl: config.oauth.discord.redirectUrl,
+      scope: 'identify email'
+    }
+  })
+  return c.redirect(location, httpStatus.FOUND as StatusCode)
+}
+
+const googleRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
+  const config = getConfig(c.env)
+  const location = await google.redirect({
+    options: {
+      clientId: config.oauth.google.clientId,
+      redirectUrl: config.oauth.google.redirectUrl,
+    }
+  })
+  return c.redirect(location, httpStatus.FOUND as StatusCode)
+}
+
+const spotifyRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
+  const config = getConfig(c.env)
+  const location = await spotify.redirect({
+    options: {
+      clientId: config.oauth.spotify.clientId,
+      redirectUrl: config.oauth.spotify.redirectUrl,
+    }
+  })
+  return c.redirect(location, httpStatus.FOUND as StatusCode)
+}
+
+// const githubCallback: Handler<{ Bindings: Bindings }> = async (c) => {
+//   const config = getConfig(c.env)
+//   const { user: githubUser } = await github.users({
+//     options: {
+//       clientId: config.oauth.github.clientId,
+//       clientSecret: config.oauth.github.clientSecret
+//     },
+//     request: c.req
+//   })
+//   console.log(githubUser)
+// }
+
+
 export {
   register,
   login,
@@ -124,5 +180,10 @@ export {
   forgotPassword,
   resetPassword,
   verifyEmail,
-  changePassword
+  changePassword,
+  githubRedirect,
+  discordRedirect,
+  googleRedirect,
+  spotifyRedirect,
+  // githubCallback
 }

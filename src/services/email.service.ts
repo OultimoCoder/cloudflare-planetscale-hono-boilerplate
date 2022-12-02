@@ -4,8 +4,7 @@ import { Config } from '../config/config'
 let client: SESClient
 
 interface EmailData {
-  firstName: string
-  lastName: string
+  name: string
   token: string
 }
 
@@ -47,7 +46,7 @@ const sendResetPasswordEmail = async (email: string, emailData: EmailData, confi
       Text: {
         Charset: 'UTF-8',
         Data: `
-          Hello ${emailData.firstName} ${emailData.lastName}
+          Hello ${emailData.name}
           Please reset your password by clicking the following link:
           ${emailData.token}
         `
@@ -67,7 +66,7 @@ const sendVerificationEmail = async (email: string, emailData: EmailData, config
       Text: {
         Charset: 'UTF-8',
         Data: `
-          Hello ${emailData.firstName} ${emailData.lastName}
+          Hello ${emailData.name}
           Please verify your email by clicking the following link:
           ${emailData.token}
         `

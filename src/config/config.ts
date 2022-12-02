@@ -35,7 +35,18 @@ const envVarsSchema = z.object({
   AWS_ACCESS_KEY_ID: z.string(),
   AWS_SECRET_ACCESS_KEY: z.string(),
   AWS_REGION: z.string(),
-  EMAIL_SENDER: z.string()
+  EMAIL_SENDER: z.string(),
+  OAUTH_GITHUB_CLIENT_ID: z.string(),
+  OAUTH_GITHUB_CLIENT_SECRET: z.string(),
+  OUATH_GOOGLE_CLIENT_ID: z.string(),
+  OUATH_GOOGLE_CLIENT_SECRET: z.string(),
+  OAUTH_GOOGLE_REDIRECT_URL: z.string(),
+  OAUTH_DISCORD_CLIENT_ID: z.string(),
+  OAUTH_DISCORD_CLIENT_SECRET: z.string(),
+  OAUTH_DISCORD_REDIRECT_URL: z.string(),
+  OAUTH_SPOTIFY_CLIENT_ID: z.string(),
+  OAUTH_SPOTIFY_CLIENT_SECRET: z.string(),
+  OAUTH_SPOTIFY_REDIRECT_URL: z.string()
 })
 
 interface Config {
@@ -60,6 +71,27 @@ interface Config {
   }
   email: {
     sender: string
+  },
+  oauth: {
+    github: {
+      clientId: string
+      clientSecret: string
+    },
+    google: {
+      clientId: string
+      clientSecret: string
+      redirectUrl: string
+    },
+    spotify: {
+      clientId: string
+      clientSecret: string
+      redirectUrl: string
+    },
+    discord: {
+      clientId: string
+      clientSecret: string
+      redirectUrl: string
+    }
   }
 }
 
@@ -92,6 +124,27 @@ const getConfig = (env: Bindings) => {
     },
     email: {
       sender: envVars.EMAIL_SENDER
+    },
+    oauth: {
+      github: {
+        clientId: envVars.OAUTH_GITHUB_CLIENT_ID,
+        clientSecret: envVars.OAUTH_GITHUB_CLIENT_SECRET
+      },
+      google: {
+        clientId: envVars.OUATH_GOOGLE_CLIENT_ID,
+        clientSecret: envVars.OUATH_GOOGLE_CLIENT_SECRET,
+        redirectUrl: envVars.OAUTH_GOOGLE_REDIRECT_URL
+      },
+      spotify: {
+        clientId: envVars.OAUTH_SPOTIFY_CLIENT_ID,
+        clientSecret: envVars.OAUTH_SPOTIFY_CLIENT_SECRET,
+        redirectUrl: envVars.OAUTH_SPOTIFY_REDIRECT_URL
+      },
+      discord: {
+        clientId: envVars.OAUTH_DISCORD_CLIENT_ID,
+        clientSecret: envVars.OAUTH_DISCORD_CLIENT_SECRET,
+        redirectUrl: envVars.OAUTH_DISCORD_REDIRECT_URL
+      }
     }
   }
   return config

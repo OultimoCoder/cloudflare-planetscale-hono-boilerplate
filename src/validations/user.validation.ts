@@ -5,8 +5,7 @@ import { hashPassword } from './custom.transform.validation'
 export const createUser = z.object({
   email: z.string().email(),
   password: z.string().superRefine(password).transform(hashPassword),
-  first_name: z.string(),
-  last_name: z.string(),
+  name: z.string(),
   is_email_verified: z
     .any()
     .optional()
@@ -42,11 +41,10 @@ export const updateUser = z.object({
   body: z
     .object({
       email: z.string().email().optional(),
-      first_name: z.string().optional(),
-      last_name: z.string().optional(),
+      name: z.string().optional(),
       role: z.union([z.literal('admin'), z.literal('user')]).optional()
     })
-    .refine(({ email, first_name, last_name, role }) => email || first_name || last_name || role, {
+    .refine(({ email, name, role }) => email || name || role, {
       message: 'At least one field is required'
     })
 })

@@ -30,6 +30,13 @@ DATABASE_USERNAME='example'
 DATABASE_HOST='example'
 AWS_REGION='eu-west-1'
 EMAIL_SENDER='noreply@gmail.com'
+OAUTH_GITHUB_CLIENT_ID='myclientid'
+OAUTH_DISCORD_CLIENT_ID='myclientid'
+OAUTH_DISCORD_REDIRECT_URL='https://frontend.com/login'
+OAUTH_SPOTIFY_CLIENT_ID='myclientid'
+OAUTH_SPOTIFY_REDIRECT_URL='https://frontend.com/login'
+OAUTH_GOOGLE_CLIENT_ID='myclientid'
+OAUTH_GOOGLE_REDIRECT_URL='https://frontend.com/login'
 
 [build]
 command = "npm run build"
@@ -40,4 +47,8 @@ command = "npm run build"
 # AWS_ACCESS_KEY_ID
 # AWS_SECRET_ACCESS_KEY
 # SENTRY_DSN
+# OAUTH_GITHUB_CLIENT_SECRET
+# OAUTH_DISCORD_CLIENT_SECRET
+# OAUTH_SPOTIFY_CLIENT_SECRET
+# OAUTH_GOOGLE_CLIENT_SECRET
 

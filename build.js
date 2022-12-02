@@ -10,7 +10,7 @@ try {
       conditions: ['worker', 'browser'],
       outExtension: { '.js': '.mjs' },
       format: 'esm',
-      target: "esnext"
+      target: 'esnext'
     })
 } catch(err) {
   process.exitCode = 1;

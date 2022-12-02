@@ -5,6 +5,7 @@ import 'aws-sdk-client-mock-jest'
 import bcrypt from 'bcryptjs'
 import dayjs from 'dayjs'
 import httpStatus from 'http-status'
+import { url } from 'inspector'
 import { TableReference } from 'kysely/dist/cjs/parser/table-parser'
 import { getConfig } from '../../src/config/config'
 import { Database, getDBClient } from '../../src/config/database'
@@ -26,8 +27,7 @@ describe('Auth routes', () => {
     let newUser: MockUser
     beforeEach(() => {
       newUser = {
-        first_name: faker.name.firstName(),
-        last_name: faker.name.firstName(),
+        name: faker.name.fullName(),
         email: faker.internet.email().toLowerCase(),
         password: 'password1'
       }
@@ -44,8 +44,7 @@ describe('Auth routes', () => {
       expect(body.user).not.toHaveProperty('password')
       expect(body.user).toEqual({
         id: expect.anything(),
-        first_name: newUser.first_name,
-        last_name: newUser.last_name,
+        name: newUser.name,
         email: newUser.email,
         role: 'user',
         is_email_verified: 0
@@ -62,8 +61,7 @@ describe('Auth routes', () => {
 
       expect(dbUser.password).not.toBe(newUser.password)
       expect(dbUser).toMatchObject({
-        first_name: newUser.first_name,
-        last_name: newUser.last_name,
+        name: newUser.name,
         password: expect.anything(),
         email: newUser.email,
         role: 'user',
@@ -149,8 +147,7 @@ describe('Auth routes', () => {
       expect(body.user).not.toHaveProperty('password')
       expect(body.user).toEqual({
         id: expect.anything(),
-        first_name: userOne.first_name,
-        last_name: userOne.last_name,
+        name: userOne.name,
         email: userOne.email,
         role: userOne.role,
         is_email_verified: 0
@@ -621,6 +618,63 @@ describe('Auth routes', () => {
         }
       })
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
+    })
+  })
+
+  describe('POST /v1/auth/github/redirect', () => {
+    test('should return 302 and successfully redirect to github', async () => {
+      const res = await request('/v1/auth/github/redirect', {
+        method: 'GET',
+      })
+      expect(res.status).toBe(httpStatus.FOUND)
+      expect(res.headers.get('location')).toBe(
+        'https://github.com/login/oauth/authorize?allow_signup=true&' +
+        `client_id=${config.oauth.github.clientId}&scope=read%3Auser%20user%3Aemail`
+      )
+    })
+  })
+
+  describe('POST /v1/auth/google/redirect', () => {
+    test('should return 302 and successfully redirect to google', async () => {
+      const urlEncodedRedirectUrl = encodeURIComponent(config.oauth.google.redirectUrl)
+      const res = await request('/v1/auth/google/redirect', {
+        method: 'GET',
+      })
+      expect(res.status).toBe(httpStatus.FOUND)
+      expect(res.headers.get('location')).toBe(
+        `https://accounts.google.com/o/oauth2/v2/auth?client_id=${config.oauth.google.clientId}&` +
+        `include_granted_scopes=true&redirect_uri=${urlEncodedRedirectUrl}&` +
+        'response_type=code&scope=openid%20email%20profile&state=pass-through%20value'
+      )
+    })
+  })
+
+  describe('POST /v1/auth/spotify/redirect', () => {
+    test('should return 302 and successfully redirect to spotify', async () => {
+      const urlEncodedRedirectUrl = encodeURIComponent(config.oauth.spotify.redirectUrl)
+      const res = await request('/v1/auth/spotify/redirect', {
+        method: 'GET',
+      })
+      expect(res.status).toBe(httpStatus.FOUND)
+      expect(res.headers.get('location')).toBe(
+        `https://accounts.spotify.com/authorize?client_id=${config.oauth.spotify.clientId}&` +
+        `redirect_uri=${urlEncodedRedirectUrl}&response_type=code&` +
+        'scope=user-library-read%20playlist-modify-private&show_dialog=false'
+      )
+    })
+  })
+
+  describe('POST /v1/auth/discord/redirect', () => {
+    test('should return 302 and successfully redirect to discord', async () => {
+      const urlEncodedRedirectUrl = encodeURIComponent(config.oauth.discord.redirectUrl)
+      const res = await request('/v1/auth/discord/redirect', {
+        method: 'GET',
+      })
+      expect(res.status).toBe(httpStatus.FOUND)
+      expect(res.headers.get('location')).toBe(
+        `https://discord.com/api/oauth2/authorize?client_id=${config.oauth.discord.clientId}&` +
+        `redirect_uri=${urlEncodedRedirectUrl}&response_type=code&scope=identify%20email`
+      )
     })
   })
 })

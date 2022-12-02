@@ -21,8 +21,7 @@ describe('User routes', () => {
 
     beforeEach(() => {
       newUser = {
-        first_name: faker.name.firstName(),
-        last_name: faker.name.firstName(),
+        name: faker.name.fullName(),
         email: faker.internet.email().toLowerCase(),
         password: 'password1',
         role: 'user'
@@ -45,8 +44,7 @@ describe('User routes', () => {
       expect(body).not.toHaveProperty('password')
       expect(body).toEqual({
         id: expect.anything(),
-        first_name: newUser.first_name,
-        last_name: newUser.last_name,
+        name: newUser.name,
         email: newUser.email,
         role: 'user',
         is_email_verified: 0
@@ -63,8 +61,7 @@ describe('User routes', () => {
 
       expect(dbUser.password).not.toBe(newUser.password)
       expect(dbUser).toMatchObject({
-        first_name: newUser.first_name,
-        last_name: newUser.last_name,
+        name: newUser.name,
         password: expect.anything(),
         email: newUser.email,
         role: 'user',
@@ -248,8 +245,7 @@ describe('User routes', () => {
       expect(body).toHaveLength(3)
       expect(body[0]).toEqual({
         id: ids[0],
-        first_name: userOne.first_name,
-        last_name: userOne.last_name,
+        name: userOne.name,
         email: userOne.email,
         role: userOne.role,
         is_email_verified: 0
@@ -382,8 +378,7 @@ describe('User routes', () => {
       expect(body).not.toHaveProperty('password')
       expect(body).toEqual({
         id: ids[0],
-        first_name: userOne.first_name,
-        last_name: userOne.last_name,
+        name: userOne.name,
         email: userOne.email,
         role: userOne.role,
         is_email_verified: 0
@@ -543,8 +538,7 @@ describe('User routes', () => {
       const ids = await insertUsers([userOne], config.database)
       const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
       const updateBody = {
-        first_name: faker.name.firstName(),
-        last_name: faker.name.lastName(),
+        name: faker.name.fullName(),
         email: faker.internet.email().toLowerCase()
       }
 
@@ -561,8 +555,7 @@ describe('User routes', () => {
       expect(body).not.toHaveProperty('password')
       expect(body).toEqual({
         id: ids[0],
-        first_name: updateBody.first_name,
-        last_name: updateBody.last_name,
+        name: updateBody.name,
         email: updateBody.email,
         role: 'user',
         is_email_verified: 0
@@ -579,8 +572,7 @@ describe('User routes', () => {
 
       expect(dbUser.password).not.toBe(userOne.password)
       expect(dbUser).toMatchObject({
-        first_name: updateBody.first_name,
-        last_name: updateBody.last_name,
+        name: updateBody.name,
         password: expect.anything(),
         email: updateBody.email,
         role: 'user',
@@ -590,7 +582,7 @@ describe('User routes', () => {
 
     test('should return 401 error if access token is missing', async () => {
       const ids = await insertUsers([userOne], config.database)
-      const updateBody = { first_name: faker.name.firstName() }
+      const updateBody = { name: faker.name.fullName() }
       const res = await request(`/v1/users/${ids[0]}`, {
         method: 'PATCH',
         body: JSON.stringify(updateBody),
@@ -604,7 +596,7 @@ describe('User routes', () => {
     test('should return 403 if user is updating another user', async () => {
       const ids = await insertUsers([userOne, userTwo], config.database)
       const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
-      const updateBody = { first_name: faker.name.firstName() }
+      const updateBody = { name: faker.name.fullName() }
       const res = await request(`/v1/users/${ids[1]}`, {
         method: 'PATCH',
         body: JSON.stringify(updateBody),
@@ -619,7 +611,7 @@ describe('User routes', () => {
     test('should return 200 and update user if admin is updating another user', async () => {
       const ids = await insertUsers([userOne, admin], config.database)
       const adminAccessToken = await getAccessToken(ids[1], admin.role, config.jwt)
-      const updateBody = { first_name: faker.name.firstName() }
+      const updateBody = { name: faker.name.fullName() }
       const res = await request(`/v1/users/${ids[0]}`, {
         method: 'PATCH',
         body: JSON.stringify(updateBody),
@@ -634,7 +626,7 @@ describe('User routes', () => {
     test('should return 404 if admin is updating another user that is not found', async () => {
       const ids = await insertUsers([admin], config.database)
       const adminAccessToken = await getAccessToken(ids[0], admin.role, config.jwt)
-      const updateBody = { first_name: faker.name.firstName() }
+      const updateBody = { name: faker.name.fullName() }
       const res = await request('/v1/users/123123222', {
         method: 'PATCH',
         body: JSON.stringify(updateBody),
@@ -649,7 +641,7 @@ describe('User routes', () => {
     test('should return 400 error if userId is not a number', async () => {
       const ids = await insertUsers([admin], config.database)
       const adminAccessToken = await getAccessToken(ids[0], admin.role, config.jwt)
-      const updateBody = { first_name: faker.name.firstName() }
+      const updateBody = { name: faker.name.fullName() }
       const res = await request('/v1/users/notanumber123', {
         method: 'PATCH',
         body: JSON.stringify(updateBody),

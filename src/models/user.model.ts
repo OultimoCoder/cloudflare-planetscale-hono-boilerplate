@@ -5,8 +5,7 @@ import { BaseModel } from './base.model'
 
 interface UserTable {
   id: Generated<number>
-  first_name: string
-  last_name: string
+  name: string
   email: string
   password: string
   is_email_verified: boolean
@@ -15,8 +14,7 @@ interface UserTable {
 
 class User extends BaseModel implements Selectable<UserTable> {
   id: number
-  first_name: string
-  last_name: string
+  name: string
   email: string
   is_email_verified: boolean
   role: Role
@@ -27,8 +25,7 @@ class User extends BaseModel implements Selectable<UserTable> {
   constructor(user: Selectable<UserTable>, role: Role = 'user') {
     super(role)
     this.id = user.id
-    this.first_name = user.first_name
-    this.last_name = user.last_name
+    this.name = user.name
     this.email = user.email
     this.is_email_verified = user.is_email_verified
     this.role = user.role

@@ -6,8 +6,7 @@ import { hashPassword } from './custom.transform.validation'
 export const register = z.object({
   email: z.string().email(),
   password: z.string().superRefine(password).transform(hashPassword),
-  first_name: z.string(),
-  last_name: z.string(),
+  name: z.string(),
   is_email_verified: z
     .any()
     .optional()

@@ -42,7 +42,7 @@ const errorHandler: ErrorHandler<{ Bindings: Bindings }> = (err, c) => {
     message: error.message,
     ...(config.env === 'development' && { stack: err.stack })
   }
-
+  delete c.error // Don't pass to sentry middleware as it is either logged or already handled
   return c.json(response, error.statusCode)
 }
 

@@ -13,16 +13,14 @@ type MockUser = Selectable<UserTable> | Partial<Omit<Selectable<UserTable>, 'id'
 
 interface UserResponse {
   id: number
-  first_name: string
-  last_name: string
+  name: string
   email: string
   role: string
   is_email_verified: boolean
 }
 
 const userOne: MockUser = {
-  first_name: faker.name.firstName(),
-  last_name: faker.name.lastName(),
+  name: faker.name.fullName(),
   email: faker.internet.email().toLowerCase(),
   password,
   role: 'user',
@@ -30,8 +28,7 @@ const userOne: MockUser = {
 }
 
 const userTwo: MockUser = {
-  first_name: faker.name.firstName(),
-  last_name: faker.name.lastName(),
+  name: faker.name.fullName(),
   email: faker.internet.email().toLowerCase(),
   password,
   role: 'user',
@@ -39,8 +36,7 @@ const userTwo: MockUser = {
 }
 
 const admin: MockUser = {
-  first_name: faker.name.firstName(),
-  last_name: faker.name.lastName(),
+  name: faker.name.fullName(),
   email: faker.internet.email().toLowerCase(),
   password,
   role: 'admin',

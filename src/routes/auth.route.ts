@@ -21,4 +21,11 @@ route.post(
 )
 route.post('/verify-email', authController.verifyEmail)
 
+route.get('/github/redirect', authController.githubRedirect)
+route.get('/google/redirect', authController.googleRedirect)
+route.get('/spotify/redirect', authController.spotifyRedirect)
+route.get('/discord/redirect', authController.discordRedirect)
+
+route.get('/github/callback', authController.githubCallback)
+
 export { route }
