@@ -621,7 +621,7 @@ describe('Auth routes', () => {
     })
   })
 
-  describe('POST /v1/auth/github/redirect', () => {
+  describe('GET /v1/auth/github/redirect', () => {
     test('should return 302 and successfully redirect to github', async () => {
       const res = await request('/v1/auth/github/redirect', {
         method: 'GET',
@@ -634,7 +634,7 @@ describe('Auth routes', () => {
     })
   })
 
-  describe('POST /v1/auth/google/redirect', () => {
+  describe('GET /v1/auth/google/redirect', () => {
     test('should return 302 and successfully redirect to google', async () => {
       const urlEncodedRedirectUrl = encodeURIComponent(config.oauth.google.redirectUrl)
       const res = await request('/v1/auth/google/redirect', {
@@ -649,7 +649,7 @@ describe('Auth routes', () => {
     })
   })
 
-  describe('POST /v1/auth/spotify/redirect', () => {
+  describe('GET /v1/auth/spotify/redirect', () => {
     test('should return 302 and successfully redirect to spotify', async () => {
       const urlEncodedRedirectUrl = encodeURIComponent(config.oauth.spotify.redirectUrl)
       const res = await request('/v1/auth/spotify/redirect', {
@@ -664,7 +664,7 @@ describe('Auth routes', () => {
     })
   })
 
-  describe('POST /v1/auth/discord/redirect', () => {
+  describe('GET /v1/auth/discord/redirect', () => {
     test('should return 302 and successfully redirect to discord', async () => {
       const urlEncodedRedirectUrl = encodeURIComponent(config.oauth.discord.redirectUrl)
       const res = await request('/v1/auth/discord/redirect', {
