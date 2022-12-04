@@ -7,7 +7,7 @@ interface UserTable {
   id: Generated<number>
   name: string
   email: string
-  password: string
+  password: string | null  // null if user is created via OAuth
   is_email_verified: boolean
   role: Role
 }

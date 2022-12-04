@@ -1,5 +1,7 @@
 import httpStatus from 'http-status'
 import { InsertResult, UpdateResult } from 'kysely'
+import { userInfo } from 'os'
+import { AuthProviderType } from '../config/authProviders'
 import { Config } from '../config/config'
 import { getDBClient } from '../config/database'
 import { User, UserTable } from '../models/user.model'
@@ -29,6 +31,45 @@ const createUser = async (userBody: CreateUser, databaseConfig: Config['database
     throw new ApiError(httpStatus.BAD_REQUEST, 'User already exists')
   }
   return user
+}
+
+const createOauthUser = async (
+  name: string,
+  email: string,
+  provider: AuthProviderType,
+  provider_id: string,
+  databaseConfig: Config['database']
+) => {
+  const db = getDBClient(databaseConfig)
+  try {
+    await db.transaction().execute(async (trx) => {
+      const userId = await trx
+        .insertInto('user')
+        .values({
+          name: name,
+          email: email,
+          is_email_verified: true,
+          password: null,
+          role: 'user'
+        })
+        .executeTakeFirstOrThrow()
+      await trx
+        .insertInto('authorisations')
+        .values({
+          user_id: String(userId.insertId),
+          provider_type: provider,
+          provider_user_id: provider_id
+        })
+        .executeTakeFirstOrThrow()
+        return userId
+    })
+  } catch (error) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN, `Cannot signup with ${provider}, user already exists with that email`
+    )
+  }
+  const user = await getUserByProviderIdType(provider_id, provider, databaseConfig)
+  return User.convert(user)
 }
 
 const queryUsers = async (
@@ -67,6 +108,22 @@ const getUserByEmail = async (email: string, databaseConfig: Config['database'])
   return user ? User.convert(user) : user
 }
 
+const getUserByProviderIdType = async (
+  id: string,
+  type: AuthProviderType,
+  databaseConfig: Config['database']
+) => {
+  const db = getDBClient(databaseConfig)
+  const user = await db
+    .selectFrom('user')
+    .innerJoin('authorisations', 'authorisations.user_id', 'user.id')
+    .selectAll()
+    .where('authorisations.provider_user_id', '=', id)
+    .where('authorisations.provider_type', '=', type)
+    .executeTakeFirst()
+  return user ? User.convert(user) : user
+}
+
 const updateUserById = async (
   userId: number,
   updateBody: Partial<UpdateUser>,
@@ -99,4 +156,13 @@ const deleteUserById = async (userId: number, databaseConfig: Config['database']
   }
 }
 
-export { createUser, queryUsers, getUserById, getUserByEmail, updateUserById, deleteUserById }
+export {
+  createUser,
+  queryUsers,
+  getUserById,
+  getUserByEmail,
+  updateUserById,
+  deleteUserById,
+  getUserByProviderIdType,
+  createOauthUser
+}

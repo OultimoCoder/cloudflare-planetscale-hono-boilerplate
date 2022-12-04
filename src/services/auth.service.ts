@@ -1,6 +1,8 @@
 import httpStatus from 'http-status'
+import { authProviders } from '../config/authProviders'
 import { Config } from '../config/config'
 import { tokenTypes } from '../config/tokens'
+import { GithubUser } from '../models/authProvider.model'
 import { ApiError } from '../utils/ApiError'
 import * as tokenService from './token.service'
 import * as userService from './user.service'
@@ -87,4 +89,31 @@ const changePassword = async (
   }
 }
 
-export { loginUserWithEmailAndPassword, refreshAuth, resetPassword, verifyEmail, changePassword }
+const loginOrCreateUserWithGithub = async (
+  githubUser: GithubUser,
+  databaseConfig: Config['database']
+) => {
+  const user = await userService.getUserByProviderIdType(
+    githubUser.id.toString(),
+    authProviders.GITHUB,
+    databaseConfig
+  )
+  if (user) return user
+  const newUser = await userService.createOauthUser(
+    githubUser.name,
+    githubUser.email,
+    authProviders.GITHUB,
+    githubUser.id.toString(),
+    databaseConfig
+  )
+  return newUser
+}
+
+export {
+  loginUserWithEmailAndPassword,
+  refreshAuth,
+  resetPassword,
+  verifyEmail,
+  changePassword,
+  loginOrCreateUserWithGithub
+}

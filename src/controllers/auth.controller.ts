@@ -4,10 +4,12 @@ import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
 import { github, discord, spotify, google } from 'worker-auth-providers'
 import { getConfig } from '../config/config'
+import { GithubUser } from '../models/authProvider.model'
 import * as authService from '../services/auth.service'
 import * as emailService from '../services/email.service'
 import * as tokenService from '../services/token.service'
 import * as userService from '../services/user.service'
+import { ApiError } from '../utils/ApiError'
 import * as authValidation from '../validations/auth.validation'
 
 const register: Handler<{ Bindings: Bindings }> = async (c) => {
@@ -159,17 +161,33 @@ const spotifyRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.redirect(location, httpStatus.FOUND as StatusCode)
 }
 
-// const githubCallback: Handler<{ Bindings: Bindings }> = async (c) => {
-//   const config = getConfig(c.env)
-//   const { user: githubUser } = await github.users({
-//     options: {
-//       clientId: config.oauth.github.clientId,
-//       clientSecret: config.oauth.github.clientSecret
-//     },
-//     request: c.req
-//   })
-//   console.log(githubUser)
-// }
+const githubCallback: Handler<{ Bindings: Bindings }> = async (c) => {
+  const config = getConfig(c.env)
+  const queryParse = c.req.query()
+  authValidation.oauthCallback.parse(queryParse)
+  let githubUser: GithubUser
+  try {
+    const result = await github.users({
+      options: {
+        clientId: config.oauth.github.clientId,
+        clientSecret: config.oauth.github.clientSecret
+      },
+      request: c.req
+    })
+    githubUser = result.user as GithubUser
+  } catch (err) {
+    throw new ApiError(httpStatus.UNAUTHORIZED as StatusCode, 'Unauthorized')
+  }
+  if (!githubUser) {
+    throw new ApiError(httpStatus.UNAUTHORIZED as StatusCode, 'Unauthorized')
+  }
+  const user = await authService.loginOrCreateUserWithGithub(
+    githubUser as GithubUser,
+    config.database
+  )
+  const tokens = await tokenService.generateAuthTokens(user, config.jwt)
+  return c.json({ user, tokens }, httpStatus.OK as StatusCode)
+}
 
 
 export {
@@ -185,5 +203,5 @@ export {
   discordRedirect,
   googleRedirect,
   spotifyRedirect,
-  // githubCallback
+  githubCallback
 }

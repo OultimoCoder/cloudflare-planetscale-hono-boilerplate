@@ -47,3 +47,7 @@ export const changePassword = z.object({
   oldPassword: z.string().superRefine(password).transform(hashPassword),
   newPassword: z.string().superRefine(password).transform(hashPassword)
 })
+
+export const oauthCallback = z.object({
+  code: z.string()
+})
