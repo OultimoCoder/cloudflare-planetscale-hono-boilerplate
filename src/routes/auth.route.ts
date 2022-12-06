@@ -27,5 +27,8 @@ route.get('/spotify/redirect', authController.spotifyRedirect)
 route.get('/discord/redirect', authController.discordRedirect)
 
 route.get('/github/callback', authController.githubCallback)
+route.get('/spotify/callback', authController.spotifyCallback)
+route.get('/discord/callback', authController.discordCallback)
+route.get('/google/callback', authController.googleCallback)
 
 export { route }

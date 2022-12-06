@@ -11,6 +11,24 @@ const githubAuthorisation = (userId: string) => ({
   user_id: userId
 })
 
+const discordAuthorisation = (userId: string) => ({
+  provider_type: authProviders.DISCORD,
+  provider_user_id: faker.datatype.number().toString(),
+  user_id: userId
+})
+
+const spotifyAuthorisation = (userId: string) => ({
+  provider_type: authProviders.SPOTIFY,
+  provider_user_id: faker.datatype.number().toString(),
+  user_id: userId
+})
+
+const googleAuthorisation = (userId: string) => ({
+  provider_type: authProviders.GOOGLE,
+  provider_user_id: faker.datatype.number().toString(),
+  user_id: userId
+})
+
 const insertAuthorisations = async (
   authorisations: Selectable<AuthProviderTable>[],
   databaseConfig: Config['database']
@@ -24,4 +42,10 @@ const insertAuthorisations = async (
   }
 }
 
-export { githubAuthorisation, insertAuthorisations }
+export {
+  githubAuthorisation,
+  spotifyAuthorisation,
+  googleAuthorisation,
+  discordAuthorisation,
+  insertAuthorisations
+}

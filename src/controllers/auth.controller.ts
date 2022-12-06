@@ -198,6 +198,50 @@ const githubCallback: Handler<{ Bindings: Bindings }> = async (c) => {
   return oauthCallback(c, oauthRequest, authProviders.GITHUB)
 }
 
+const discordCallback: Handler<{ Bindings: Bindings }> = async (c) => {
+  const config = getConfig(c.env)
+  const queryParse = c.req.query()
+  authValidation.oauthCallback.parse(queryParse)
+  const oauthRequest = discord.users({
+    options: {
+      clientId: config.oauth.discord.clientId,
+      clientSecret: config.oauth.discord.clientSecret,
+      redirectUrl: config.oauth.discord.redirectUrl
+    },
+    request: c.req
+  })
+  return oauthCallback(c, oauthRequest, authProviders.DISCORD)
+}
+
+const spotifyCallback: Handler<{ Bindings: Bindings }> = async (c) => {
+  const config = getConfig(c.env)
+  const queryParse = c.req.query()
+  authValidation.oauthCallback.parse(queryParse)
+  const oauthRequest = spotify.users({
+    options: {
+      clientId: config.oauth.spotify.clientId,
+      clientSecret: config.oauth.spotify.clientSecret,
+      redirectUrl: config.oauth.spotify.redirectUrl
+    },
+    request: c.req
+  })
+  return oauthCallback(c, oauthRequest, authProviders.SPOTIFY)
+}
+
+const googleCallback: Handler<{ Bindings: Bindings }> = async (c) => {
+  const config = getConfig(c.env)
+  const queryParse = c.req.query()
+  authValidation.oauthCallback.parse(queryParse)
+  const oauthRequest = github.users({
+    options: {
+      clientId: config.oauth.github.clientId,
+      clientSecret: config.oauth.github.clientSecret,
+      redirectUrl: config.oauth.google.redirectUrl
+    },
+    request: c.req
+  })
+  return oauthCallback(c, oauthRequest, authProviders.GOOGLE)
+}
 
 export {
   register,
@@ -212,5 +256,8 @@ export {
   discordRedirect,
   googleRedirect,
   spotifyRedirect,
-  githubCallback
+  githubCallback,
+  spotifyCallback,
+  googleCallback,
+  discordCallback
 }
