@@ -232,10 +232,10 @@ const googleCallback: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const queryParse = c.req.query()
   authValidation.oauthCallback.parse(queryParse)
-  const oauthRequest = github.users({
+  const oauthRequest = google.users({
     options: {
-      clientId: config.oauth.github.clientId,
-      clientSecret: config.oauth.github.clientSecret,
+      clientId: config.oauth.google.clientId,
+      clientSecret: config.oauth.google.clientSecret,
       redirectUrl: config.oauth.google.redirectUrl
     },
     request: c.req
