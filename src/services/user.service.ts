@@ -54,7 +54,7 @@ const createOauthUser = async (
         .insertInto('authorisations')
         .values({
           user_id: String(userId.insertId),
-          provider_type: providerUser.provider_type,
+          provider_type: providerUser.providerType,
           provider_user_id: providerUser.id.toString()
         })
         .executeTakeFirstOrThrow()
@@ -63,11 +63,11 @@ const createOauthUser = async (
   } catch (error) {
     throw new ApiError(
       httpStatus.FORBIDDEN,
-      `Cannot signup with ${providerUser.provider_type}, user already exists with that email`
+      `Cannot signup with ${providerUser.providerType}, user already exists with that email`
     )
   }
   const user = await getUserByProviderIdType(
-    providerUser.id.toString(), providerUser.provider_type, databaseConfig
+    providerUser.id.toString(), providerUser.providerType, databaseConfig
   )
   return User.convert(user)
 }

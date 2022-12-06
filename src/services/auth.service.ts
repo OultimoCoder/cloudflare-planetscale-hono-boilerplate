@@ -95,7 +95,7 @@ const loginOrCreateUserWithOauth = async (
 ) => {
   const user = await userService.getUserByProviderIdType(
     providerUser.id.toString(),
-    providerUser.provider_type,
+    providerUser.providerType,
     databaseConfig
   )
   if (user) return user

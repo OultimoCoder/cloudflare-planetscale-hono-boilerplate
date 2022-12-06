@@ -1,9 +1,9 @@
 import { JwtPayload } from '@tsndr/cloudflare-worker-jwt'
-import { Handler } from 'hono'
+import { Context, Handler } from 'hono'
 import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
 import { github, discord, spotify, google } from 'worker-auth-providers'
-import { authProviders } from '../config/authProviders'
+import { authProviders, AuthProviderType } from '../config/authProviders'
 import { getConfig } from '../config/config'
 import { OauthUser } from '../models/authProvider.model'
 import * as authService from '../services/auth.service'
@@ -162,36 +162,40 @@ const spotifyRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.redirect(location, httpStatus.FOUND as StatusCode)
 }
 
-// const oauthCallback: Handler<{ Bindings: Bindings }> = async (c) => {
-// }
+const oauthCallback = async (
+  c: Context<string, { Bindings: Bindings }>,
+  oauthRequest: Promise<{user: unknown, tokens: unknown}>,
+  providerType: AuthProviderType
+) => {
+  const config = getConfig(c.env)
+  let providerUser: OauthUser
+  try {
+    const result = await oauthRequest
+    providerUser = result.user as OauthUser
+    providerUser.providerType = providerType
+  } catch (err) {
+    throw new ApiError(httpStatus.UNAUTHORIZED as StatusCode, 'Unauthorized')
+  }
+  if (!providerUser) {
+    throw new ApiError(httpStatus.UNAUTHORIZED as StatusCode, 'Unauthorized')
+  }
+  const user = await authService.loginOrCreateUserWithOauth(providerUser, config.database)
+  const tokens = await tokenService.generateAuthTokens(user, config.jwt)
+  return c.json({ user, tokens }, httpStatus.OK as StatusCode)
+}
 
 const githubCallback: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const queryParse = c.req.query()
   authValidation.oauthCallback.parse(queryParse)
-  let githubUser: OauthUser
-  try {
-    const result = await github.users({
-      options: {
-        clientId: config.oauth.github.clientId,
-        clientSecret: config.oauth.github.clientSecret
-      },
-      request: c.req
-    })
-    githubUser = result.user as OauthUser
-    githubUser.provider_type = authProviders.GITHUB
-  } catch (err) {
-    throw new ApiError(httpStatus.UNAUTHORIZED as StatusCode, 'Unauthorized')
-  }
-  if (!githubUser) {
-    throw new ApiError(httpStatus.UNAUTHORIZED as StatusCode, 'Unauthorized')
-  }
-  const user = await authService.loginOrCreateUserWithOauth(
-    githubUser as OauthUser,
-    config.database
-  )
-  const tokens = await tokenService.generateAuthTokens(user, config.jwt)
-  return c.json({ user, tokens }, httpStatus.OK as StatusCode)
+  const oauthRequest = github.users({
+    options: {
+      clientId: config.oauth.github.clientId,
+      clientSecret: config.oauth.github.clientSecret
+    },
+    request: c.req
+  })
+  return oauthCallback(c, oauthRequest, authProviders.GITHUB)
 }
 
 

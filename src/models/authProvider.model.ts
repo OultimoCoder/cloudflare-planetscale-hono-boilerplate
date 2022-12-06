@@ -10,7 +10,7 @@ interface OauthUser {
   id: number
   email: string
   name: string
-  provider_type: AuthProviderType
+  providerType: AuthProviderType
 }
 
 export { AuthProviderTable, OauthUser }
