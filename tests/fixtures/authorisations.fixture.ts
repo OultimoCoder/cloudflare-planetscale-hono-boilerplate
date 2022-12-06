@@ -29,6 +29,12 @@ const googleAuthorisation = (userId: string) => ({
   user_id: userId
 })
 
+const facebookAuthorisation = (userId: string) => ({
+  provider_type: authProviders.FACEBOOK,
+  provider_user_id: faker.datatype.number().toString(),
+  user_id: userId
+})
+
 const insertAuthorisations = async (
   authorisations: Selectable<AuthProviderTable>[],
   databaseConfig: Config['database']
@@ -47,5 +53,6 @@ export {
   spotifyAuthorisation,
   googleAuthorisation,
   discordAuthorisation,
-  insertAuthorisations
+  insertAuthorisations,
+  facebookAuthorisation
 }

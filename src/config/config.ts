@@ -46,7 +46,10 @@ const envVarsSchema = z.object({
   OAUTH_DISCORD_REDIRECT_URL: z.string(),
   OAUTH_SPOTIFY_CLIENT_ID: z.string(),
   OAUTH_SPOTIFY_CLIENT_SECRET: z.string(),
-  OAUTH_SPOTIFY_REDIRECT_URL: z.string()
+  OAUTH_SPOTIFY_REDIRECT_URL: z.string(),
+  OAUTH_FACEBOOK_CLIENT_ID: z.string(),
+  OAUTH_FACEBOOK_CLIENT_SECRET: z.string(),
+  OAUTH_FACEBOOK_REDIRECT_URL: z.string()
 })
 
 interface Config {
@@ -88,6 +91,11 @@ interface Config {
       redirectUrl: string
     },
     discord: {
+      clientId: string
+      clientSecret: string
+      redirectUrl: string
+    },
+    facebook: {
       clientId: string
       clientSecret: string
       redirectUrl: string
@@ -144,6 +152,11 @@ const getConfig = (env: Bindings) => {
         clientId: envVars.OAUTH_DISCORD_CLIENT_ID,
         clientSecret: envVars.OAUTH_DISCORD_CLIENT_SECRET,
         redirectUrl: envVars.OAUTH_DISCORD_REDIRECT_URL
+      },
+      facebook: {
+        clientId: envVars.OAUTH_FACEBOOK_CLIENT_ID,
+        clientSecret: envVars.OAUTH_FACEBOOK_CLIENT_SECRET,
+        redirectUrl: envVars.OAUTH_FACEBOOK_REDIRECT_URL
       }
     }
   }

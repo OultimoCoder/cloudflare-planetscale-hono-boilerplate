@@ -13,4 +13,9 @@ interface OauthUser {
   providerType: AuthProviderType
 }
 
-export { AuthProviderTable, OauthUser }
+interface FacebookUser extends OauthUser{
+  first_name: string
+  last_name: string
+}
+
+export { AuthProviderTable, OauthUser, FacebookUser }

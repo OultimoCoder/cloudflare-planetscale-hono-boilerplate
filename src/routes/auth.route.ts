@@ -25,10 +25,12 @@ route.get('/github/redirect', authController.githubRedirect)
 route.get('/google/redirect', authController.googleRedirect)
 route.get('/spotify/redirect', authController.spotifyRedirect)
 route.get('/discord/redirect', authController.discordRedirect)
+route.get('/facebook/redirect', authController.facebookRedirect)
 
 route.get('/github/callback', authController.githubCallback)
 route.get('/spotify/callback', authController.spotifyCallback)
 route.get('/discord/callback', authController.discordCallback)
 route.get('/google/callback', authController.googleCallback)
+route.get('/facebook/callback', authController.facebookCallback)
 
 export { route }

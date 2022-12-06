@@ -2,10 +2,10 @@ import { JwtPayload } from '@tsndr/cloudflare-worker-jwt'
 import { Context, Handler } from 'hono'
 import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
-import { github, discord, spotify, google } from 'worker-auth-providers'
+import { github, discord, spotify, google, facebook } from 'worker-auth-providers'
 import { authProviders, AuthProviderType } from '../config/authProviders'
 import { getConfig } from '../config/config'
-import { OauthUser } from '../models/authProvider.model'
+import { OauthUser, FacebookUser } from '../models/authProvider.model'
 import * as authService from '../services/auth.service'
 import * as emailService from '../services/email.service'
 import * as tokenService from '../services/token.service'
@@ -162,6 +162,17 @@ const spotifyRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.redirect(location, httpStatus.FOUND as StatusCode)
 }
 
+const facebookRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
+  const config = getConfig(c.env)
+  const location = await facebook.redirect({
+    options: {
+      clientId: config.oauth.facebook.clientId,
+      redirectUrl: config.oauth.facebook.redirectUrl,
+    }
+  })
+  return c.redirect(location, httpStatus.FOUND as StatusCode)
+}
+
 const oauthCallback = async (
   c: Context<string, { Bindings: Bindings }>,
   oauthRequest: Promise<{user: unknown, tokens: unknown}>,
@@ -243,6 +254,24 @@ const googleCallback: Handler<{ Bindings: Bindings }> = async (c) => {
   return oauthCallback(c, oauthRequest, authProviders.GOOGLE)
 }
 
+const facebookCallback: Handler<{ Bindings: Bindings }> = async (c) => {
+  const config = getConfig(c.env)
+  const queryParse = c.req.query()
+  authValidation.oauthCallback.parse(queryParse)
+  const oauthRequest = facebook.users({
+    options: {
+      clientId: config.oauth.facebook.clientId,
+      clientSecret: config.oauth.facebook.clientSecret,
+      redirectUrl: config.oauth.facebook.redirectUrl
+    },
+    request: c.req
+  }).then((result) => {
+    result.user.name = `${result.user.first_name} ${result.user.last_name}`
+    return result
+  })
+  return oauthCallback(c, oauthRequest, authProviders.FACEBOOK)
+}
+
 export {
   register,
   login,
@@ -259,5 +288,7 @@ export {
   githubCallback,
   spotifyCallback,
   googleCallback,
-  discordCallback
+  discordCallback,
+  facebookRedirect,
+  facebookCallback
 }
