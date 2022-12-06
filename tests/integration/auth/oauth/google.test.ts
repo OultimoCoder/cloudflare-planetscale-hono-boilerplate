@@ -169,9 +169,9 @@ describe('Oauth Google routes', () => {
 
       test('should return 401 if code is invalid', async () => {
         const fetchMock = getMiniflareFetchMock()
-        const githubMock = fetchMock.get('https://github.com')
-        githubMock
-          .intercept({method: 'POST', path: '/login/oauth/access_token'})
+        const googleMock = fetchMock.get('https://oauth2.googleapis.com')
+        googleMock
+          .intercept({method: 'POST', path: '/token'})
           .reply(httpStatus.UNAUTHORIZED, JSON.stringify({error: 'error'}))
 
         const providerId = 123456
