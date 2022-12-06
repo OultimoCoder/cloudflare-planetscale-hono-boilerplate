@@ -1,9 +1,9 @@
 import httpStatus from 'http-status'
 import { InsertResult, UpdateResult } from 'kysely'
-import { userInfo } from 'os'
 import { AuthProviderType } from '../config/authProviders'
 import { Config } from '../config/config'
 import { getDBClient } from '../config/database'
+import { OauthUser } from '../models/authProvider.model'
 import { User, UserTable } from '../models/user.model'
 import { ApiError } from '../utils/ApiError'
 import { CreateUser, UpdateUser } from '../validations/user.validation'
@@ -34,10 +34,7 @@ const createUser = async (userBody: CreateUser, databaseConfig: Config['database
 }
 
 const createOauthUser = async (
-  name: string,
-  email: string,
-  provider: AuthProviderType,
-  provider_id: string,
+  providerUser: OauthUser,
   databaseConfig: Config['database']
 ) => {
   const db = getDBClient(databaseConfig)
@@ -46,8 +43,8 @@ const createOauthUser = async (
       const userId = await trx
         .insertInto('user')
         .values({
-          name: name,
-          email: email,
+          name: providerUser.name,
+          email: providerUser.email,
           is_email_verified: true,
           password: null,
           role: 'user'
@@ -57,18 +54,21 @@ const createOauthUser = async (
         .insertInto('authorisations')
         .values({
           user_id: String(userId.insertId),
-          provider_type: provider,
-          provider_user_id: provider_id
+          provider_type: providerUser.provider_type,
+          provider_user_id: providerUser.id.toString()
         })
         .executeTakeFirstOrThrow()
         return userId
     })
   } catch (error) {
     throw new ApiError(
-      httpStatus.FORBIDDEN, `Cannot signup with ${provider}, user already exists with that email`
+      httpStatus.FORBIDDEN,
+      `Cannot signup with ${providerUser.provider_type}, user already exists with that email`
     )
   }
-  const user = await getUserByProviderIdType(provider_id, provider, databaseConfig)
+  const user = await getUserByProviderIdType(
+    providerUser.id.toString(), providerUser.provider_type, databaseConfig
+  )
   return User.convert(user)
 }
 

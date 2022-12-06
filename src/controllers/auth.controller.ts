@@ -3,8 +3,9 @@ import { Handler } from 'hono'
 import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
 import { github, discord, spotify, google } from 'worker-auth-providers'
+import { authProviders } from '../config/authProviders'
 import { getConfig } from '../config/config'
-import { GithubUser } from '../models/authProvider.model'
+import { OauthUser } from '../models/authProvider.model'
 import * as authService from '../services/auth.service'
 import * as emailService from '../services/email.service'
 import * as tokenService from '../services/token.service'
@@ -161,11 +162,14 @@ const spotifyRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.redirect(location, httpStatus.FOUND as StatusCode)
 }
 
+// const oauthCallback: Handler<{ Bindings: Bindings }> = async (c) => {
+// }
+
 const githubCallback: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const queryParse = c.req.query()
   authValidation.oauthCallback.parse(queryParse)
-  let githubUser: GithubUser
+  let githubUser: OauthUser
   try {
     const result = await github.users({
       options: {
@@ -174,15 +178,16 @@ const githubCallback: Handler<{ Bindings: Bindings }> = async (c) => {
       },
       request: c.req
     })
-    githubUser = result.user as GithubUser
+    githubUser = result.user as OauthUser
+    githubUser.provider_type = authProviders.GITHUB
   } catch (err) {
     throw new ApiError(httpStatus.UNAUTHORIZED as StatusCode, 'Unauthorized')
   }
   if (!githubUser) {
     throw new ApiError(httpStatus.UNAUTHORIZED as StatusCode, 'Unauthorized')
   }
-  const user = await authService.loginOrCreateUserWithGithub(
-    githubUser as GithubUser,
+  const user = await authService.loginOrCreateUserWithOauth(
+    githubUser as OauthUser,
     config.database
   )
   const tokens = await tokenService.generateAuthTokens(user, config.jwt)

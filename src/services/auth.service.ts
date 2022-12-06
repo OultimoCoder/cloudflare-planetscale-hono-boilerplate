@@ -2,7 +2,7 @@ import httpStatus from 'http-status'
 import { authProviders } from '../config/authProviders'
 import { Config } from '../config/config'
 import { tokenTypes } from '../config/tokens'
-import { GithubUser } from '../models/authProvider.model'
+import { OauthUser } from '../models/authProvider.model'
 import { ApiError } from '../utils/ApiError'
 import * as tokenService from './token.service'
 import * as userService from './user.service'
@@ -89,24 +89,17 @@ const changePassword = async (
   }
 }
 
-const loginOrCreateUserWithGithub = async (
-  githubUser: GithubUser,
+const loginOrCreateUserWithOauth = async (
+  providerUser: OauthUser,
   databaseConfig: Config['database']
 ) => {
   const user = await userService.getUserByProviderIdType(
-    githubUser.id.toString(),
-    authProviders.GITHUB,
+    providerUser.id.toString(),
+    providerUser.provider_type,
     databaseConfig
   )
   if (user) return user
-  const newUser = await userService.createOauthUser(
-    githubUser.name,
-    githubUser.email,
-    authProviders.GITHUB,
-    githubUser.id.toString(),
-    databaseConfig
-  )
-  return newUser
+  return userService.createOauthUser(providerUser, databaseConfig)
 }
 
 export {
@@ -115,5 +108,5 @@ export {
   resetPassword,
   verifyEmail,
   changePassword,
-  loginOrCreateUserWithGithub
+  loginOrCreateUserWithOauth
 }
