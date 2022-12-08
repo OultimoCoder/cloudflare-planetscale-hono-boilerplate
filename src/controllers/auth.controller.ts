@@ -5,7 +5,7 @@ import httpStatus from 'http-status'
 import { github, discord, spotify, google, facebook } from 'worker-auth-providers'
 import { authProviders, AuthProviderType } from '../config/authProviders'
 import { getConfig } from '../config/config'
-import { OauthUser, FacebookUser } from '../models/authProvider.model'
+import { OauthUser } from '../models/authProvider.model'
 import * as authService from '../services/auth.service'
 import * as emailService from '../services/email.service'
 import * as tokenService from '../services/token.service'
@@ -272,6 +272,47 @@ const facebookCallback: Handler<{ Bindings: Bindings }> = async (c) => {
   return oauthCallback(c, oauthRequest, authProviders.FACEBOOK)
 }
 
+const oauthLink = async (
+  c: Context<string, { Bindings: Bindings }>,
+  oauthRequest: Promise<{user: unknown, tokens: unknown}>,
+  providerType: AuthProviderType
+) => {
+  const payload = c.get('payload') as JwtPayload
+  const userId = Number(payload.sub)
+  const config = getConfig(c.env)
+  let providerUser: OauthUser
+  try {
+    const result = await oauthRequest
+    providerUser = result.user as OauthUser
+    providerUser.providerType = providerType
+  } catch (err) {
+    throw new ApiError(httpStatus.UNAUTHORIZED as StatusCode, 'Unauthorized')
+  }
+  if (!providerUser) {
+    throw new ApiError(httpStatus.UNAUTHORIZED as StatusCode, 'Unauthorized')
+  }
+  await authService.linkUserWithOauth(userId, providerUser, config.database)
+  c.status(httpStatus.OK as StatusCode)
+  return c.body(null)
+}
+
+const linkGithub: Handler<{ Bindings: Bindings }> = async (c) => {
+  const config = getConfig(c.env)
+  const bodyParse = await c.req.json()
+  const { code } = authValidation.oauthCallback.parse(bodyParse)
+  const url = new URL(c.req.url)
+  url.searchParams.set('code', code)
+  const request = new Request(url.toString())
+  const oauthRequest = github.users({
+    options: {
+      clientId: config.oauth.github.clientId,
+      clientSecret: config.oauth.github.clientSecret
+    },
+    request
+  })
+  return oauthLink(c, oauthRequest, authProviders.GITHUB)
+}
+
 export {
   register,
   login,
@@ -290,5 +331,6 @@ export {
   googleCallback,
   discordCallback,
   facebookRedirect,
-  facebookCallback
+  facebookCallback,
+  linkGithub
 }

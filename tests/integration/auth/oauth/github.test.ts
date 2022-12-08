@@ -6,7 +6,7 @@ import { getConfig } from '../../../../src/config/config'
 import { Database, getDBClient } from '../../../../src/config/database'
 import { OauthUser } from '../../../../src/models/authProvider.model'
 import { githubAuthorisation, insertAuthorisations} from '../../../fixtures/authorisations.fixture'
-import { TokenResponse } from '../../../fixtures/token.fixture'
+import { getAccessToken, TokenResponse } from '../../../fixtures/token.fixture'
 import { userOne, insertUsers, UserResponse } from '../../../fixtures/user.fixture'
 import { clearDBTables } from '../../../utils/clearDBTables'
 import { request } from '../../../utils/testRequest'
@@ -28,6 +28,180 @@ describe('Oauth routes', () => {
         'https://github.com/login/oauth/authorize?allow_signup=true&' +
         `client_id=${config.oauth.github.clientId}&scope=read%3Auser%20user%3Aemail`
       )
+    })
+  })
+
+  describe('POST /v1/auth/github/:userId', () => {
+    let newUser: Omit<OauthUser, 'providerType'>
+    beforeAll(async () => {
+      newUser = {
+        id: faker.datatype.number(),
+        name: faker.name.fullName(),
+        email: faker.internet.email(),
+      }
+    })
+    test('should return 200 and successfully link github account', async () => {
+      const ids = await insertUsers([userOne], config.database)
+      const userId = ids[0]
+      const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
+
+      const fetchMock = getMiniflareFetchMock()
+      const githubApiMock = fetchMock.get('https://api.github.com')
+      githubApiMock
+        .intercept({method: 'GET', path: '/user'})
+        .reply(200, JSON.stringify(newUser))
+      const githubMock = fetchMock.get('https://github.com')
+      githubMock
+        .intercept({method: 'POST', path: '/login/oauth/access_token'})
+        .reply(200, JSON.stringify({access_token: '1234'}))
+
+      const providerId = '123456'
+      const res = await request(`/v1/auth/github/${userId}`, {
+        method: 'POST',
+        body: JSON.stringify({code: providerId}),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.OK)
+
+      const dbUser = await client
+        .selectFrom('user')
+        .selectAll()
+        .where('user.id', '=', userId)
+        .executeTakeFirst()
+
+      expect(dbUser).toBeDefined()
+      if (!dbUser) return
+
+      expect(dbUser.password).toBeDefined()
+      expect(dbUser).toMatchObject({
+        name: userOne.name,
+        password: expect.anything(),
+        email: userOne.email,
+        role: userOne.role,
+        is_email_verified: 0
+      })
+
+      const oauthUser = await client
+        .selectFrom('authorisations')
+        .selectAll()
+        .where('authorisations.provider_type', '=', authProviders.GITHUB)
+        .where('authorisations.user_id', '=', userId)
+        .where('authorisations.provider_user_id', '=', String(newUser.id))
+        .executeTakeFirst()
+
+      expect(oauthUser).toBeDefined()
+      if (!oauthUser) return
+    })
+
+    test('should return 401 if user does not exist when linking', async () => {
+      const ids = await insertUsers([userOne], config.database)
+      const userId = ids[0]
+      const userOneAccessToken = await getAccessToken(userId, userOne.role, config.jwt)
+      await client
+        .deleteFrom('user')
+        .where('user.id', '=', userId)
+        .execute()
+
+      const fetchMock = getMiniflareFetchMock()
+      const githubApiMock = fetchMock.get('https://api.github.com')
+      githubApiMock
+        .intercept({method: 'GET', path: '/user'})
+        .reply(200, JSON.stringify(newUser))
+      const githubMock = fetchMock.get('https://github.com')
+      githubMock
+        .intercept({method: 'POST', path: '/login/oauth/access_token'})
+        .reply(200, JSON.stringify({access_token: '1234'}))
+
+      const providerId = '123456'
+      const res = await request(`/v1/auth/github/${userId}`, {
+        method: 'POST',
+        body: JSON.stringify({code: providerId}),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.UNAUTHORIZED)
+
+      const oauthUser = await client
+        .selectFrom('authorisations')
+        .selectAll()
+        .where('authorisations.provider_type', '=', authProviders.GITHUB)
+        .where('authorisations.user_id', '=', userId)
+        .where('authorisations.provider_user_id', '=', String(newUser.id))
+        .executeTakeFirst()
+
+      expect(oauthUser).toBeUndefined()
+    })
+
+    test('should return 401 if code is invalid', async () => {
+      const ids = await insertUsers([userOne], config.database)
+      const userId = ids[0]
+      const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
+
+      const fetchMock = getMiniflareFetchMock()
+      const githubMock = fetchMock.get('https://github.com')
+      githubMock
+        .intercept({method: 'POST', path: '/login/oauth/access_token'})
+        .reply(httpStatus.UNAUTHORIZED, JSON.stringify({error: 'error'}))
+
+      const providerId = '123456'
+      const res = await request(`/v1/auth/github/${userId}`, {
+        method: 'POST',
+        body: JSON.stringify({code: providerId}),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.UNAUTHORIZED)
+    })
+
+    test('should return 403 if linking different user', async () => {
+      const ids = await insertUsers([userOne], config.database)
+      const userId = ids[0]
+      const userOneAccessToken = await getAccessToken(userId, userOne.role, config.jwt)
+
+      const providerId = '123456'
+      const res = await request('/v1/auth/github/5298', {
+        method: 'POST',
+        body: JSON.stringify({code: providerId}),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.FORBIDDEN)
+    })
+
+    test('should return 400 if no code provided', async () => {
+      const ids = await insertUsers([userOne], config.database)
+      const userId = ids[0]
+      const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
+
+      const res = await request(`/v1/auth/github/${userId}`, {
+        method: 'POST',
+        body: JSON.stringify({}),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+
+    test('should return 401 error if access token is missing', async () => {
+      const res = await request('/v1/auth/github/1234', {
+        method: 'POST',
+        body: JSON.stringify({}),
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+      expect(res.status).toBe(httpStatus.UNAUTHORIZED)
     })
   })
 

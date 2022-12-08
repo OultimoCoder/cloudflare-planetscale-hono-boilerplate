@@ -1,6 +1,8 @@
 import httpStatus from 'http-status'
+import { sql } from 'kysely'
 import { authProviders } from '../config/authProviders'
 import { Config } from '../config/config'
+import { getDBClient } from '../config/database'
 import { tokenTypes } from '../config/tokens'
 import { OauthUser } from '../models/authProvider.model'
 import { ApiError } from '../utils/ApiError'
@@ -102,11 +104,46 @@ const loginOrCreateUserWithOauth = async (
   return userService.createOauthUser(providerUser, databaseConfig)
 }
 
+const linkUserWithOauth = async (
+  userId: number,
+  providerUser: OauthUser,
+  databaseConfig: Config['database']
+) => {
+  const db = getDBClient(databaseConfig)
+  await db.transaction().execute(async (trx) => {
+    try {
+      await trx
+      .selectFrom('user')
+      .selectAll()
+      .where('user.id', '=', userId)
+      .executeTakeFirstOrThrow()
+    } catch (err) {
+      throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
+    }
+    try {
+      await trx
+      .insertInto('authorisations')
+      .values({
+        user_id: userId,
+        provider_user_id: providerUser.id.toString(),
+        provider_type: providerUser.providerType
+      })
+      .executeTakeFirstOrThrow()
+    } catch (err) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        `User has already linked their ${providerUser.providerType} account`
+      )
+    }
+  })
+}
+
 export {
   loginUserWithEmailAndPassword,
   refreshAuth,
   resetPassword,
   verifyEmail,
   changePassword,
-  loginOrCreateUserWithOauth
+  loginOrCreateUserWithOauth,
+  linkUserWithOauth
 }

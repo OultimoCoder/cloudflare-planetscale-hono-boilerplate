@@ -33,4 +33,16 @@ route.get('/discord/callback', authController.discordCallback)
 route.get('/google/callback', authController.googleCallback)
 route.get('/facebook/callback', authController.facebookCallback)
 
+route.post('/github/:userId', auth('manageUsers'), authController.linkGithub)
+// route.post('/spotify/:userId', auth('manageUsers'), authController.linkSpotify)
+// route.post('/discord/:userId', auth('manageUsers'), authController.linkDiscord)
+// route.post('/google/:userId', auth('manageUsers'), authController.linkGoogle)
+// route.post('/facebook/:userId', auth('manageUsers'), authController.linkFacebook)
+
+// route.delete('/github/:userId', auth('manageUsers'), authController.deleteGithub)
+// route.delete('/spotify/:userId', auth('manageUsers'), authController.deleteSpotify)
+// route.delete('/discord/:userId', auth('manageUsers'), authController.deleteDiscord)
+// route.delete('/google/:userId', auth('manageUsers'), authController.deleteGoogle)
+// route.delete('/facebook/:userId', auth('manageUsers'), authController.deleteFacebook)
+
 export { route }

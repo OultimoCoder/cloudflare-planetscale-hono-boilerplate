@@ -53,7 +53,7 @@ const createOauthUser = async (
       await trx
         .insertInto('authorisations')
         .values({
-          user_id: String(userId.insertId),
+          user_id: Number(userId.insertId),
           provider_type: providerUser.providerType,
           provider_user_id: providerUser.id.toString()
         })
