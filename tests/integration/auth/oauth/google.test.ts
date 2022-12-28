@@ -222,7 +222,7 @@ describe('Oauth Google routes', () => {
           Authorization: `Bearer ${userOneAccessToken}`
         }
       })
-      expect(res.status).toBe(httpStatus.OK)
+      expect(res.status).toBe(httpStatus.NO_CONTENT)
 
       const dbUser = await client
         .selectFrom('user')

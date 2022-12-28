@@ -23,9 +23,6 @@ const oauthCallback = async (
   } catch (err) {
     throw new ApiError(httpStatus.UNAUTHORIZED as StatusCode, 'Unauthorized')
   }
-  if (!providerUser) {
-    throw new ApiError(httpStatus.UNAUTHORIZED as StatusCode, 'Unauthorized')
-  }
   const user = await authService.loginOrCreateUserWithOauth(providerUser, config.database)
   const tokens = await tokenService.generateAuthTokens(user, config.jwt)
   return c.json({ user, tokens }, httpStatus.OK as StatusCode)
@@ -47,11 +44,8 @@ const oauthLink = async (
   } catch (err) {
     throw new ApiError(httpStatus.UNAUTHORIZED as StatusCode, 'Unauthorized')
   }
-  if (!providerUser) {
-    throw new ApiError(httpStatus.UNAUTHORIZED as StatusCode, 'Unauthorized')
-  }
   await authService.linkUserWithOauth(userId, providerUser, config.database)
-  c.status(httpStatus.OK as StatusCode)
+  c.status(httpStatus.NO_CONTENT as StatusCode)
   return c.body(null)
 }
 
