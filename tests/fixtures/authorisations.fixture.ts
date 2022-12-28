@@ -5,31 +5,31 @@ import { Config } from '../../src/config/config'
 import { getDBClient } from '../../src/config/database'
 import { AuthProviderTable } from '../../src/models/authProvider.model'
 
-const githubAuthorisation = (userId: string) => ({
+const githubAuthorisation = (userId: number) => ({
   provider_type: authProviders.GITHUB,
   provider_user_id: faker.datatype.number().toString(),
   user_id: userId
 })
 
-const discordAuthorisation = (userId: string) => ({
+const discordAuthorisation = (userId: number) => ({
   provider_type: authProviders.DISCORD,
   provider_user_id: faker.datatype.number().toString(),
   user_id: userId
 })
 
-const spotifyAuthorisation = (userId: string) => ({
+const spotifyAuthorisation = (userId: number) => ({
   provider_type: authProviders.SPOTIFY,
   provider_user_id: faker.datatype.number().toString(),
   user_id: userId
 })
 
-const googleAuthorisation = (userId: string) => ({
+const googleAuthorisation = (userId: number) => ({
   provider_type: authProviders.GOOGLE,
   provider_user_id: faker.datatype.number().toString(),
   user_id: userId
 })
 
-const facebookAuthorisation = (userId: string) => ({
+const facebookAuthorisation = (userId: number) => ({
   provider_type: authProviders.FACEBOOK,
   provider_user_id: faker.datatype.number().toString(),
   user_id: userId

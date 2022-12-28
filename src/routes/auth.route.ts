@@ -1,5 +1,10 @@
 import { Hono } from 'hono'
-import * as authController from '../controllers/auth.controller'
+import * as authController from '../controllers/auth/auth.controller'
+import * as discordController from '../controllers/auth/oauth/discord.controller'
+import * as facebookController from '../controllers/auth/oauth/facebook.controller'
+import * as githubController from '../controllers/auth/oauth/github.controller'
+import * as googleController from '../controllers/auth/oauth/google.controller'
+import * as spotifyController from '../controllers/auth/oauth/spotify.controller'
 import { auth } from '../middlewares/auth'
 import { rateLimit } from '../middlewares/rateLimiter'
 
@@ -21,28 +26,28 @@ route.post(
 )
 route.post('/verify-email', authController.verifyEmail)
 
-route.get('/github/redirect', authController.githubRedirect)
-route.get('/google/redirect', authController.googleRedirect)
-route.get('/spotify/redirect', authController.spotifyRedirect)
-route.get('/discord/redirect', authController.discordRedirect)
-route.get('/facebook/redirect', authController.facebookRedirect)
+route.get('/github/redirect', githubController.githubRedirect)
+route.get('/google/redirect', googleController.googleRedirect)
+route.get('/spotify/redirect', spotifyController.spotifyRedirect)
+route.get('/discord/redirect', discordController.discordRedirect)
+route.get('/facebook/redirect', facebookController.facebookRedirect)
 
-route.get('/github/callback', authController.githubCallback)
-route.get('/spotify/callback', authController.spotifyCallback)
-route.get('/discord/callback', authController.discordCallback)
-route.get('/google/callback', authController.googleCallback)
-route.get('/facebook/callback', authController.facebookCallback)
+route.get('/github/callback', githubController.githubCallback)
+route.get('/spotify/callback', spotifyController.spotifyCallback)
+route.get('/discord/callback', discordController.discordCallback)
+route.get('/google/callback', googleController.googleCallback)
+route.get('/facebook/callback', facebookController.facebookCallback)
 
-route.post('/github/:userId', auth('manageUsers'), authController.linkGithub)
-// route.post('/spotify/:userId', auth('manageUsers'), authController.linkSpotify)
-// route.post('/discord/:userId', auth('manageUsers'), authController.linkDiscord)
-// route.post('/google/:userId', auth('manageUsers'), authController.linkGoogle)
-// route.post('/facebook/:userId', auth('manageUsers'), authController.linkFacebook)
+route.post('/github/:userId', auth('manageUsers'), githubController.linkGithub)
+route.post('/spotify/:userId', auth('manageUsers'), spotifyController.linkSpotify)
+route.post('/discord/:userId', auth('manageUsers'), discordController.linkDiscord)
+route.post('/google/:userId', auth('manageUsers'), googleController.linkGoogle)
+route.post('/facebook/:userId', auth('manageUsers'), facebookController.linkFacebook)
 
-// route.delete('/github/:userId', auth('manageUsers'), authController.deleteGithub)
-// route.delete('/spotify/:userId', auth('manageUsers'), authController.deleteSpotify)
-// route.delete('/discord/:userId', auth('manageUsers'), authController.deleteDiscord)
-// route.delete('/google/:userId', auth('manageUsers'), authController.deleteGoogle)
-// route.delete('/facebook/:userId', auth('manageUsers'), authController.deleteFacebook)
+route.delete('/github/:userId', auth('manageUsers'), githubController.deleteGithubLink)
+route.delete('/spotify/:userId', auth('manageUsers'), spotifyController.deleteSpotifyLink)
+route.delete('/discord/:userId', auth('manageUsers'), discordController.deleteDiscordLink)
+route.delete('/google/:userId', auth('manageUsers'), googleController.deleteGoogleLink)
+route.delete('/facebook/:userId', auth('manageUsers'), facebookController.deleteFacebookLink)
 
 export { route }

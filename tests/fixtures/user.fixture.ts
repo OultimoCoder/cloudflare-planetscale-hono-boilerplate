@@ -47,7 +47,10 @@ const insertUsers = async (
   users: Omit<Selectable<UserTable>, 'id'>[],
   databaseConfig: Config['database']
 ) => {
-  const hashedUsers = users.map((user) => ({ ...user, password: hashedPassword }))
+  const hashedUsers = users.map((user) => ({
+    ...user,
+    password: (user.password ? hashedPassword : null)
+  }))
   const client = getDBClient(databaseConfig)
   const results: number[] = []
   for await (const user of hashedUsers) {

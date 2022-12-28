@@ -5,7 +5,7 @@ import { authProviders } from '../../../../src/config/authProviders'
 import { getConfig } from '../../../../src/config/config'
 import { Database, getDBClient } from '../../../../src/config/database'
 import { OauthUser } from '../../../../src/models/authProvider.model'
-import { githubAuthorisation, insertAuthorisations} from '../../../fixtures/authorisations.fixture'
+import { facebookAuthorisation, githubAuthorisation, insertAuthorisations} from '../../../fixtures/authorisations.fixture'
 import { getAccessToken, TokenResponse } from '../../../fixtures/token.fixture'
 import { userOne, insertUsers, UserResponse } from '../../../fixtures/user.fixture'
 import { clearDBTables } from '../../../utils/clearDBTables'
@@ -197,6 +197,139 @@ describe('Oauth routes', () => {
       const res = await request('/v1/auth/github/1234', {
         method: 'POST',
         body: JSON.stringify({}),
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+      expect(res.status).toBe(httpStatus.UNAUTHORIZED)
+    })
+  })
+
+  describe('DELETE /v1/auth/github/:userId', () => {
+    test('should return 200 and successfully remove github account link', async () => {
+      const ids = await insertUsers([userOne], config.database)
+      const userId = ids[0]
+      const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
+      const githubUser = githubAuthorisation(userId)
+      await insertAuthorisations([githubUser], config.database)
+
+      const res = await request(`/v1/auth/github/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.NO_CONTENT)
+
+      const oauthUser = await client
+        .selectFrom('authorisations')
+        .selectAll()
+        .where('authorisations.provider_type', '=', authProviders.GITHUB)
+        .where('authorisations.user_id', '=', userId)
+        .executeTakeFirst()
+
+      expect(oauthUser).toBeUndefined()
+      if (!oauthUser) return
+    })
+
+    test('should return 400 if user does not have a local login and only 1 link', async () => {
+      const newUser = { ...userOne }
+      delete newUser.password
+      const ids = await insertUsers([newUser], config.database)
+      const userId = ids[0]
+      const userOneAccessToken = await getAccessToken(ids[0], newUser.role, config.jwt)
+      const githubUser = githubAuthorisation(userId)
+      await insertAuthorisations([githubUser], config.database)
+
+      const res = await request(`/v1/auth/github/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+
+      const oauthUser = await client
+        .selectFrom('authorisations')
+        .selectAll()
+        .where('authorisations.provider_type', '=', authProviders.GITHUB)
+        .where('authorisations.user_id', '=', userId)
+        .executeTakeFirst()
+
+      expect(oauthUser).toBeDefined()
+    })
+
+    test('should return 400 if user does not have github link', async () => {
+      const newUser = { ...userOne }
+      delete newUser.password
+      const ids = await insertUsers([newUser], config.database)
+      const userId = ids[0]
+      const userOneAccessToken = await getAccessToken(ids[0], newUser.role, config.jwt)
+
+      const res = await request(`/v1/auth/github/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+
+    test('should return 200 if user does not have a local login and 2 links', async () => {
+      const newUser = { ...userOne }
+      delete newUser.password
+      const ids = await insertUsers([newUser], config.database)
+      const userId = ids[0]
+      const userOneAccessToken = await getAccessToken(ids[0], newUser.role, config.jwt)
+      const githubUser = githubAuthorisation(userId)
+      const facebookUser = facebookAuthorisation(userId)
+      await insertAuthorisations([githubUser, facebookUser], config.database)
+
+      const res = await request(`/v1/auth/github/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.NO_CONTENT)
+
+      const oauthGithubUser = await client
+        .selectFrom('authorisations')
+        .selectAll()
+        .where('authorisations.provider_type', '=', authProviders.GITHUB)
+        .where('authorisations.user_id', '=', userId)
+        .executeTakeFirst()
+
+      expect(oauthGithubUser).toBeUndefined()
+
+      const oauthFacebookUser = await client
+      .selectFrom('authorisations')
+      .selectAll()
+      .where('authorisations.provider_type', '=', authProviders.FACEBOOK)
+      .where('authorisations.user_id', '=', userId)
+      .executeTakeFirst()
+
+      expect(oauthFacebookUser).toBeDefined()
+    })
+
+    test('should return 403 if unlinking different user', async () => {
+      const ids = await insertUsers([userOne], config.database)
+      const userId = ids[0]
+      const userOneAccessToken = await getAccessToken(userId, userOne.role, config.jwt)
+
+      const res = await request('/v1/auth/github/5298', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.FORBIDDEN)
+    })
+
+    test('should return 401 error if access token is missing', async () => {
+      const res = await request('/v1/auth/github/1234', {
+        method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         }

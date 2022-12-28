@@ -1,6 +1,6 @@
 import httpStatus from 'http-status'
 import { sql } from 'kysely'
-import { authProviders } from '../config/authProviders'
+import { authProviders, AuthProviderType } from '../config/authProviders'
 import { Config } from '../config/config'
 import { getDBClient } from '../config/database'
 import { tokenTypes } from '../config/tokens'
@@ -138,6 +138,43 @@ const linkUserWithOauth = async (
   })
 }
 
+const deleteOauthLink = async (
+  userId: number,
+  provider: AuthProviderType,
+  databaseConfig: Config['database']
+) => {
+  const db = getDBClient(databaseConfig)
+  await db.transaction().execute(async (trx) => {
+    const { count } = trx.fn
+    let loginsNo: number
+    try {
+      const logins = await trx
+        .selectFrom('user')
+        .select('password')
+        .select(count<number>('authorisations.provider_user_id').as('authorisations'))
+        .innerJoin('authorisations', 'authorisations.user_id', 'user.id')
+        .groupBy('user.password')
+        .executeTakeFirstOrThrow()
+      loginsNo = logins.password ? logins.authorisations + 1 : logins.authorisations
+    } catch(_) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'Account not linked')
+    }
+    const minLoginMethods = 1
+    if (loginsNo <= minLoginMethods) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'Cannot unlink last login method')
+    }
+    try {
+      await trx
+        .deleteFrom('authorisations')
+        .where('user_id', '=', userId)
+        .where('provider_type', '=', provider)
+        .executeTakeFirstOrThrow()
+    } catch (_) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'Account unlink failed')
+    }
+  })
+}
+
 export {
   loginUserWithEmailAndPassword,
   refreshAuth,
@@ -145,5 +182,6 @@ export {
   verifyEmail,
   changePassword,
   loginOrCreateUserWithOauth,
-  linkUserWithOauth
+  linkUserWithOauth,
+  deleteOauthLink
 }
