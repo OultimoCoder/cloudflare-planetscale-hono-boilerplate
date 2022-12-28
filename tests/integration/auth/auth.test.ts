@@ -10,6 +10,7 @@ import { getConfig } from '../../../src/config/config'
 import { Database, getDBClient } from '../../../src/config/database'
 import { tokenTypes } from '../../../src/config/tokens'
 import * as tokenService from '../../../src/services/token.service'
+import { discordAuthorisation, insertAuthorisations } from '../../fixtures/authorisations.fixture'
 import { getAccessToken, TokenResponse } from '../../fixtures/token.fixture'
 import { userOne, insertUsers, MockUser, UserResponse } from '../../fixtures/user.fixture'
 import { clearDBTables } from '../../utils/clearDBTables'
@@ -177,6 +178,32 @@ describe('Auth routes', () => {
       })
     })
 
+    test('should return 401 error if only oauth account exists', async () => {
+      const newUser = { ...userOne }
+      delete newUser.password
+      const ids = await insertUsers([newUser], config.database)
+      const userId = ids[0]
+      const discordUser = discordAuthorisation(userId)
+      await insertAuthorisations([discordUser], config.database)
+
+      const loginCredentials = {
+        email: newUser.email,
+        password: ''
+      }
+
+      const res = await request('/v1/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(loginCredentials),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const body = await res.json()
+      expect(res.status).toBe(httpStatus.UNAUTHORIZED)
+      expect(body).toEqual({
+        code: httpStatus.UNAUTHORIZED,
+        message: 'Please login with your social account'
+      })
+    })
+
     test('should return 401 error if password is wrong', async () => {
       await insertUsers([userOne], config.database)
       const loginCredentials = {
@@ -314,6 +341,26 @@ describe('Auth routes', () => {
       expect(sesMock).toHaveReceivedCommandTimes(SendEmailCommand, 1)
     })
 
+    test('should return 204 and send email if only has oauth account', async () => {
+      const newUser = { ...userOne }
+      delete newUser.password
+      const ids = await insertUsers([newUser], config.database)
+      const userId = ids[0]
+      const discordUser = discordAuthorisation(userId)
+      await insertAuthorisations([discordUser], config.database)
+
+      sesMock.on(SendEmailCommand).resolves({
+        MessageId: 'message-id'
+      })
+      const res = await request('/v1/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email: newUser.email }),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      expect(res.status).toBe(httpStatus.NO_CONTENT)
+      expect(sesMock).toHaveReceivedCommandTimes(SendEmailCommand, 1)
+    })
+
     test('should return 400 if email is missing', async () => {
       await insertUsers([userOne])
 
@@ -360,6 +407,28 @@ describe('Auth routes', () => {
       })
       expect(res.status).toBe(httpStatus.NO_CONTENT)
       expect(sesMock).toHaveReceivedCommandTimes(SendEmailCommand, 1)
+    })
+
+    test('should return 204 and not send verification email if already verified', async () => {
+      const newUser = { ...userOne }
+      newUser.is_email_verified = true
+      const ids = await insertUsers([newUser], config.database)
+      const newUserAccessToken = await getAccessToken(ids[0], newUser.role, config.jwt)
+
+      sesMock.on(SendEmailCommand).resolves({
+        MessageId: 'message-id'
+      })
+
+      const res = await request('/v1/auth/send-verification-email', {
+        method: 'POST',
+        body: JSON.stringify({ email: newUser.email }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${newUserAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.NO_CONTENT)
+      expect(sesMock).toHaveReceivedCommandTimes(SendEmailCommand, 0)
     })
 
     test('should return 429 if a second request is sent in under 2 minutes', async () => {

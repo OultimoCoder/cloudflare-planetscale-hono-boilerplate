@@ -15,6 +15,10 @@ const loginUserWithEmailAndPassword = async (
   databaseConfig: Config['database']
 ) => {
   const user = await userService.getUserByEmail(email, databaseConfig)
+  // If password is null then the user must login with a social account
+  if (user && !user.password) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Please login with your social account')
+  }
   if (!user || !(await user.isPasswordMatch(password))) {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password')
   }
