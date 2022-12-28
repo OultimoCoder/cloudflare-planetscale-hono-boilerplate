@@ -13,3 +13,4 @@ fauna/temp
 package-lock.json
 .faunarc
 wrangler.toml
+coverage

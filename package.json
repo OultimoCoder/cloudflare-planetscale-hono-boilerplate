@@ -10,6 +10,8 @@
     "build": "node ./build.js",
     "dev": "miniflare --live-reload --debug --env .env --modules dist/index.mjs",
     "tests": "npm run build && NODE_OPTIONS=--experimental-vm-modules jest -i --colors --verbose --detectOpenHandles --runInBand",
+    "tests:coverage": "npm run build && NODE_OPTIONS=--experimental-vm-modules jest -i --colors --verbose --detectOpenHandles --runInBand --coverage",
+    "tests:summary": "npm run build && NODE_OPTIONS=--experimental-vm-modules jest -i --colors --verbose --detectOpenHandles --runInBand --coverage --coverageReporters=\"text-summary\"",
     "tests:unit": "npm run build && NODE_OPTIONS=--experimental-vm-modules jest -i --colors --verbose --detectOpenHandles ./tests/unit",
     "tests:integration": "npm run build && NODE_OPTIONS=--experimental-vm-modules jest -i --colors --verbose --detectOpenHandles ./tests/integration",
     "migrate:dev:latest": "node --experimental-specifier-resolution=node --loader ts-node/esm ./scripts/migrate.ts dev latest",

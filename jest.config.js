@@ -17,5 +17,6 @@ export default {
   transformIgnorePatterns: [
     'node_modules/(?!(@planetscale|kysely-planetscale|@aws-sdk|worker-auth-providers|uuid))'
   ],
-  moduleNameMapper: {'^uuid$': 'uuid'}
+  moduleNameMapper: {'^uuid$': 'uuid'},
+  collectCoverageFrom: ['src/**/*.{ts,js}']
 }
