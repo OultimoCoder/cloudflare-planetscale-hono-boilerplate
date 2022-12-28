@@ -1,6 +1,5 @@
 import httpStatus from 'http-status'
-import { sql } from 'kysely'
-import { authProviders, AuthProviderType } from '../config/authProviders'
+import { AuthProviderType } from '../config/authProviders'
 import { Config } from '../config/config'
 import { getDBClient } from '../config/database'
 import { tokenTypes } from '../config/tokens'
