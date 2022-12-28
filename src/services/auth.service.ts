@@ -77,23 +77,6 @@ const verifyEmail = async (verifyEmailToken: string, config: Config) => {
   }
 }
 
-const changePassword = async (
-  userId: number,
-  oldPassword: string,
-  newPassword: string,
-  databaseConfig: Config['database']
-) => {
-  try {
-    const user = await userService.getUserById(userId, databaseConfig)
-    if (!(await user.isPasswordMatch(oldPassword))) {
-      throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect password')
-    }
-    await userService.updateUserById(user.id, { password: newPassword }, databaseConfig)
-  } catch (error) {
-    throw new ApiError(httpStatus.UNAUTHORIZED, 'Password change failed')
-  }
-}
-
 const loginOrCreateUserWithOauth = async (
   providerUser: OauthUser,
   databaseConfig: Config['database']
@@ -183,7 +166,6 @@ export {
   refreshAuth,
   resetPassword,
   verifyEmail,
-  changePassword,
   loginOrCreateUserWithOauth,
   linkUserWithOauth,
   deleteOauthLink

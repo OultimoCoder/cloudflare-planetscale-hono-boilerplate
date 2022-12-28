@@ -18,7 +18,7 @@ class User extends BaseModel implements Selectable<UserTable> {
   email: string
   is_email_verified: boolean
   role: Role
-  password: string
+  password: string | null
 
   private_fields = ['password']
 

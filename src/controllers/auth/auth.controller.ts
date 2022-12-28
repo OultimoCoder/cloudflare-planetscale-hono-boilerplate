@@ -103,17 +103,6 @@ const verifyEmail: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.body(null)
 }
 
-const changePassword: Handler<{ Bindings: Bindings }> = async (c) => {
-  const config = getConfig(c.env)
-  const payload = c.get('payload') as JwtPayload
-  const bodyParse = await c.req.json()
-  const { oldPassword, newPassword } = authValidation.changePassword.parse(bodyParse)
-  const userId = Number(payload.sub)
-  await authService.changePassword(userId, oldPassword, newPassword, config.database)
-  c.status(httpStatus.NO_CONTENT as StatusCode)
-  return c.body(null)
-}
-
 export {
   register,
   login,
@@ -121,6 +110,5 @@ export {
   sendVerificationEmail,
   forgotPassword,
   resetPassword,
-  verifyEmail,
-  changePassword
+  verifyEmail
 }
