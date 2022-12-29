@@ -76,7 +76,7 @@ const setup = async () => {
 
     // Remove extra files
     fs.unlinkSync(path.join(appPath, 'TODO.md'))
-    fs.unlinkSync(path.join(appPath, 'bin', 'createApp.ts'))
+    fs.unlinkSync(path.join(appPath, 'bin', 'createApp.js'))
     fs.rmdirSync(path.join(appPath, 'bin'))
 
     console.log('Installation is now complete!')
