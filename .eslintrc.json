@@ -46,6 +46,14 @@
     "no-empty": ["warn", { "allowEmptyCatch": true }],
     "no-process-exit": "off",
     "no-useless-escape": "off",
-    "max-len": ["error", { "code": 100 }]
+    "max-len": ["error", { "code": 100 }],
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ]
   }
 }

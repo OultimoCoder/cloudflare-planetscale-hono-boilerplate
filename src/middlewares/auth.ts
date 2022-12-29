@@ -1,4 +1,5 @@
 import jwt from '@tsndr/cloudflare-worker-jwt'
+import { MiddlewareHandler } from 'hono'
 import httpStatus from 'http-status'
 import { getConfig } from '../config/config'
 import { roleRights, Permission, Role } from '../config/roles'
@@ -18,8 +19,8 @@ const authenticate = async (jwtToken: string, secret: string) => {
 }
 
 const auth =
-  (...requiredRights: Permission[]) =>
-  async (c: any, next: Function) => {
+  (...requiredRights: Permission[]): MiddlewareHandler<string, { Bindings: Bindings }> =>
+  async (c, next) => {
     const credentials = c.req.headers.get('Authorization')
     const config = getConfig(c.env)
     if (!credentials) {

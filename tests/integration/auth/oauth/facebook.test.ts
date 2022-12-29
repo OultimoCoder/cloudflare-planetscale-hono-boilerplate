@@ -31,7 +31,7 @@ describe('Oauth Facebook routes', () => {
       })
       expect(res.status).toBe(httpStatus.FOUND)
       expect(res.headers.get('location')).toBe(
-        `https://www.facebook.com/v4.0/dialog/oauth?auth_type=rerequest&` +
+        'https://www.facebook.com/v4.0/dialog/oauth?auth_type=rerequest&' +
         `client_id=${config.oauth.facebook.clientId}&display=popup&` +
         `redirect_uri=${urlEncodedRedirectUrl}&response_type=code&scope=email%2C%20user_friends`
       )

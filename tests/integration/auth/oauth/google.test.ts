@@ -5,7 +5,12 @@ import { authProviders } from '../../../../src/config/authProviders'
 import { getConfig } from '../../../../src/config/config'
 import { Database, getDBClient } from '../../../../src/config/database'
 import { OauthUser } from '../../../../src/models/authProvider.model'
-import { facebookAuthorisation, githubAuthorisation, googleAuthorisation, insertAuthorisations} from '../../../fixtures/authorisations.fixture'
+import {
+  facebookAuthorisation,
+  githubAuthorisation,
+  googleAuthorisation,
+  insertAuthorisations
+} from '../../../fixtures/authorisations.fixture'
 import { getAccessToken, TokenResponse } from '../../../fixtures/token.fixture'
 import { userOne, insertUsers, UserResponse } from '../../../fixtures/user.fixture'
 import { clearDBTables } from '../../../utils/clearDBTables'
