@@ -4,9 +4,24 @@ A boilerplate/starter project for quickly building RESTful APIs using
 [PlanetScale](https://planetscale.com/). Inspired by
 [node-express-boilerplate](https://github.com/hagopj13/node-express-boilerplate) by hagopj13.
 
+## Quick Start
+
+To create a project, simply run:
+
+```bash
+npx create-cf-planetscale-app <project-name>
+```
+
+Or
+
+```bash
+npm init create-cf-planetscale-app <project-name>
+```
+
 ## Table of Contents
 
 - [RESTful API Cloudflare Workers Boilerplate](#restful-api-cloudflare-workers-boilerplate)
+  - [Quick Start](#quick-start)
   - [Table of Contents](#table-of-contents)
   - [Features](#features)
   - [Commands](#commands)

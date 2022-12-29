@@ -1,11 +1,33 @@
 {
-  "name": "cf-hono-app",
+  "name": "create-cf-planetscale-app",
   "version": "0.0.1",
   "description": "Create a Cloudflare workers app for building production ready RESTful APIs using Hono",
   "main": "dist/index.mjs",
   "engines": {
     "node": ">=12.0.0"
   },
+  "repository": "https://github.com/OultimoCoder/cloudflare-planetscale-hono-boilerplate.git",
+  "author": "Ben Louis Armstrong <ben.armstrong22@gmail.com>",
+  "license": "MIT",
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "cloudflare-worker",
+    "planetscale",
+    "jest",
+    "hono",
+    "api",
+    "rest",
+    "sql",
+    "es6",
+    "es7",
+    "es8",
+    "es9",
+    "jwt",
+    "zod",
+    "eslint",
+    "prettier"
+  ],
   "scripts": {
     "build": "node ./build.js",
     "dev": "miniflare --live-reload --debug --env .env --modules dist/index.mjs",
@@ -30,8 +52,6 @@
     "prepare": "husky install"
   },
   "type": "module",
-  "author": "Ben Armstrong <ben.armstrong22@gmail.com>",
-  "license": "MIT",
   "devDependencies": {
     "@cloudflare/workers-types": "^3.11.0",
     "@faker-js/faker": "^7.6.0",
