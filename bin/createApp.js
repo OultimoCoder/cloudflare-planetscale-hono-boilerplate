@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+
 /* eslint no-console: "off" */
 import { exec as child_exec } from 'child_process'
 import fs from 'fs'
@@ -8,7 +9,7 @@ import util from 'util'
 // Utility functions
 const exec = util.promisify(child_exec)
 
-const runCmd = async (command: string) => {
+const runCmd = async (command) => {
   try {
     const { stdout, stderr } = await exec(command)
     console.log(stdout)
