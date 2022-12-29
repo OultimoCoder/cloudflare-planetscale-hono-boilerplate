@@ -7,5 +7,6 @@
 - [ ] API docs
 - [ ] Fix all types
 - [ ] CI/CD using Github Actions
+- [ ] MFA
 
 ### In Progress
