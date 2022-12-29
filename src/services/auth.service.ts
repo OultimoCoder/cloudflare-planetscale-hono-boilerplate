@@ -106,8 +106,7 @@ const linkUserWithOauth = async (
     } catch (err) {
       throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
     }
-    try {
-      await trx
+    await trx
       .insertInto('authorisations')
       .values({
         user_id: userId,
@@ -115,12 +114,6 @@ const linkUserWithOauth = async (
         provider_type: providerUser.providerType
       })
       .executeTakeFirstOrThrow()
-    } catch (err) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        `User has already linked their ${providerUser.providerType} account`
-      )
-    }
   })
 }
 
@@ -149,14 +142,13 @@ const deleteOauthLink = async (
     if (loginsNo <= minLoginMethods) {
       throw new ApiError(httpStatus.BAD_REQUEST, 'Cannot unlink last login method')
     }
-    try {
-      await trx
-        .deleteFrom('authorisations')
-        .where('user_id', '=', userId)
-        .where('provider_type', '=', provider)
-        .executeTakeFirstOrThrow()
-    } catch (_) {
-      throw new ApiError(httpStatus.BAD_REQUEST, 'Account unlink failed')
+    const result = await trx
+      .deleteFrom('authorisations')
+      .where('user_id', '=', userId)
+      .where('provider_type', '=', provider)
+      .executeTakeFirst()
+    if (!result.numDeletedRows || Number(result.numDeletedRows) < 1) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'Account not linked')
     }
   })
 }

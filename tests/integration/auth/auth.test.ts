@@ -302,7 +302,7 @@ describe('Auth routes', () => {
     })
 
     test('should return 401 error if user is not found', async () => {
-      const expires = dayjs().subtract(1, 'minutes')
+      const expires = dayjs().add(1, 'minutes')
       const refreshToken = await tokenService.generateToken(
         123,
         tokenTypes.REFRESH,
@@ -670,6 +670,25 @@ describe('Auth routes', () => {
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
     })
 
+    test('should return 401 if verify email token is an access token', async () => {
+      const ids = await insertUsers([userOne], config.database)
+      const expires = dayjs().add(10, 'minutes')
+      const verifyEmailToken = await tokenService.generateToken(
+        ids[0],
+        tokenTypes.ACCESS,
+        userOne.role,
+        expires,
+        config.jwt.secret
+      )
+      const res = await request(`/v1/auth/verify-email?token=${verifyEmailToken}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      expect(res.status).toBe(httpStatus.UNAUTHORIZED)
+    })
+
     test('should return 401 if user is not found', async () => {
       const expires = dayjs().add(config.jwt.verifyEmailExpirationMinutes, 'minutes')
       const verifyEmailToken = await tokenService.generateToken(
@@ -683,6 +702,17 @@ describe('Auth routes', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
+        }
+      })
+      expect(res.status).toBe(httpStatus.UNAUTHORIZED)
+    })
+  })
+  describe('Auth middleware', () => {
+    test('should return 401 if auth header is malformed', async () => {
+      const res = await request('/v1/users/123', {
+        method: 'GET',
+        headers: {
+          Authorization: 'Bearer123'
         }
       })
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)

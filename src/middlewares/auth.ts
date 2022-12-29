@@ -1,5 +1,4 @@
 import jwt from '@tsndr/cloudflare-worker-jwt'
-import { Context } from 'hono'
 import httpStatus from 'http-status'
 import { getConfig } from '../config/config'
 import { roleRights, Permission, Role } from '../config/roles'

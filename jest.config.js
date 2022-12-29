@@ -18,5 +18,8 @@ export default {
     'node_modules/(?!(@planetscale|kysely-planetscale|@aws-sdk|worker-auth-providers|uuid))'
   ],
   moduleNameMapper: {'^uuid$': 'uuid'},
-  collectCoverageFrom: ['src/**/*.{ts,js}']
+  collectCoverageFrom: ['src/**/*.{ts,js}'],
+  coveragePathIgnorePatterns: [
+    'src/durable-objects'  // Jest doesn't accurately report coverage for Durable Objects
+  ]
 }

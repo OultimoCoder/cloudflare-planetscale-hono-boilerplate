@@ -697,5 +697,19 @@ describe('User routes', () => {
       })
       expect(res.status).toBe(httpStatus.OK)
     })
+    test('should return 400 if one of email/password/role are not passed in', async () => {
+      const ids = await insertUsers([userOne], config.database)
+      const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
+      const updateBody = {}
+      const res = await request(`/v1/users/${ids[0]}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updateBody),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
   })
 })

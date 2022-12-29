@@ -4,7 +4,7 @@ class BaseModel {
   private_fields: Array<string> = []
   role: Role = 'user'
 
-  constructor(role: Role = 'user') {
+  constructor(role: Role) {
     this.role = role
   }
   static _convertArrayObjects(array: any) {

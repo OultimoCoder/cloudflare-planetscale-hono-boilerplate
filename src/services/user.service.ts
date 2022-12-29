@@ -27,9 +27,6 @@ const createUser = async (userBody: CreateUser, databaseConfig: Config['database
     throw new ApiError(httpStatus.BAD_REQUEST, 'User already exists')
   }
   const user = await getUserById(Number(result.insertId), databaseConfig)
-  if (!user) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'User already exists')
-  }
   return user
 }
 

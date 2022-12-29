@@ -5,7 +5,7 @@ import { authProviders } from '../../../../src/config/authProviders'
 import { getConfig } from '../../../../src/config/config'
 import { Database, getDBClient } from '../../../../src/config/database'
 import { OauthUser } from '../../../../src/models/authProvider.model'
-import { discordAuthorisation, facebookAuthorisation, insertAuthorisations} from '../../../fixtures/authorisations.fixture'
+import { discordAuthorisation, facebookAuthorisation, githubAuthorisation, insertAuthorisations} from '../../../fixtures/authorisations.fixture'
 import { getAccessToken, TokenResponse } from '../../../fixtures/token.fixture'
 import { userOne, insertUsers, UserResponse } from '../../../fixtures/user.fixture'
 import { clearDBTables } from '../../../utils/clearDBTables'
@@ -417,6 +417,26 @@ describe('Oauth Discord routes', () => {
     })
 
     test('should return 400 if user does not have discord link', async () => {
+      const newUser = { ...userOne }
+      delete newUser.password
+      const ids = await insertUsers([newUser], config.database)
+      const userId = ids[0]
+      const userOneAccessToken = await getAccessToken(ids[0], newUser.role, config.jwt)
+      const githubUser = githubAuthorisation(userId)
+      await insertAuthorisations([githubUser], config.database)
+      const facebookUser = facebookAuthorisation(userId)
+      await insertAuthorisations([facebookUser], config.database)
+
+      const res = await request(`/v1/auth/discord/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+
+    test('should return 400 if user only has a local login', async () => {
       const newUser = { ...userOne }
       delete newUser.password
       const ids = await insertUsers([newUser], config.database)
