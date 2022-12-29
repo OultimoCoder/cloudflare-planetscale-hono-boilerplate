@@ -1,11 +1,12 @@
 {
   "name": "create-cf-planetscale-app",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Create a Cloudflare workers app for building production ready RESTful APIs using Hono",
   "main": "dist/index.mjs",
   "engines": {
     "node": ">=12.0.0"
   },
+  "bin": "node --experimental-specifier-resolution=node --loader ts-node/esm ./bin/createApp.ts",
   "repository": "https://github.com/OultimoCoder/cloudflare-planetscale-hono-boilerplate.git",
   "author": "Ben Louis Armstrong <ben.armstrong22@gmail.com>",
   "license": "MIT",
