@@ -15,7 +15,7 @@ npx create-cf-planetscale-app <project-name>
 Or
 
 ```bash
-npm init create-cf-planetscale-app <project-name>
+npm init cf-planetscale-app <project-name>
 ```
 
 ## Table of Contents
