@@ -4,8 +4,7 @@ import httpStatus from 'http-status'
 import { spotify } from 'worker-auth-providers'
 import { authProviders } from '../../../config/authProviders'
 import { getConfig } from '../../../config/config'
-import * as authValidation from '../../../validations/auth.validation'
-import { oauthCallback, oauthLink, deleteOauthLink } from './oauth.controller'
+import { oauthCallback, oauthLink, deleteOauthLink, validateCallbackBody } from './oauth.controller'
 
 const spotifyRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
@@ -20,26 +19,21 @@ const spotifyRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
 
 const spotifyCallback: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
-  const queryParse = c.req.query()
-  authValidation.oauthCallback.parse(queryParse)
+  const request = await validateCallbackBody(c)
   const oauthRequest = spotify.users({
     options: {
       clientId: config.oauth.spotify.clientId,
       clientSecret: config.oauth.spotify.clientSecret,
       redirectUrl: config.oauth.spotify.redirectUrl
     },
-    request: c.req
+    request
   })
   return oauthCallback(c, oauthRequest, authProviders.SPOTIFY)
 }
 
 const linkSpotify: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
-  const bodyParse = await c.req.json()
-  const { code } = authValidation.oauthCallback.parse(bodyParse)
-  const url = new URL(c.req.url)
-  url.searchParams.set('code', code)
-  const request = new Request(url.toString())
+  const request = await validateCallbackBody(c)
   const oauthRequest = spotify.users({
     options: {
       clientId: config.oauth.facebook.clientId,

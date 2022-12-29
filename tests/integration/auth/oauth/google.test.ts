@@ -37,7 +37,7 @@ describe('Oauth Google routes', () => {
       )
     })
 
-    describe('GET /v1/auth/google/callback', () => {
+    describe('POST /v1/auth/google/callback', () => {
       let newUser: Omit<OauthUser, 'providerType'>
       beforeAll(async () => {
         newUser = {
@@ -57,9 +57,13 @@ describe('Oauth Google routes', () => {
           .intercept({method: 'POST', path: '/token'})
           .reply(200, JSON.stringify({access_token: '1234'}))
 
-        const providerId = 123456
-        const res = await request(`/v1/auth/google/callback?code=${providerId}`, {
-          method: 'GET',
+        const providerId = '123456'
+        const res = await request('/v1/auth/google/callback', {
+          method: 'POST',
+          body: JSON.stringify({code: providerId}),
+          headers: {
+            'Content-Type': 'application/json'
+          }
         })
         const body = await res.json<{ user: UserResponse; tokens: TokenResponse }>()
         expect(res.status).toBe(httpStatus.OK)
@@ -94,7 +98,7 @@ describe('Oauth Google routes', () => {
           .selectFrom('authorisations')
           .selectAll()
           .where('authorisations.provider_type', '=', authProviders.GOOGLE)
-          .where('authorisations.user_id', '=', String(body.user.id))
+          .where('authorisations.user_id', '=', body.user.id)
           .where('authorisations.provider_user_id', '=', String(newUser.id))
           .executeTakeFirst()
 
@@ -109,7 +113,7 @@ describe('Oauth Google routes', () => {
 
       test('should return 200 and successfully login user if already created', async () => {
         const ids = await insertUsers([userOne], config.database)
-        const userId = ids[0].toString()
+        const userId = ids[0]
         const googleUser = googleAuthorisation(userId)
         await insertAuthorisations([googleUser], config.database)
         newUser.id = parseInt(googleUser.provider_user_id)
@@ -124,9 +128,13 @@ describe('Oauth Google routes', () => {
           .intercept({method: 'POST', path: '/token'})
           .reply(200, JSON.stringify({access_token: '1234'}))
 
-        const providerId = 123456
-        const res = await request(`/v1/auth/google/callback?code=${providerId}`, {
-          method: 'GET',
+        const providerId = '123456'
+        const res = await request('/v1/auth/google/callback', {
+          method: 'POST',
+          body: JSON.stringify({code: providerId}),
+          headers: {
+            'Content-Type': 'application/json'
+          }
         })
         const body = await res.json<{ user: UserResponse; tokens: TokenResponse }>()
         expect(res.status).toBe(httpStatus.OK)
@@ -159,9 +167,13 @@ describe('Oauth Google routes', () => {
           .intercept({method: 'POST', path: '/token'})
           .reply(200, JSON.stringify({access_token: '1234'}))
 
-        const providerId = 123456
-        const res = await request(`/v1/auth/google/callback?code=${providerId}`, {
-          method: 'GET',
+        const providerId = '123456'
+        const res = await request('/v1/auth/google/callback', {
+          method: 'POST',
+          body: JSON.stringify({code: providerId}),
+          headers: {
+            'Content-Type': 'application/json'
+          }
         })
         const body = await res.json<{ user: UserResponse; tokens: TokenResponse }>()
         expect(res.status).toBe(httpStatus.FORBIDDEN)
@@ -179,16 +191,24 @@ describe('Oauth Google routes', () => {
           .intercept({method: 'POST', path: '/token'})
           .reply(httpStatus.UNAUTHORIZED, JSON.stringify({error: 'error'}))
 
-        const providerId = 123456
-        const res = await request(`/v1/auth/google/callback?code=${providerId}`, {
-          method: 'GET',
+        const providerId = '123456'
+        const res = await request('/v1/auth/google/callback', {
+          method: 'POST',
+          body: JSON.stringify({code: providerId}),
+          headers: {
+            'Content-Type': 'application/json'
+          }
         })
         expect(res.status).toBe(httpStatus.UNAUTHORIZED)
       })
 
       test('should return 400 if no code provided', async () => {
         const res = await request('/v1/auth/google/callback', {
-          method: 'GET',
+          method: 'POST',
+          body: JSON.stringify({}),
+          headers: {
+            'Content-Type': 'application/json'
+          }
         })
         expect(res.status).toBe(httpStatus.BAD_REQUEST)
       })

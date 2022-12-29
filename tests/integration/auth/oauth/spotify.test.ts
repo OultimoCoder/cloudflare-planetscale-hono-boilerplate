@@ -38,7 +38,7 @@ describe('Oauth Spotify routes', () => {
     })
   })
 
-  describe('GET /v1/auth/spotify/callback', () => {
+  describe('POST /v1/auth/spotify/callback', () => {
     let newUser: Omit<OauthUser, 'providerType'>
     beforeAll(async () => {
       newUser = {
@@ -49,7 +49,7 @@ describe('Oauth Spotify routes', () => {
     })
     test('should return 200 and successfully register user if request data is ok', async () => {
       const fetchMock = getMiniflareFetchMock()
-      const providerId = 123456
+      const providerId = '123456'
 
       const spotifyApiMock = fetchMock.get('https://api.spotify.com')
       spotifyApiMock
@@ -64,8 +64,12 @@ describe('Oauth Spotify routes', () => {
         )
         .reply(200, JSON.stringify({access_token: '1234'}))
 
-      const res = await request(`/v1/auth/spotify/callback?code=${providerId}`, {
-        method: 'GET',
+      const res = await request('/v1/auth/spotify/callback', {
+        method: 'POST',
+        body: JSON.stringify({code: providerId}),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       })
       const body = await res.json<{ user: UserResponse; tokens: TokenResponse }>()
       expect(res.status).toBe(httpStatus.OK)
@@ -100,7 +104,7 @@ describe('Oauth Spotify routes', () => {
         .selectFrom('authorisations')
         .selectAll()
         .where('authorisations.provider_type', '=', authProviders.SPOTIFY)
-        .where('authorisations.user_id', '=', String(body.user.id))
+        .where('authorisations.user_id', '=', body.user.id)
         .where('authorisations.provider_user_id', '=', String(newUser.id))
         .executeTakeFirst()
 
@@ -115,11 +119,11 @@ describe('Oauth Spotify routes', () => {
 
     test('should return 200 and successfully login user if already created', async () => {
       const ids = await insertUsers([userOne], config.database)
-      const userId = ids[0].toString()
+      const userId = ids[0]
       const spotifyUser = spotifyAuthorisation(userId)
       await insertAuthorisations([spotifyUser], config.database)
       newUser.id = parseInt(spotifyUser.provider_user_id)
-      const providerId = 123456
+      const providerId = '123456'
 
       const fetchMock = getMiniflareFetchMock()
       const spotifyApiMock = fetchMock.get('https://api.spotify.com')
@@ -135,8 +139,12 @@ describe('Oauth Spotify routes', () => {
         )
         .reply(200, JSON.stringify({access_token: '1234'}))
 
-      const res = await request(`/v1/auth/spotify/callback?code=${providerId}`, {
-        method: 'GET',
+      const res = await request('/v1/auth/spotify/callback', {
+        method: 'POST',
+        body: JSON.stringify({code: providerId}),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       })
       const body = await res.json<{ user: UserResponse; tokens: TokenResponse }>()
       expect(res.status).toBe(httpStatus.OK)
@@ -158,7 +166,7 @@ describe('Oauth Spotify routes', () => {
     test('should return 403 if user exists but has not linked their spotify', async () => {
       await insertUsers([userOne], config.database)
       newUser.email = userOne.email
-      const providerId = 123456
+      const providerId = '123456'
 
       const fetchMock = getMiniflareFetchMock()
       const spotifyApiMock = fetchMock.get('https://api.spotify.com')
@@ -174,8 +182,12 @@ describe('Oauth Spotify routes', () => {
         )
         .reply(200, JSON.stringify({access_token: '1234'}))
 
-      const res = await request(`/v1/auth/spotify/callback?code=${providerId}`, {
-        method: 'GET',
+      const res = await request('/v1/auth/spotify/callback', {
+        method: 'POST',
+        body: JSON.stringify({code: providerId}),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       })
       const body = await res.json<{ user: UserResponse; tokens: TokenResponse }>()
       expect(res.status).toBe(httpStatus.FORBIDDEN)
@@ -188,7 +200,7 @@ describe('Oauth Spotify routes', () => {
 
     test('should return 401 if code is invalid', async () => {
       const fetchMock = getMiniflareFetchMock()
-      const providerId = 123456
+      const providerId = '123456'
 
       const spotifyMock = fetchMock.get('https://accounts.spotify.com')
       spotifyMock
@@ -199,15 +211,23 @@ describe('Oauth Spotify routes', () => {
         )
         .reply(httpStatus.UNAUTHORIZED, JSON.stringify({error: 'error'}))
 
-      const res = await request(`/v1/auth/spotify/callback?code=${providerId}`, {
-        method: 'GET',
+      const res = await request('/v1/auth/spotify/callback', {
+        method: 'POST',
+        body: JSON.stringify({code: providerId}),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       })
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
     })
 
     test('should return 400 if no code provided', async () => {
       const res = await request('/v1/auth/spotify/callback', {
-        method: 'GET',
+        method: 'POST',
+        body: JSON.stringify({}),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       })
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
     })

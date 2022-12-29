@@ -4,8 +4,7 @@ import httpStatus from 'http-status'
 import { facebook } from 'worker-auth-providers'
 import { authProviders } from '../../../config/authProviders'
 import { getConfig } from '../../../config/config'
-import * as authValidation from '../../../validations/auth.validation'
-import { oauthCallback, oauthLink, deleteOauthLink } from './oauth.controller'
+import { oauthCallback, oauthLink, deleteOauthLink, validateCallbackBody } from './oauth.controller'
 
 const facebookRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
@@ -20,15 +19,14 @@ const facebookRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
 
 const facebookCallback: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
-  const queryParse = c.req.query()
-  authValidation.oauthCallback.parse(queryParse)
+  const request = await validateCallbackBody(c)
   const oauthRequest = facebook.users({
     options: {
       clientId: config.oauth.facebook.clientId,
       clientSecret: config.oauth.facebook.clientSecret,
       redirectUrl: config.oauth.facebook.redirectUrl
     },
-    request: c.req
+    request
   }).then((result) => {
     result.user.name = `${result.user.first_name} ${result.user.last_name}`
     return result
@@ -38,11 +36,7 @@ const facebookCallback: Handler<{ Bindings: Bindings }> = async (c) => {
 
 const linkFacebook: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
-  const bodyParse = await c.req.json()
-  const { code } = authValidation.oauthCallback.parse(bodyParse)
-  const url = new URL(c.req.url)
-  url.searchParams.set('code', code)
-  const request = new Request(url.toString())
+  const request = await validateCallbackBody(c)
   const oauthRequest = facebook.users({
     options: {
       clientId: config.oauth.facebook.clientId,

@@ -8,6 +8,7 @@ import { OauthUser } from '../../../models/authProvider.model'
 import * as authService from '../../../services/auth.service'
 import * as tokenService from '../../../services/token.service'
 import { ApiError } from '../../../utils/ApiError'
+import * as authValidation from '../../../validations/auth.validation'
 
 const oauthCallback = async (
   c: Context<string, { Bindings: Bindings }>,
@@ -61,8 +62,18 @@ const deleteOauthLink = async (
   return c.body(null)
 }
 
+const validateCallbackBody = async (c: Context<string, { Bindings: Bindings }>) => {
+  const bodyParse = await c.req.json()
+  const { code } = authValidation.oauthCallback.parse(bodyParse)
+  const url = new URL(c.req.url)
+  url.searchParams.set('code', code)
+  const request = new Request(url.toString())
+  return request
+}
+
 export {
   oauthCallback,
   oauthLink,
-  deleteOauthLink
+  deleteOauthLink,
+  validateCallbackBody
 }
