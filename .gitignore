@@ -1,7 +1,6 @@
 /target
 /dist
 **/*.rs.bk
-bin/
 pkg/
 wasm-pack.log
 worker/
