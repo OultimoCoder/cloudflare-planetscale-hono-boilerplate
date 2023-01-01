@@ -10,3 +10,4 @@ node_modules/
 .mf
 wrangler.toml
 coverage
+.vscode

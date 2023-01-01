@@ -23,7 +23,7 @@ const errorConverter = (err: any, sentry: Toucan) => {
       // Log any unhandled application error
       sentry.captureException(error)
     }
-    error = new ApiError(statusCode, message, false, err.stack)
+    error = new ApiError(statusCode, message, false)
   }
   return error
 }

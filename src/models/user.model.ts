@@ -33,7 +33,8 @@ class User extends BaseModel implements Selectable<UserTable> {
   }
 
   isPasswordMatch = async (userPassword: string) => {
-    return bcrypt.compare(userPassword, this.password)
+    if (!this.password) Promise.reject('No password connected to user')
+    return bcrypt.compare(userPassword, this.password || '')
   }
 }
 

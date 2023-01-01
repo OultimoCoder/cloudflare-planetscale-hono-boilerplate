@@ -1,7 +1,7 @@
 import { Handler } from 'hono'
 import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
-import { spotify } from 'worker-auth-providers'
+import { spotify } from 'worker-auth-providers-typed'
 import { authProviders } from '../../../config/authProviders'
 import { getConfig } from '../../../config/config'
 import { oauthCallback, oauthLink, deleteOauthLink, validateCallbackBody } from './oauth.controller'
