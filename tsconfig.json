@@ -20,5 +20,6 @@
   "ts-node": {
     "transpileOnly": true
   },
-  "include": ["./src/**/*", "bindings.d.ts", "./src/declarations/*"]
+  "include": ["./src/**/*", "bindings.d.ts", "./src/declarations/*"],
+  "exclude": ["node_modules"]
 }

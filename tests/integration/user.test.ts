@@ -197,8 +197,8 @@ describe('User routes', () => {
     })
 
     test('should return 400 error if role is neither user nor admin', async () => {
-      const ids = await insertUsers([admin], config.database)
-      ;(newUser as any).role = 'invalid'
+      const ids = await insertUsers([admin], config.database);
+      (newUser as any).role = 'invalid'
       const adminAccessToken = await getAccessToken(ids[0], admin.role, config.jwt)
       const res = await request('/v1/users', {
         method: 'POST',
