@@ -13,6 +13,6 @@ try {
       target: 'esnext'
     })
 } catch(err) {
-  process.exitCode = 1;
+  process.exitCode = 1
 }
 

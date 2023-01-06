@@ -14,12 +14,12 @@
     "noImplicitAny": true,
     "noEmit": true,
     "types": [
-      "@cloudflare/workers-types",
-      "@types/bcryptjs"
+      "@cloudflare/workers-types"
     ]
   },
   "ts-node": {
     "transpileOnly": true
   },
-  "include": ["./src/**/*", "bindings.d.ts"]
+  "include": ["./src/**/*", "bindings.d.ts", "./src/declarations/*"],
+  "exclude": ["node_modules"]
 }

@@ -29,7 +29,9 @@ describe('Auth routes', () => {
       newUser = {
         name: faker.name.fullName(),
         email: faker.internet.email().toLowerCase(),
-        password: 'password1'
+        password: 'password1',
+        is_email_verified: false,
+        role: 'user'
       }
     })
 
@@ -179,8 +181,7 @@ describe('Auth routes', () => {
     })
 
     test('should return 401 error if only oauth account exists', async () => {
-      const newUser = { ...userOne }
-      delete newUser.password
+      const newUser = { ...userOne, password: null }
       const ids = await insertUsers([newUser], config.database)
       const userId = ids[0]
       const discordUser = discordAuthorisation(userId)
@@ -342,8 +343,7 @@ describe('Auth routes', () => {
     })
 
     test('should return 204 and send email if only has oauth account', async () => {
-      const newUser = { ...userOne }
-      delete newUser.password
+      const newUser = { ...userOne, password: null }
       const ids = await insertUsers([newUser], config.database)
       const userId = ids[0]
       const discordUser = discordAuthorisation(userId)
@@ -362,7 +362,7 @@ describe('Auth routes', () => {
     })
 
     test('should return 400 if email is missing', async () => {
-      await insertUsers([userOne])
+      await insertUsers([userOne], config.database)
 
       const res = await request('/v1/auth/forgot-password', {
         method: 'POST',
@@ -508,7 +508,7 @@ describe('Auth routes', () => {
       expect(dbUser).toBeDefined()
       if (!dbUser) return
 
-      const isPasswordMatch = await bcrypt.compare(newPassword, dbUser.password)
+      const isPasswordMatch = await bcrypt.compare(newPassword, dbUser.password || '')
       expect(isPasswordMatch).toBe(true)
     })
 

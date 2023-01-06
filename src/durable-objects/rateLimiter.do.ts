@@ -23,7 +23,7 @@ const zodErrorOptions: ErrorMessageOptions = {
   transform: ({ errorMessage, index }) => `Error #${index + 1}: ${errorMessage}`
 }
 
-class RateLimiter {
+export class RateLimiter {
   state: DurableObjectState
   env: Bindings
   app: Hono = new Hono()
@@ -141,5 +141,3 @@ class RateLimiter {
     return this.app.fetch(request)
   }
 }
-
-export { RateLimiter }

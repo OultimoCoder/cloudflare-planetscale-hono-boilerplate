@@ -8,7 +8,7 @@ import * as spotifyController from '../controllers/auth/oauth/spotify.controller
 import { auth } from '../middlewares/auth'
 import { rateLimit } from '../middlewares/rateLimiter'
 
-const route = new Hono<{ Bindings: Bindings }>()
+export const route = new Hono<{ Bindings: Bindings }>()
 const twoMinutes = 120
 const oneRequest = 1
 
@@ -48,5 +48,3 @@ route.delete('/spotify/:userId', auth('manageUsers'), spotifyController.deleteSp
 route.delete('/discord/:userId', auth('manageUsers'), discordController.deleteDiscordLink)
 route.delete('/google/:userId', auth('manageUsers'), googleController.deleteGoogleLink)
 route.delete('/facebook/:userId', auth('manageUsers'), facebookController.deleteFacebookLink)
-
-export { route }

@@ -1,18 +1,18 @@
 import bcrypt from 'bcryptjs'
 import { Generated, Selectable } from 'kysely'
 import { Role } from '../config/roles'
-import { BaseModel } from './base.model'
+import { BaseModel, ConvertReturn } from './base.model'
 
-interface UserTable {
+export interface UserTable {
   id: Generated<number>
   name: string
   email: string
-  password: string | null  // null if user is created via OAuth
+  password: string | null // null if user is created via OAuth
   is_email_verified: boolean
   role: Role
 }
 
-class User extends BaseModel implements Selectable<UserTable> {
+export class User extends BaseModel implements Selectable<UserTable> {
   id: number
   name: string
   email: string
@@ -22,8 +22,9 @@ class User extends BaseModel implements Selectable<UserTable> {
 
   private_fields = ['password']
 
-  constructor(user: Selectable<UserTable>, role: Role = 'user') {
-    super(role)
+  constructor(user: Selectable<UserTable>) {
+    super()
+    this.role = user.role
     this.id = user.id
     this.name = user.name
     this.email = user.email
@@ -32,9 +33,28 @@ class User extends BaseModel implements Selectable<UserTable> {
     this.password = user.password
   }
 
-  isPasswordMatch = async (userPassword: string) => {
-    return bcrypt.compare(userPassword, this.password)
+  isPasswordMatch = async (userPassword: string): Promise<boolean> => {
+    if (!this.password) throw 'No password connected to user'
+    return await bcrypt.compare(userPassword, this.password)
+  }
+  static _convertArrayObjects(array: Selectable<UserTable>[]): User[] {
+    return array.reduce((arr: User[], obj: Selectable<UserTable>) => {
+      arr.push(this.convert(obj))
+      return arr
+    }, [])
+  }
+
+  static convert<T extends Selectable<UserTable> | Selectable<UserTable>[]>(
+    user: T
+  ): ConvertReturn<T, User> {
+    type ReturnT = ConvertReturn<T, User>
+    if (Array.isArray(user)) {
+      return this._convertArrayObjects(user) as ReturnT
+    }
+    return new this(user) as ReturnT
+  }
+
+  canAccessPrivateFields(): boolean {
+    return this.role === 'admin'
   }
 }
-
-export { UserTable, User }

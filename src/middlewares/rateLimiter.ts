@@ -1,10 +1,10 @@
-import { MiddlewareHandler } from 'hono'
+import { Context, MiddlewareHandler } from 'hono'
 import httpStatus from 'http-status'
 import { ApiError } from '../utils/ApiError'
 
 const fakeDomain = 'http://rate-limiter.com'
 
-const getRateLimitKey = (c: any) => {
+const getRateLimitKey = (c: Context) => {
   const ip = c.req.headers.get('cf-connecting-ip')
   const user = c.get('payload')?.sub
   const uniqueKey = user ? user : ip
@@ -20,9 +20,11 @@ const isRateLimited = async (res: Response) => {
   return body.blocked
 }
 
-const rateLimit =
-  (interval: number, limit: number): MiddlewareHandler<string, { Bindings: Bindings }> =>
-  async (c, next) => {
+export const rateLimit = (
+  interval: number,
+  limit: number
+): MiddlewareHandler<string, { Bindings: Bindings }> => {
+  return async (c, next) => {
     const key = getRateLimitKey(c)
     const endpoint = new URL(c.req.url).pathname
     const id = c.env.RATE_LIMITER.idFromName(key)
@@ -52,6 +54,5 @@ const rateLimit =
     if (await isRateLimited(res))
       throw new ApiError(httpStatus.TOO_MANY_REQUESTS, 'Too many requests')
     await next()
+  }
 }
-
-export { rateLimit }

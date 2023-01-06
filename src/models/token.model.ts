@@ -1,12 +1,10 @@
-interface TokenResponse {
+export interface TokenResponse {
   access: {
     token: string
-    expires: string
+    expires: Date
   }
   refresh: {
     token: string
-    expires: string
+    expires: Date
   }
 }
-
-export { TokenResponse }

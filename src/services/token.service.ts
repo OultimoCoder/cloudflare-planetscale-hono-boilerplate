@@ -1,18 +1,19 @@
-import jwt from '@tsndr/cloudflare-worker-jwt'
+import jwt, { JwtPayload } from '@tsndr/cloudflare-worker-jwt'
 import dayjs, { Dayjs } from 'dayjs'
 import { Selectable } from 'kysely'
 import { Config } from '../config/config'
 import { Role } from '../config/roles'
 import { TokenType, tokenTypes } from '../config/tokens'
+import { TokenResponse } from '../models/token.model'
 import { User } from '../models/user.model'
 
-const generateToken = async (
+export const generateToken = async (
   userId: number,
   type: TokenType,
   role: Role,
   expires: Dayjs,
   secret: string
-) => {
+): Promise<string> => {
   const payload = {
     sub: userId.toString(),
     exp: expires.unix(),
@@ -23,7 +24,10 @@ const generateToken = async (
   return jwt.sign(payload, secret)
 }
 
-const generateAuthTokens = async (user: Selectable<User>, jwtConfig: Config['jwt']) => {
+export const generateAuthTokens = async (
+  user: Selectable<User>,
+  jwtConfig: Config['jwt']
+): Promise<TokenResponse> => {
   const accessTokenExpires = dayjs().add(jwtConfig.accessExpirationMinutes, 'minutes')
   const accessToken = await generateToken(
     user.id,
@@ -52,7 +56,11 @@ const generateAuthTokens = async (user: Selectable<User>, jwtConfig: Config['jwt
   }
 }
 
-const verifyToken = async (token: string, type: TokenType, secret: string) => {
+export const verifyToken = async (
+  token: string,
+  type: TokenType,
+  secret: string
+): Promise<JwtPayload> => {
   const isValid = await jwt.verify(token, secret)
   if (!isValid) {
     throw new Error('Token not valid')
@@ -65,7 +73,10 @@ const verifyToken = async (token: string, type: TokenType, secret: string) => {
   return payload
 }
 
-const generateVerifyEmailToken = async (user: Selectable<User>, jwtConfig: Config['jwt']) => {
+export const generateVerifyEmailToken = async (
+  user: Selectable<User>,
+  jwtConfig: Config['jwt']
+): Promise<string> => {
   const expires = dayjs().add(jwtConfig.verifyEmailExpirationMinutes, 'minutes')
   const verifyEmailToken = await generateToken(
     user.id,
@@ -80,7 +91,7 @@ const generateVerifyEmailToken = async (user: Selectable<User>, jwtConfig: Confi
 export const generateResetPasswordToken = async (
   user: Selectable<User>,
   jwtConfig: Config['jwt']
-) => {
+): Promise<string> => {
   const expires = dayjs().add(jwtConfig.resetPasswordExpirationMinutes, 'minutes')
   const resetPasswordToken = await generateToken(
     user.id,
@@ -91,5 +102,3 @@ export const generateResetPasswordToken = async (
   )
   return resetPasswordToken
 }
-
-export { generateToken, generateAuthTokens, generateVerifyEmailToken, verifyToken }

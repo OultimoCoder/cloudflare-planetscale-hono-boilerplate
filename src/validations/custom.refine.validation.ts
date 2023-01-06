@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const password = async (value: string, ctx: z.RefinementCtx) => {
+export const password = async (value: string, ctx: z.RefinementCtx): Promise<void> => {
   if (value.length < 8) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -16,5 +16,3 @@ const password = async (value: string, ctx: z.RefinementCtx) => {
     return
   }
 }
-
-export { password }

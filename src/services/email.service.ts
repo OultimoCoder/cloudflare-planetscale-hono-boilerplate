@@ -3,12 +3,12 @@ import { Config } from '../config/config'
 
 let client: SESClient
 
-interface EmailData {
+export interface EmailData {
   name: string
   token: string
 }
 
-const getClient = (awsConfig: Config['aws']) => {
+const getClient = (awsConfig: Config['aws']): SESClient => {
   client =
     client ||
     new SESClient({
@@ -26,7 +26,7 @@ const sendEmail = async (
   sender: string,
   message: Message,
   awsConfig: Config['aws']
-) => {
+): Promise<void> => {
   const sesClient = getClient(awsConfig)
   const command = new SendEmailCommand({
     Destination: { ToAddresses: [to] },
@@ -36,7 +36,11 @@ const sendEmail = async (
   await sesClient.send(command)
 }
 
-const sendResetPasswordEmail = async (email: string, emailData: EmailData, config: Config) => {
+export const sendResetPasswordEmail = async (
+  email: string,
+  emailData: EmailData,
+  config: Config
+): Promise<void> => {
   const message = {
     Subject: {
       Data: 'Reset your password',
@@ -56,7 +60,11 @@ const sendResetPasswordEmail = async (email: string, emailData: EmailData, confi
   await sendEmail(email, config.email.sender, message, config.aws)
 }
 
-const sendVerificationEmail = async (email: string, emailData: EmailData, config: Config) => {
+export const sendVerificationEmail = async (
+  email: string,
+  emailData: EmailData,
+  config: Config
+): Promise<void> => {
   const message = {
     Subject: {
       Data: 'Verify your email address',
@@ -75,5 +83,3 @@ const sendVerificationEmail = async (email: string, emailData: EmailData, config
   }
   await sendEmail(email, config.email.sender, message, config.aws)
 }
-
-export { sendResetPasswordEmail, sendVerificationEmail }

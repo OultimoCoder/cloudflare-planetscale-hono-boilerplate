@@ -1,40 +1,25 @@
-import { Role } from '../config/roles'
+export type ConvertReturn<T, V> = T extends unknown[] ? V[] : V
 
-class BaseModel {
-  private_fields: Array<string> = []
-  role: Role = 'user'
-
-  constructor(role: Role) {
-    this.role = role
-  }
-  static _convertArrayObjects(array: any) {
-    return array.reduce((arr: any, obj: any) => {
-      arr.push(new this(obj))
-      return arr
-    }, [])
+export abstract class BaseModel {
+  private_fields: string[]
+  constructor() {
+    this.private_fields = []
   }
 
-  static async convert(object: any) {
-    if (Array.isArray(object)) {
-      return this._convertArrayObjects(object)
-    }
-    return new this(object)
-  }
+  abstract canAccessPrivateFields(): boolean
 
   toJSON() {
     const properties = Object.getOwnPropertyNames(this)
     const publicProperties = properties.filter((property) => {
       return (
-        (!this.private_fields.includes(property) || this.role === 'admin') &&
+        (!this.private_fields.includes(property) || this.canAccessPrivateFields()) &&
         property !== 'private_fields'
       )
     })
-    const json = publicProperties.reduce((obj: any, key: any) => {
-      obj[key] = this[key as keyof BaseModel]
+    const json = publicProperties.reduce((obj: Record<string, unknown>, key: string) => {
+      obj[key] = this[key as keyof typeof this]
       return obj
     }, {})
     return json
   }
 }
-
-export { BaseModel }
