@@ -26,10 +26,7 @@ export const loginUserWithEmailAndPassword = async (
   return user
 }
 
-export const refreshAuth = async (
-  refreshToken: string,
-  config: Config
-): Promise<TokenResponse> => {
+export const refreshAuth = async (refreshToken: string, config: Config): Promise<TokenResponse> => {
   try {
     const refreshTokenDoc = await tokenService.verifyToken(
       refreshToken,
@@ -68,10 +65,7 @@ export const resetPassword = async (
   }
 }
 
-export const verifyEmail = async (
-  verifyEmailToken: string,
-  config: Config
-): Promise<void> => {
+export const verifyEmail = async (verifyEmailToken: string, config: Config): Promise<void> => {
   try {
     const verifyEmailTokenDoc = await tokenService.verifyToken(
       verifyEmailToken,
@@ -111,10 +105,10 @@ export const linkUserWithOauth = async (
   await db.transaction().execute(async (trx) => {
     try {
       await trx
-      .selectFrom('user')
-      .selectAll()
-      .where('user.id', '=', userId)
-      .executeTakeFirstOrThrow()
+        .selectFrom('user')
+        .selectAll()
+        .where('user.id', '=', userId)
+        .executeTakeFirstOrThrow()
     } catch (err) {
       throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
     }
@@ -147,7 +141,7 @@ export const deleteOauthLink = async (
         .groupBy('user.password')
         .executeTakeFirstOrThrow()
       loginsNo = logins.password ? logins.authorisations + 1 : logins.authorisations
-    } catch(_) {
+    } catch (_) {
       throw new ApiError(httpStatus.BAD_REQUEST, 'Account not linked')
     }
     const minLoginMethods = 1

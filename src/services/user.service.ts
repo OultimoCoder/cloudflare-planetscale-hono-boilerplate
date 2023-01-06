@@ -29,7 +29,7 @@ export const createUser = async (
   } catch (error) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'User already exists')
   }
-  const user = await getUserById(Number(result.insertId), databaseConfig) as User
+  const user = (await getUserById(Number(result.insertId), databaseConfig)) as User
   return user
 }
 
@@ -58,7 +58,7 @@ export const createOauthUser = async (
           provider_user_id: providerUser.id.toString()
         })
         .executeTakeFirstOrThrow()
-        return userId
+      return userId
     })
   } catch (error) {
     throw new ApiError(
@@ -66,9 +66,11 @@ export const createOauthUser = async (
       `Cannot signup with ${providerUser.providerType}, user already exists with that email`
     )
   }
-  const user = await getUserByProviderIdType(
-    providerUser.id.toString(), providerUser.providerType, databaseConfig
-  ) as User
+  const user = (await getUserByProviderIdType(
+    providerUser.id.toString(),
+    providerUser.providerType,
+    databaseConfig
+  )) as User
   return User.convert(user)
 }
 
@@ -149,7 +151,7 @@ export const updateUserById = async (
   if (!result.numUpdatedRows || Number(result.numUpdatedRows) < 1) {
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found')
   }
-  const user = await getUserById(userId, databaseConfig) as User
+  const user = (await getUserById(userId, databaseConfig)) as User
   return user
 }
 

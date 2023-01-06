@@ -49,7 +49,7 @@ export const insertUsers = async (
 ) => {
   const hashedUsers = users.map((user) => ({
     ...user,
-    password: (user.password ? hashedPassword : null)
+    password: user.password ? hashedPassword : null
   }))
   const client = getDBClient(databaseConfig)
   const results: number[] = []

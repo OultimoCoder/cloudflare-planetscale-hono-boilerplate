@@ -6,7 +6,7 @@ import { authProviders } from '../../../config/authProviders'
 import { getConfig } from '../../../config/config'
 import { oauthCallback, oauthLink, deleteOauthLink, validateCallbackBody } from './oauth.controller'
 
-const googleCallback: Handler<{ Bindings: Bindings }> = async (c) => {
+export const googleCallback: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const request = await validateCallbackBody(c)
   const oauthRequest = google.users({
@@ -20,7 +20,7 @@ const googleCallback: Handler<{ Bindings: Bindings }> = async (c) => {
   return oauthCallback(c, oauthRequest, authProviders.GOOGLE)
 }
 
-const googleRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
+export const googleRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const location = await google.redirect({
     options: {
@@ -31,7 +31,7 @@ const googleRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.redirect(location, httpStatus.FOUND as StatusCode)
 }
 
-const linkGoogle: Handler<{ Bindings: Bindings }> = async (c) => {
+export const linkGoogle: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const request = await validateCallbackBody(c)
   const oauthRequest = google.users({
@@ -45,13 +45,6 @@ const linkGoogle: Handler<{ Bindings: Bindings }> = async (c) => {
   return oauthLink(c, oauthRequest, authProviders.GOOGLE)
 }
 
-const deleteGoogleLink: Handler<{ Bindings: Bindings }> = async (c) => {
+export const deleteGoogleLink: Handler<{ Bindings: Bindings }> = async (c) => {
   return deleteOauthLink(c, authProviders.GOOGLE)
-}
-
-export {
-  googleRedirect,
-  googleCallback,
-  linkGoogle,
-  deleteGoogleLink
 }

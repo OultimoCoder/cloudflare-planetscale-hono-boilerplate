@@ -7,7 +7,7 @@ export interface UserTable {
   id: Generated<number>
   name: string
   email: string
-  password: string | null  // null if user is created via OAuth
+  password: string | null // null if user is created via OAuth
   is_email_verified: boolean
   role: Role
 }
@@ -33,9 +33,9 @@ export class User extends BaseModel implements Selectable<UserTable> {
     this.password = user.password
   }
 
-  isPasswordMatch = async (userPassword: string) => {
-    if (!this.password) Promise.reject('No password connected to user')
-    return bcrypt.compare(userPassword, this.password || '')
+  isPasswordMatch = async (userPassword: string): Promise<boolean> => {
+    if (!this.password) throw 'No password connected to user'
+    return await bcrypt.compare(userPassword, this.password || '')
   }
   static _convertArrayObjects(array: Selectable<UserTable>[]): User[] {
     return array.reduce((arr: User[], obj: Selectable<UserTable>) => {
@@ -44,11 +44,10 @@ export class User extends BaseModel implements Selectable<UserTable> {
     }, [])
   }
 
-
   static convert<T extends Selectable<UserTable> | Selectable<UserTable>[]>(
     user: T
   ): ConvertReturn<T, User> {
-    type ReturnT = ConvertReturn<T, User>;
+    type ReturnT = ConvertReturn<T, User>
     if (Array.isArray(user)) {
       return this._convertArrayObjects(user) as ReturnT
     }

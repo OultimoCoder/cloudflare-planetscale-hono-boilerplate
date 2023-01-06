@@ -52,7 +52,7 @@ const envVarsSchema = z.object({
   OAUTH_FACEBOOK_REDIRECT_URL: z.string()
 })
 
-interface Config {
+export interface Config {
   env: 'production' | 'development' | 'test'
   database: {
     name: string
@@ -74,27 +74,27 @@ interface Config {
   }
   email: {
     sender: string
-  },
+  }
   oauth: {
     github: {
       clientId: string
       clientSecret: string
-    },
+    }
     google: {
       clientId: string
       clientSecret: string
       redirectUrl: string
-    },
+    }
     spotify: {
       clientId: string
       clientSecret: string
       redirectUrl: string
-    },
+    }
     discord: {
       clientId: string
       clientSecret: string
       redirectUrl: string
-    },
+    }
     facebook: {
       clientId: string
       clientSecret: string
@@ -105,7 +105,7 @@ interface Config {
 
 let config: Config
 
-const getConfig = (env: Bindings) => {
+export const getConfig = (env: Bindings) => {
   if (config) {
     return config
   }
@@ -162,5 +162,3 @@ const getConfig = (env: Bindings) => {
   }
   return config
 }
-
-export { getConfig, Config }

@@ -6,7 +6,7 @@ import { authProviders } from '../../../config/authProviders'
 import { getConfig } from '../../../config/config'
 import { oauthCallback, oauthLink, deleteOauthLink, validateCallbackBody } from './oauth.controller'
 
-const discordRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
+export const discordRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const location = await discord.redirect({
     options: {
@@ -18,7 +18,7 @@ const discordRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.redirect(location, httpStatus.FOUND as StatusCode)
 }
 
-const discordCallback: Handler<{ Bindings: Bindings }> = async (c) => {
+export const discordCallback: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const request = await validateCallbackBody(c)
   const oauthRequest = discord.users({
@@ -32,7 +32,7 @@ const discordCallback: Handler<{ Bindings: Bindings }> = async (c) => {
   return oauthCallback(c, oauthRequest, authProviders.DISCORD)
 }
 
-const linkDiscord: Handler<{ Bindings: Bindings }> = async (c) => {
+export const linkDiscord: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const request = await validateCallbackBody(c)
   const oauthRequest = discord.users({
@@ -46,13 +46,6 @@ const linkDiscord: Handler<{ Bindings: Bindings }> = async (c) => {
   return oauthLink(c, oauthRequest, authProviders.DISCORD)
 }
 
-const deleteDiscordLink: Handler<{ Bindings: Bindings }> = async (c) => {
+export const deleteDiscordLink: Handler<{ Bindings: Bindings }> = async (c) => {
   return deleteOauthLink(c, authProviders.DISCORD)
-}
-
-export {
-  discordRedirect,
-  discordCallback,
-  linkDiscord,
-  deleteDiscordLink
 }

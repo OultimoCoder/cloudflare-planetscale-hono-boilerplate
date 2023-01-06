@@ -8,7 +8,7 @@ import { authProviders } from '../../../config/authProviders'
 import { getConfig } from '../../../config/config'
 import { oauthCallback, oauthLink, deleteOauthLink, validateCallbackBody } from './oauth.controller'
 
-const facebookRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
+export const facebookRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const location = await facebook.redirect({
     options: {
@@ -19,18 +19,7 @@ const facebookRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.redirect(location, httpStatus.FOUND as StatusCode)
 }
 
-// Don't actually know what the response values are
-// Just putting in enough for types to stop complaining
-export interface IFacebookCallbackResponse {
-  user: {
-    name: string,
-    first_name: string,
-    last_name: string
-  },
-  tokens: object
-}
-
-const facebookCallback: Handler<{ Bindings: Bindings }> = async (c) => {
+export const facebookCallback: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const request = await validateCallbackBody(c)
   const oauthRequest = facebook.users({
@@ -51,7 +40,7 @@ const facebookCallback: Handler<{ Bindings: Bindings }> = async (c) => {
   return oauthCallback(c, oauthRequest, authProviders.FACEBOOK)
 }
 
-const linkFacebook: Handler<{ Bindings: Bindings }> = async (c) => {
+export const linkFacebook: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const request = await validateCallbackBody(c)
   const oauthRequest = facebook.users({
@@ -65,13 +54,6 @@ const linkFacebook: Handler<{ Bindings: Bindings }> = async (c) => {
   return oauthLink(c, oauthRequest, authProviders.FACEBOOK)
 }
 
-const deleteFacebookLink: Handler<{ Bindings: Bindings }> = async (c) => {
+export const deleteFacebookLink: Handler<{ Bindings: Bindings }> = async (c) => {
   return deleteOauthLink(c, authProviders.FACEBOOK)
-}
-
-export {
-  facebookRedirect,
-  facebookCallback,
-  linkFacebook,
-  deleteFacebookLink
 }
