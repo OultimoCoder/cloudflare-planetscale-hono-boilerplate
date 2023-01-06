@@ -35,7 +35,7 @@ export class User extends BaseModel implements Selectable<UserTable> {
 
   isPasswordMatch = async (userPassword: string): Promise<boolean> => {
     if (!this.password) throw 'No password connected to user'
-    return await bcrypt.compare(userPassword, this.password || '')
+    return await bcrypt.compare(userPassword, this.password)
   }
   static _convertArrayObjects(array: Selectable<UserTable>[]): User[] {
     return array.reduce((arr: User[], obj: Selectable<UserTable>) => {

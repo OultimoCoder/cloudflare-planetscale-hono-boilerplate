@@ -1,15 +1,12 @@
 export type ConvertReturn<T, V> = T extends unknown[] ? V[] : V
 
-export class BaseModel {
+export abstract class BaseModel {
   private_fields: string[]
   constructor() {
     this.private_fields = []
   }
-  // Reference implementation of convert function
-  // Needs to be reimplemented per type
-  canAccessPrivateFields(): boolean {
-    return false
-  }
+
+  abstract canAccessPrivateFields(): boolean
 
   toJSON() {
     const properties = Object.getOwnPropertyNames(this)
