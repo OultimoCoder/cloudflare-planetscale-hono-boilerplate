@@ -4,15 +4,17 @@ import { Config } from '../config/config'
 import { getDBClient } from '../config/database'
 import { tokenTypes } from '../config/tokens'
 import { OauthUser } from '../models/authProvider.model'
+import { TokenResponse } from '../models/token.model'
+import { User } from '../models/user.model'
 import { ApiError } from '../utils/ApiError'
 import * as tokenService from './token.service'
 import * as userService from './user.service'
 
-const loginUserWithEmailAndPassword = async (
+export const loginUserWithEmailAndPassword = async (
   email: string,
   password: string,
   databaseConfig: Config['database']
-) => {
+): Promise<User> => {
   const user = await userService.getUserByEmail(email, databaseConfig)
   // If password is null then the user must login with a social account
   if (user && !user.password) {
@@ -24,7 +26,10 @@ const loginUserWithEmailAndPassword = async (
   return user
 }
 
-const refreshAuth = async (refreshToken: string, config: Config) => {
+export const refreshAuth = async (
+  refreshToken: string,
+  config: Config
+): Promise<TokenResponse> => {
   try {
     const refreshTokenDoc = await tokenService.verifyToken(
       refreshToken,
@@ -41,7 +46,11 @@ const refreshAuth = async (refreshToken: string, config: Config) => {
   }
 }
 
-const resetPassword = async (resetPasswordToken: string, newPassword: string, config: Config) => {
+export const resetPassword = async (
+  resetPasswordToken: string,
+  newPassword: string,
+  config: Config
+): Promise<void> => {
   try {
     const resetPasswordTokenDoc = await tokenService.verifyToken(
       resetPasswordToken,
@@ -59,7 +68,10 @@ const resetPassword = async (resetPasswordToken: string, newPassword: string, co
   }
 }
 
-const verifyEmail = async (verifyEmailToken: string, config: Config) => {
+export const verifyEmail = async (
+  verifyEmailToken: string,
+  config: Config
+): Promise<void> => {
   try {
     const verifyEmailTokenDoc = await tokenService.verifyToken(
       verifyEmailToken,
@@ -77,10 +89,10 @@ const verifyEmail = async (verifyEmailToken: string, config: Config) => {
   }
 }
 
-const loginOrCreateUserWithOauth = async (
+export const loginOrCreateUserWithOauth = async (
   providerUser: OauthUser,
   databaseConfig: Config['database']
-) => {
+): Promise<User> => {
   const user = await userService.getUserByProviderIdType(
     providerUser.id.toString(),
     providerUser.providerType,
@@ -90,11 +102,11 @@ const loginOrCreateUserWithOauth = async (
   return userService.createOauthUser(providerUser, databaseConfig)
 }
 
-const linkUserWithOauth = async (
+export const linkUserWithOauth = async (
   userId: number,
   providerUser: OauthUser,
   databaseConfig: Config['database']
-) => {
+): Promise<void> => {
   const db = getDBClient(databaseConfig)
   await db.transaction().execute(async (trx) => {
     try {
@@ -117,11 +129,11 @@ const linkUserWithOauth = async (
   })
 }
 
-const deleteOauthLink = async (
+export const deleteOauthLink = async (
   userId: number,
   provider: AuthProviderType,
   databaseConfig: Config['database']
-) => {
+): Promise<void> => {
   const db = getDBClient(databaseConfig)
   await db.transaction().execute(async (trx) => {
     const { count } = trx.fn
@@ -151,14 +163,4 @@ const deleteOauthLink = async (
       throw new ApiError(httpStatus.BAD_REQUEST, 'Account not linked')
     }
   })
-}
-
-export {
-  loginUserWithEmailAndPassword,
-  refreshAuth,
-  resetPassword,
-  verifyEmail,
-  loginOrCreateUserWithOauth,
-  linkUserWithOauth,
-  deleteOauthLink
 }
