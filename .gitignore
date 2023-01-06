@@ -11,3 +11,4 @@ node_modules/
 wrangler.toml
 coverage
 .vscode
+pnpm-lock.yaml
