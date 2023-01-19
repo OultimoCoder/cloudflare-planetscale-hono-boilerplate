@@ -71,7 +71,7 @@ export const createOauthUser = async (
     providerUser.providerType,
     databaseConfig
   )) as User
-  return User.convert(user)
+  return new User(user)
 }
 
 export const queryUsers = async (
@@ -91,7 +91,7 @@ export const queryUsers = async (
     usersQuery = usersQuery.where('user.email', '=', filter.email)
   }
   const users = await usersQuery.execute()
-  return User.convert(users)
+  return users.map((user) => new User(user))
 }
 
 export const getUserById = async (
@@ -100,7 +100,7 @@ export const getUserById = async (
 ): Promise<User | undefined> => {
   const db = getDBClient(databaseConfig)
   const user = await db.selectFrom('user').selectAll().where('user.id', '=', id).executeTakeFirst()
-  return user ? User.convert(user) : user
+  return user ? new User(user) : undefined
 }
 
 export const getUserByEmail = async (
@@ -113,7 +113,7 @@ export const getUserByEmail = async (
     .selectAll()
     .where('user.email', '=', email)
     .executeTakeFirst()
-  return user ? User.convert(user) : user
+  return user ? new User(user) : undefined
 }
 
 export const getUserByProviderIdType = async (
@@ -129,7 +129,7 @@ export const getUserByProviderIdType = async (
     .where('authorisations.provider_user_id', '=', id)
     .where('authorisations.provider_type', '=', type)
     .executeTakeFirst()
-  return user ? User.convert(user) : user
+  return user ? new User(user) : undefined
 }
 
 export const updateUserById = async (

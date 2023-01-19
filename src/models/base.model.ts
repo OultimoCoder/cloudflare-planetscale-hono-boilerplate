@@ -1,11 +1,7 @@
 export type ConvertReturn<T, V> = T extends unknown[] ? V[] : V
 
 export abstract class BaseModel {
-  private_fields: string[]
-  constructor() {
-    this.private_fields = []
-  }
-
+  abstract private_fields: string[]
   abstract canAccessPrivateFields(): boolean
 
   toJSON() {

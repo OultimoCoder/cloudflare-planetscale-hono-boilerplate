@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs'
 import { Generated, Selectable } from 'kysely'
 import { Role } from '../config/roles'
-import { BaseModel, ConvertReturn } from './base.model'
+import { BaseModel } from './base.model'
 
 export interface UserTable {
   id: Generated<number>
@@ -36,22 +36,6 @@ export class User extends BaseModel implements Selectable<UserTable> {
   isPasswordMatch = async (userPassword: string): Promise<boolean> => {
     if (!this.password) throw 'No password connected to user'
     return await bcrypt.compare(userPassword, this.password)
-  }
-  static _convertArrayObjects(array: Selectable<UserTable>[]): User[] {
-    return array.reduce((arr: User[], obj: Selectable<UserTable>) => {
-      arr.push(this.convert(obj))
-      return arr
-    }, [])
-  }
-
-  static convert<T extends Selectable<UserTable> | Selectable<UserTable>[]>(
-    user: T
-  ): ConvertReturn<T, User> {
-    type ReturnT = ConvertReturn<T, User>
-    if (Array.isArray(user)) {
-      return this._convertArrayObjects(user) as ReturnT
-    }
-    return new this(user) as ReturnT
   }
 
   canAccessPrivateFields(): boolean {
