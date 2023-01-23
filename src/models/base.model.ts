@@ -1,5 +1,3 @@
-export type ConvertReturn<T, V> = T extends unknown[] ? V[] : V
-
 export abstract class BaseModel {
   abstract private_fields: string[]
   abstract canAccessPrivateFields(): boolean
