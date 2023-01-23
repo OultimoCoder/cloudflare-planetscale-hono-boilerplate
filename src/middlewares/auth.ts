@@ -1,4 +1,4 @@
-import jwt from '@tsndr/cloudflare-worker-jwt'
+import jwt, { JwtPayload } from '@tsndr/cloudflare-worker-jwt'
 import { MiddlewareHandler } from 'hono'
 import httpStatus from 'http-status'
 import { getConfig } from '../config/config'
@@ -6,7 +6,12 @@ import { roleRights, Permission, Role } from '../config/roles'
 import { tokenTypes } from '../config/tokens'
 import { ApiError } from '../utils/ApiError'
 
-const authenticate = async (jwtToken: string, secret: string) => {
+export interface AuthenticateResponse {
+  authorized: boolean
+  payload: JwtPayload
+}
+
+const authenticate = async (jwtToken: string, secret: string): Promise<AuthenticateResponse> => {
   let authorized = false
   let payload
   try {
@@ -15,12 +20,13 @@ const authenticate = async (jwtToken: string, secret: string) => {
     payload = decoded.payload
     authorized = authorized && payload.type === tokenTypes.ACCESS
   } catch (e) {}
-  return { authorized, payload }
+  return { authorized, payload: payload as JwtPayload }
 }
 
-const auth =
-  (...requiredRights: Permission[]): MiddlewareHandler<string, { Bindings: Bindings }> =>
-  async (c, next) => {
+export const auth = (
+  ...requiredRights: Permission[]
+): MiddlewareHandler<string, { Bindings: Bindings }> => {
+  return async (c, next) => {
     const credentials = c.req.headers.get('Authorization')
     const config = getConfig(c.env)
     if (!credentials) {
@@ -51,5 +57,4 @@ const auth =
     c.set('payload', payload)
     await next()
   }
-
-export { auth }
+}

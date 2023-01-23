@@ -1,12 +1,12 @@
 import { Handler } from 'hono'
 import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
-import { github } from 'worker-auth-providers'
+import { github } from 'worker-auth-providers-typed'
 import { authProviders } from '../../../config/authProviders'
 import { getConfig } from '../../../config/config'
 import { oauthCallback, oauthLink, deleteOauthLink, validateCallbackBody } from './oauth.controller'
 
-const githubRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
+export const githubRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const location = await github.redirect({
     options: {
@@ -16,7 +16,7 @@ const githubRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.redirect(location, httpStatus.FOUND as StatusCode)
 }
 
-const githubCallback: Handler<{ Bindings: Bindings }> = async (c) => {
+export const githubCallback: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const request = await validateCallbackBody(c)
   const oauthRequest = github.users({
@@ -29,7 +29,7 @@ const githubCallback: Handler<{ Bindings: Bindings }> = async (c) => {
   return oauthCallback(c, oauthRequest, authProviders.GITHUB)
 }
 
-const linkGithub: Handler<{ Bindings: Bindings }> = async (c) => {
+export const linkGithub: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const request = await validateCallbackBody(c)
   const oauthRequest = github.users({
@@ -42,13 +42,6 @@ const linkGithub: Handler<{ Bindings: Bindings }> = async (c) => {
   return oauthLink(c, oauthRequest, authProviders.GITHUB)
 }
 
-const deleteGithubLink: Handler<{ Bindings: Bindings }> = async (c) => {
+export const deleteGithubLink: Handler<{ Bindings: Bindings }> = async (c) => {
   return deleteOauthLink(c, authProviders.GITHUB)
-}
-
-export {
-  githubRedirect,
-  githubCallback,
-  linkGithub,
-  deleteGithubLink
 }

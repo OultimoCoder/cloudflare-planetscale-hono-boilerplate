@@ -10,11 +10,11 @@ import * as tokenService from '../../../services/token.service'
 import { ApiError } from '../../../utils/ApiError'
 import * as authValidation from '../../../validations/auth.validation'
 
-const oauthCallback = async (
+export const oauthCallback = async (
   c: Context<string, { Bindings: Bindings }>,
   oauthRequest: Promise<{user: unknown, tokens: unknown}>,
   providerType: AuthProviderType
-) => {
+): Promise<Response> => {
   const config = getConfig(c.env)
   let providerUser: OauthUser
   try {
@@ -29,11 +29,11 @@ const oauthCallback = async (
   return c.json({ user, tokens }, httpStatus.OK as StatusCode)
 }
 
-const oauthLink = async (
+export const oauthLink = async (
   c: Context<string, { Bindings: Bindings }>,
   oauthRequest: Promise<{user: unknown, tokens: unknown}>,
   providerType: AuthProviderType
-) => {
+): Promise<Response> => {
   const payload = c.get('payload') as JwtPayload
   const userId = Number(payload.sub)
   const config = getConfig(c.env)
@@ -50,10 +50,10 @@ const oauthLink = async (
   return c.body(null)
 }
 
-const deleteOauthLink = async (
+export const deleteOauthLink = async (
   c: Context<string, { Bindings: Bindings }>,
   provider: AuthProviderType
-) => {
+): Promise<Response> => {
   const payload = c.get('payload') as JwtPayload
   const userId = Number(payload.sub)
   const config = getConfig(c.env)
@@ -62,18 +62,13 @@ const deleteOauthLink = async (
   return c.body(null)
 }
 
-const validateCallbackBody = async (c: Context<string, { Bindings: Bindings }>) => {
+export const validateCallbackBody = async (
+  c: Context<string, { Bindings: Bindings }>
+): Promise<Request> => {
   const bodyParse = await c.req.json()
   const { code } = authValidation.oauthCallback.parse(bodyParse)
   const url = new URL(c.req.url)
   url.searchParams.set('code', code)
   const request = new Request(url.toString())
   return request
-}
-
-export {
-  oauthCallback,
-  oauthLink,
-  deleteOauthLink,
-  validateCallbackBody
 }

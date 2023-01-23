@@ -1,4 +1,4 @@
-const authProviders = {
+export const authProviders = {
   GITHUB: 'github',
   SPOTIFY: 'spotify',
   DISCORD: 'discord',
@@ -6,5 +6,4 @@ const authProviders = {
   FACEBOOK: 'facebook'
 } as const
 
-type AuthProviderType = typeof authProviders[keyof typeof authProviders]
-export { authProviders, AuthProviderType }
+export type AuthProviderType = typeof authProviders[keyof typeof authProviders]

@@ -9,9 +9,9 @@ const password = 'password1'
 const salt = bcrypt.genSaltSync(8)
 const hashedPassword = bcrypt.hashSync(password, salt)
 
-type MockUser = Selectable<UserTable> | Partial<Omit<Selectable<UserTable>, 'id'>>
+export type MockUser = Omit<Selectable<UserTable>, 'id'>
 
-interface UserResponse {
+export interface UserResponse {
   id: number
   name: string
   email: string
@@ -19,7 +19,7 @@ interface UserResponse {
   is_email_verified: boolean
 }
 
-const userOne: MockUser = {
+export const userOne: MockUser = {
   name: faker.name.fullName(),
   email: faker.internet.email().toLowerCase(),
   password,
@@ -27,7 +27,7 @@ const userOne: MockUser = {
   is_email_verified: false
 }
 
-const userTwo: MockUser = {
+export const userTwo: MockUser = {
   name: faker.name.fullName(),
   email: faker.internet.email().toLowerCase(),
   password,
@@ -35,7 +35,7 @@ const userTwo: MockUser = {
   is_email_verified: false
 }
 
-const admin: MockUser = {
+export const admin: MockUser = {
   name: faker.name.fullName(),
   email: faker.internet.email().toLowerCase(),
   password,
@@ -43,13 +43,13 @@ const admin: MockUser = {
   is_email_verified: false
 }
 
-const insertUsers = async (
+export const insertUsers = async (
   users: Omit<Selectable<UserTable>, 'id'>[],
   databaseConfig: Config['database']
 ) => {
   const hashedUsers = users.map((user) => ({
     ...user,
-    password: (user.password ? hashedPassword : null)
+    password: user.password ? hashedPassword : null
   }))
   const client = getDBClient(databaseConfig)
   const results: number[] = []
@@ -59,5 +59,3 @@ const insertUsers = async (
   }
   return results
 }
-
-export { userOne, userTwo, admin, insertUsers, MockUser, UserResponse }

@@ -9,7 +9,7 @@ import * as tokenService from '../../services/token.service'
 import * as userService from '../../services/user.service'
 import * as authValidation from '../../validations/auth.validation'
 
-const register: Handler<{ Bindings: Bindings }> = async (c) => {
+export const register: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const bodyParse = await c.req.json()
   const body = await authValidation.register.parseAsync(bodyParse)
@@ -18,7 +18,7 @@ const register: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.json({ user, tokens }, httpStatus.CREATED as StatusCode)
 }
 
-const login: Handler<{ Bindings: Bindings }> = async (c) => {
+export const login: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const bodyParse = await c.req.json()
   const { email, password } = authValidation.login.parse(bodyParse)
@@ -27,7 +27,7 @@ const login: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.json({ user, tokens }, httpStatus.OK as StatusCode)
 }
 
-const refreshTokens: Handler<{ Bindings: Bindings }> = async (c) => {
+export const refreshTokens: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const bodyParse = await c.req.json()
   const { refresh_token } = authValidation.refreshTokens.parse(bodyParse)
@@ -35,7 +35,7 @@ const refreshTokens: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.json({ ...tokens }, httpStatus.OK as StatusCode)
 }
 
-const forgotPassword: Handler<{ Bindings: Bindings }> = async (c) => {
+export const forgotPassword: Handler<{ Bindings: Bindings }> = async (c) => {
   const bodyParse = await c.req.json()
   const config = getConfig(c.env)
   const { email } = authValidation.forgotPassword.parse(bodyParse)
@@ -56,7 +56,7 @@ const forgotPassword: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.body(null)
 }
 
-const resetPassword: Handler<{ Bindings: Bindings }> = async (c) => {
+export const resetPassword: Handler<{ Bindings: Bindings }> = async (c) => {
   const queryParse = c.req.query()
   const bodyParse = await c.req.json()
   const config = getConfig(c.env)
@@ -69,7 +69,7 @@ const resetPassword: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.body(null)
 }
 
-const sendVerificationEmail: Handler<{ Bindings: Bindings }> = async (c) => {
+export const sendVerificationEmail: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const payload = c.get('payload') as JwtPayload
   const userId = Number(payload.sub)
@@ -77,7 +77,7 @@ const sendVerificationEmail: Handler<{ Bindings: Bindings }> = async (c) => {
   // is already verified
   try {
     const user = await userService.getUserById(userId, config.database)
-    if (user.is_email_verified) {
+    if (!user || user.is_email_verified) {
       throw new Error()
     }
     const verifyEmailToken = await tokenService.generateVerifyEmailToken(user, config.jwt)
@@ -94,21 +94,11 @@ const sendVerificationEmail: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.body(null)
 }
 
-const verifyEmail: Handler<{ Bindings: Bindings }> = async (c) => {
+export const verifyEmail: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const queryParse = c.req.query()
   const { token } = authValidation.verifyEmail.parse(queryParse)
   await authService.verifyEmail(token, config)
   c.status(httpStatus.NO_CONTENT as StatusCode)
   return c.body(null)
-}
-
-export {
-  register,
-  login,
-  refreshTokens,
-  sendVerificationEmail,
-  forgotPassword,
-  resetPassword,
-  verifyEmail
 }

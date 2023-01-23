@@ -41,10 +41,7 @@ const insertAuthorisations = async (
 ) => {
   const client = getDBClient(databaseConfig)
   for await (const authorisation of authorisations) {
-    await client
-      .insertInto('authorisations')
-      .values(authorisation)
-      .executeTakeFirst()
+    await client.insertInto('authorisations').values(authorisation).executeTakeFirst()
   }
 }
 

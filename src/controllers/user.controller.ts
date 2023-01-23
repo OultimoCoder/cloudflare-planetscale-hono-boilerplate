@@ -6,7 +6,7 @@ import * as userService from '../services/user.service'
 import { ApiError } from '../utils/ApiError'
 import * as userValidation from '../validations/user.validation'
 
-const createUser: Handler<{ Bindings: Bindings }> = async (c) => {
+export const createUser: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const bodyParse = await c.req.json()
   const body = await userValidation.createUser.parseAsync(bodyParse)
@@ -14,7 +14,7 @@ const createUser: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.json(user, httpStatus.CREATED as StatusCode)
 }
 
-const getUsers: Handler<{ Bindings: Bindings }> = async (c) => {
+export const getUsers: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const queryParse = c.req.query()
   const query = userValidation.getUsers.parse(queryParse)
@@ -24,7 +24,7 @@ const getUsers: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.json(result, httpStatus.OK as StatusCode)
 }
 
-const getUser: Handler<{ Bindings: Bindings }> = async (c) => {
+export const getUser: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const paramsParse = c.req.param()
   const params = userValidation.getUser.parse(paramsParse)
@@ -35,7 +35,7 @@ const getUser: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.json(user, httpStatus.OK as StatusCode)
 }
 
-const updateUser: Handler<{ Bindings: Bindings }> = async (c) => {
+export const updateUser: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const paramsParse = c.req.param()
   const bodyParse = await c.req.json()
@@ -44,7 +44,7 @@ const updateUser: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.json(user, httpStatus.OK as StatusCode)
 }
 
-const deleteUser: Handler<{ Bindings: Bindings }> = async (c) => {
+export const deleteUser: Handler<{ Bindings: Bindings }> = async (c) => {
   const config = getConfig(c.env)
   const paramsParse = c.req.param()
   const params = userValidation.deleteUser.parse(paramsParse)
@@ -52,5 +52,3 @@ const deleteUser: Handler<{ Bindings: Bindings }> = async (c) => {
   c.status(httpStatus.NO_CONTENT as StatusCode)
   return c.body(null)
 }
-
-export { createUser, getUsers, getUser, updateUser, deleteUser }

@@ -3,7 +3,7 @@ import { route as userRoute } from './user.route'
 
 const base_path = 'v1'
 
-const defaultRoutes = [
+export const defaultRoutes = [
   {
     path: `/${base_path}/auth`,
     route: authRoute
@@ -13,5 +13,3 @@ const defaultRoutes = [
     route: userRoute
   }
 ]
-
-export { defaultRoutes }

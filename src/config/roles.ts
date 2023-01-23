@@ -1,11 +1,9 @@
-const roleRights = {
+export const roleRights = {
   user: [],
   admin: ['getUsers', 'manageUsers']
 } as const
 
-const roles = Object.keys(roleRights) as Role[]
+export const roles = Object.keys(roleRights) as Role[]
 
-type Permission = typeof roleRights[keyof typeof roleRights][number]
-type Role = keyof typeof roleRights
-
-export { roles, roleRights, Permission, Role }
+export type Permission = typeof roleRights[keyof typeof roleRights][number]
+export type Role = keyof typeof roleRights

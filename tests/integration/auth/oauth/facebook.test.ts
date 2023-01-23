@@ -148,7 +148,7 @@ describe('Oauth Facebook routes', () => {
       expect(res.status).toBe(httpStatus.OK)
       expect(body.user).not.toHaveProperty('password')
       expect(body.user).toEqual({
-        id: parseInt(userId),
+        id: userId,
         name: userOne.name,
         email: userOne.email,
         role: userOne.role,
@@ -432,8 +432,7 @@ describe('Oauth Facebook routes', () => {
     })
 
     test('should return 400 if user does not have a local login and only 1 link', async () => {
-      const newUser = { ...userOne }
-      delete newUser.password
+      const newUser = { ...userOne, password: null }
       const ids = await insertUsers([newUser], config.database)
       const userId = ids[0]
       const userOneAccessToken = await getAccessToken(ids[0], newUser.role, config.jwt)
@@ -459,8 +458,7 @@ describe('Oauth Facebook routes', () => {
     })
 
     test('should return 400 if user does not have facebook link', async () => {
-      const newUser = { ...userOne }
-      delete newUser.password
+      const newUser = { ...userOne, password: null }
       const ids = await insertUsers([newUser], config.database)
       const userId = ids[0]
       const userOneAccessToken = await getAccessToken(ids[0], newUser.role, config.jwt)
@@ -479,8 +477,7 @@ describe('Oauth Facebook routes', () => {
     })
 
     test('should return 400 if user only has a local login', async () => {
-      const newUser = { ...userOne }
-      delete newUser.password
+      const newUser = { ...userOne, password: null }
       const ids = await insertUsers([newUser], config.database)
       const userId = ids[0]
       const userOneAccessToken = await getAccessToken(ids[0], newUser.role, config.jwt)
@@ -495,8 +492,7 @@ describe('Oauth Facebook routes', () => {
     })
 
     test('should return 200 if user does not have a local login and 2 links', async () => {
-      const newUser = { ...userOne }
-      delete newUser.password
+      const newUser = { ...userOne, password: null }
       const ids = await insertUsers([newUser], config.database)
       const userId = ids[0]
       const userOneAccessToken = await getAccessToken(ids[0], newUser.role, config.jwt)

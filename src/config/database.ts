@@ -6,12 +6,12 @@ import { Config } from './config'
 
 let dbClient: Kysely<Database>
 
-interface Database {
-  user: UserTable,
+export interface Database {
+  user: UserTable
   authorisations: AuthProviderTable
 }
 
-const getDBClient = (databaseConfig: Config['database']) => {
+export const getDBClient = (databaseConfig: Config['database']): Kysely<Database> => {
   dbClient =
     dbClient ||
     new Kysely<Database>({
@@ -23,5 +23,3 @@ const getDBClient = (databaseConfig: Config['database']) => {
     })
   return dbClient
 }
-
-export { getDBClient, Database }

@@ -1,4 +1,4 @@
-class ApiError extends Error {
+export class ApiError extends Error {
   statusCode: number
   isOperational: boolean
 
@@ -8,5 +8,3 @@ class ApiError extends Error {
     this.isOperational = isOperational
   }
 }
-
-export { ApiError }
