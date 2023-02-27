@@ -88,27 +88,28 @@ npm run prettier:fix
 
 Migrations:
 
+To deploy to production you must first deploy to a test/dev branch on Planetscale and then create
+a deploy request and merge the schema into production. 
+
 ```bash
-# run all migrations for dev/test/prod
+# run all migrations for dev/test
 npm run migrate:dev:latest
 npm run migrate:test:latest
-npm run migrate:prod:latest
 
-# remove all migrations for dev/test/prod
+# remove all migrations for dev/test
 npm run migrate:dev:none
 npm run migrate:test:none
-npm run migrate:prod:none
 
-# revert last migration for dev/test/prod
+# revert last migration for dev/test
 npm run migrate:dev:down
 npm run migrate:test:down
-npm run migrate:prod:down
 ```
 
 Deploy to Cloudflare:
 
 ```bash
-npm run deploy
+npm run deploy:dev
+npm run deploy:prod
 ```
 
 ## Error Handling
