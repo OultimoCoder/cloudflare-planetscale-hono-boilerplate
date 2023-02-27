@@ -40,6 +40,27 @@ OAUTH_GOOGLE_REDIRECT_URL='https://frontend.com/login'
 OAUTH_FACEBOOK_CLIENT_ID='myclientid'
 OAUTH_FACEBOOK_REDIRECT_URL='https://frontend.com/login'
 
+[env.production.vars]
+ENV = 'production'
+JWT_ACCESS_EXPIRATION_MINUTES=30
+JWT_REFRESH_EXPIRATION_DAYS=30
+JWT_RESET_PASSWORD_EXPIRATION_MINUTES=15
+JWT_VERIFY_EMAIL_EXPIRATION_MINUTES=15
+DATABASE_NAME='example'
+DATABASE_USERNAME='example'
+DATABASE_HOST='example'
+AWS_REGION='eu-west-1'
+EMAIL_SENDER='noreply@gmail.com'
+OAUTH_GITHUB_CLIENT_ID='myclientid'
+OAUTH_DISCORD_CLIENT_ID='myclientid'
+OAUTH_DISCORD_REDIRECT_URL='https://frontend.com/login'
+OAUTH_SPOTIFY_CLIENT_ID='myclientid'
+OAUTH_SPOTIFY_REDIRECT_URL='https://frontend.com/login'
+OAUTH_GOOGLE_CLIENT_ID='myclientid'
+OAUTH_GOOGLE_REDIRECT_URL='https://frontend.com/login'
+OAUTH_FACEBOOK_CLIENT_ID='myclientid'
+OAUTH_FACEBOOK_REDIRECT_URL='https://frontend.com/login'
+
 [build]
 command = "npm run build"
 
