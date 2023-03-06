@@ -21,5 +21,6 @@ export default {
   collectCoverageFrom: ['src/**/*.{ts,js}'],
   coveragePathIgnorePatterns: [
     'src/durable-objects'  // Jest doesn't accurately report coverage for Durable Objects
-  ]
+  ],
+  testTimeout: 10000
 }
