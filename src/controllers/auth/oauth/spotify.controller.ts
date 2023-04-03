@@ -36,9 +36,9 @@ export const linkSpotify: Handler<{ Bindings: Bindings }> = async (c) => {
   const request = await validateCallbackBody(c)
   const oauthRequest = spotify.users({
     options: {
-      clientId: config.oauth.facebook.clientId,
-      clientSecret: config.oauth.facebook.clientSecret,
-      redirectUrl: config.oauth.facebook.redirectUrl
+      clientId: config.oauth.spotify.clientId,
+      clientSecret: config.oauth.spotify.clientSecret,
+      redirectUrl: config.oauth.spotify.redirectUrl
     },
     request
   })
