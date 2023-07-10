@@ -99,9 +99,9 @@ async function migrateNone() {
 const myArgs = process.argv[3]
 
 if (myArgs === 'down') {
-  migrateDown()
+  await migrateDown()
 } else if (myArgs === 'latest') {
-  migrateToLatest()
+  await migrateToLatest()
 } else if (myArgs === 'none') {
-  migrateNone()
+  await migrateNone()
 }
