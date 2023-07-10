@@ -10,7 +10,14 @@ import { getConfig } from '../../../src/config/config'
 import { Database, getDBClient } from '../../../src/config/database'
 import { tokenTypes } from '../../../src/config/tokens'
 import * as tokenService from '../../../src/services/token.service'
-import { discordAuthorisation, insertAuthorisations } from '../../fixtures/authorisations.fixture'
+import {
+  discordAuthorisation,
+  facebookAuthorisation,
+  githubAuthorisation,
+  googleAuthorisation,
+  insertAuthorisations,
+  spotifyAuthorisation
+} from '../../fixtures/authorisations.fixture'
 import { getAccessToken, TokenResponse } from '../../fixtures/token.fixture'
 import { userOne, insertUsers, MockUser, UserResponse, userTwo } from '../../fixtures/user.fixture'
 import { clearDBTables } from '../../utils/clearDBTables'
