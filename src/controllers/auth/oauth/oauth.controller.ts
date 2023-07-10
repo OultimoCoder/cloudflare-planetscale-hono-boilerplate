@@ -1,4 +1,3 @@
-import { JwtPayload } from '@tsndr/cloudflare-worker-jwt'
 import { Context } from 'hono'
 import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
@@ -35,7 +34,7 @@ export const oauthLink = async (
   oauthRequest: Promise<{user: unknown, tokens: unknown}>,
   providerType: AuthProviderType
 ): Promise<Response> => {
-  const payload = c.get('payload') as JwtPayload
+  const payload = c.get('payload')
   const userId = Number(payload.sub)
   const config = getConfig(c.env)
   let providerUser: OauthUser
@@ -55,7 +54,7 @@ export const deleteOauthLink = async (
   c: Context<Environment>,
   provider: AuthProviderType
 ): Promise<Response> => {
-  const payload = c.get('payload') as JwtPayload
+  const payload = c.get('payload')
   const userId = Number(payload.sub)
   const config = getConfig(c.env)
   await authService.deleteOauthLink(userId, provider, config.database)

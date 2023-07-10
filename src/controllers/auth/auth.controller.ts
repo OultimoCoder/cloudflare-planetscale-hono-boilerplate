@@ -1,4 +1,3 @@
-import { JwtPayload } from '@tsndr/cloudflare-worker-jwt'
 import { Handler } from 'hono'
 import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
@@ -72,7 +71,7 @@ export const resetPassword: Handler<Environment> = async (c) => {
 
 export const sendVerificationEmail: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
-  const payload = c.get('payload') as JwtPayload
+  const payload = c.get('payload')
   const userId = Number(payload.sub)
   // Don't let bad actors know if the email is registered by returning an error if the email
   // is already verified
@@ -106,7 +105,7 @@ export const verifyEmail: Handler<Environment> = async (c) => {
 
 export const getAuthorisations: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
-  const payload = c.get('payload') as JwtPayload
+  const payload = c.get('payload')
   const userId = Number(payload.sub)
   const authorisations = await userService.getAuthorisations(userId, config.database)
   return c.json(authorisations, httpStatus.OK as StatusCode)
