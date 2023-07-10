@@ -3,7 +3,7 @@ import httpStatus from 'http-status'
 import { Environment } from '../../bindings'
 import { ApiError } from '../utils/ApiError'
 
-const fakeDomain = 'http://rate-limiter.com'
+const fakeDomain = 'http://rate-limiter.com/'
 
 const getRateLimitKey = (c: Context) => {
   const ip = c.req.headers.get('cf-connecting-ip')
