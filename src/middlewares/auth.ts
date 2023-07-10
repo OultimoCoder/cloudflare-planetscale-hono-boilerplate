@@ -1,17 +1,13 @@
-import jwt, { JwtPayload } from '@tsndr/cloudflare-worker-jwt'
+import jwt from '@tsndr/cloudflare-worker-jwt'
 import { MiddlewareHandler } from 'hono'
 import httpStatus from 'http-status'
 import { getConfig } from '../config/config'
 import { roleRights, Permission, Role } from '../config/roles'
 import { tokenTypes } from '../config/tokens'
+import { getUserById } from '../services/user.service'
 import { ApiError } from '../utils/ApiError'
 
-export interface AuthenticateResponse {
-  authorized: boolean
-  payload: JwtPayload
-}
-
-const authenticate = async (jwtToken: string, secret: string): Promise<AuthenticateResponse> => {
+const authenticate = async (jwtToken: string, secret: string) => {
   let authorized = false
   let payload
   try {
@@ -20,13 +16,12 @@ const authenticate = async (jwtToken: string, secret: string): Promise<Authentic
     payload = decoded.payload
     authorized = authorized && payload.type === tokenTypes.ACCESS
   } catch (e) {}
-  return { authorized, payload: payload as JwtPayload }
+  return { authorized, payload }
 }
 
-export const auth = (
-  ...requiredRights: Permission[]
-): MiddlewareHandler<string, { Bindings: Bindings }> => {
-  return async (c, next) => {
+export const jwtAuth =
+  (...requiredRights: Permission[]): MiddlewareHandler<string, { Bindings: Bindings }> =>
+  async (c, next) => {
     const credentials = c.req.headers.get('Authorization')
     const config = getConfig(c.env)
     if (!credentials) {
@@ -54,7 +49,16 @@ export const auth = (
         throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden')
       }
     }
+    if (!payload.isEmailVerified) {
+      const user = await getUserById(Number(payload.sub), config['database'])
+      if (!user) {
+        throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
+      }
+      const url = new URL(c.req.url)
+      if (url.pathname !== '/v1/auth/send-verification-email') {
+        throw new ApiError(httpStatus.FORBIDDEN, 'Please verify your email')
+      }
+    }
     c.set('payload', payload)
     await next()
   }
-}

@@ -3,6 +3,7 @@ import httpStatus from 'http-status'
 import { TableReference } from 'kysely/dist/cjs/parser/table-parser'
 import { getConfig } from '../../src/config/config'
 import { Database, getDBClient } from '../../src/config/database'
+import { tokenTypes } from '../../src/config/tokens'
 import { getAccessToken } from '../fixtures/token.fixture'
 import { MockUser, UserResponse } from '../fixtures/user.fixture'
 import { userOne, userTwo, admin, insertUsers } from '../fixtures/user.fixture'
@@ -230,6 +231,22 @@ describe('User routes', () => {
       const body = await res.json<UserResponse>()
       expect(body.is_email_verified).toBe(0)
     })
+    test('should return 403 if user has not verified their email', async () => {
+      const ids = await insertUsers([userTwo], config.database)
+      const userId = ids[0]
+      const accessToken = await getAccessToken(
+        userId, userTwo.role, config.jwt, tokenTypes.ACCESS, userTwo.is_email_verified
+      )
+      const res = await request('/v1/users', {
+        method: 'POST',
+        body: JSON.stringify(newUser),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.FORBIDDEN)
+    })
   })
 
   describe('GET /v1/users', () => {
@@ -363,6 +380,21 @@ describe('User routes', () => {
       expect(body).toHaveLength(1)
       expect(body[0].id).toBe(ids[2])
     })
+    test('should return 403 if user has not verified their email', async () => {
+      const ids = await insertUsers([userTwo], config.database)
+      const userId = ids[0]
+      const accessToken = await getAccessToken(
+        userId, userTwo.role, config.jwt, tokenTypes.ACCESS, userTwo.is_email_verified
+      )
+      const res = await request('/v1/users?limit=2&page=1', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.FORBIDDEN)
+    })
   })
 
   describe('GET /v1/users/:userId', () => {
@@ -450,6 +482,21 @@ describe('User routes', () => {
       })
       expect(res.status).toBe(httpStatus.NOT_FOUND)
     })
+    test('should return 403 if user has not verified their email', async () => {
+      const ids = await insertUsers([userTwo], config.database)
+      const userId = ids[0]
+      const accessToken = await getAccessToken(
+        userId, userTwo.role, config.jwt, tokenTypes.ACCESS, userTwo.is_email_verified
+      )
+      const res = await request('/v1/users/1221212', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.FORBIDDEN)
+    })
   })
 
   describe('DELETE /v1/users/:userId', () => {
@@ -533,6 +580,21 @@ describe('User routes', () => {
         }
       })
       expect(res.status).toBe(httpStatus.NOT_FOUND)
+    })
+    test('should return 403 if user has not verified their email', async () => {
+      const ids = await insertUsers([userTwo], config.database)
+      const userId = ids[0]
+      const accessToken = await getAccessToken(
+        userId, userTwo.role, config.jwt, tokenTypes.ACCESS, userTwo.is_email_verified
+      )
+      const res = await request('/v1/users/12345', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.FORBIDDEN)
     })
   })
 
@@ -713,6 +775,23 @@ describe('User routes', () => {
         }
       })
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 403 if user has not verified their email', async () => {
+      const ids = await insertUsers([userTwo], config.database)
+      const userId = ids[0]
+      const accessToken = await getAccessToken(
+        userId, userTwo.role, config.jwt, tokenTypes.ACCESS, userTwo.is_email_verified
+      )
+      const updateBody = {}
+      const res = await request('/v1/users/1234', {
+        method: 'PATCH',
+        body: JSON.stringify(updateBody),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.FORBIDDEN)
     })
   })
 })

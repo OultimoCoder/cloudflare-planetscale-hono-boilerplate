@@ -19,10 +19,18 @@ const getAccessToken = async (
   userId: number,
   role: Role,
   jwtConfig: Config['jwt'],
-  type: TokenType = tokenTypes.ACCESS
+  type: TokenType = tokenTypes.ACCESS,
+  isEmailVerified = true
 ) => {
   const expires = dayjs().add(jwtConfig.accessExpirationMinutes, 'minutes')
-  const token = await tokenService.generateToken(userId, type, role, expires, jwtConfig.secret)
+  const token = await tokenService.generateToken(
+    userId,
+    type,
+    role,
+    expires,
+    jwtConfig.secret,
+    isEmailVerified
+  )
   return token
 }
 

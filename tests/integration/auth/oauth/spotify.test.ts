@@ -4,6 +4,7 @@ import { TableReference } from 'kysely/dist/cjs/parser/table-parser'
 import { authProviders } from '../../../../src/config/authProviders'
 import { getConfig } from '../../../../src/config/config'
 import { Database, getDBClient } from '../../../../src/config/database'
+import { tokenTypes } from '../../../../src/config/tokens'
 import { OauthUser } from '../../../../src/models/authProvider.model'
 import {
   spotifyAuthorisation,
@@ -12,7 +13,7 @@ import {
   githubAuthorisation
 } from '../../../fixtures/authorisations.fixture'
 import { getAccessToken, TokenResponse } from '../../../fixtures/token.fixture'
-import { userOne, insertUsers, UserResponse } from '../../../fixtures/user.fixture'
+import { userOne, insertUsers, UserResponse, userTwo } from '../../../fixtures/user.fixture'
 import { clearDBTables } from '../../../utils/clearDBTables'
 import { request } from '../../../utils/testRequest'
 
@@ -416,6 +417,22 @@ describe('Oauth Spotify routes', () => {
       })
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
     })
+    test('should return 403 if user has not verified their email', async () => {
+      const ids = await insertUsers([userTwo], config.database)
+      const userId = ids[0]
+      const accessToken = await getAccessToken(
+        userId, userTwo.role, config.jwt, tokenTypes.ACCESS, userTwo.is_email_verified
+      )
+      const res = await request('/v1/auth/spotify/5298', {
+        method: 'POST',
+        body: JSON.stringify({}),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.FORBIDDEN)
+    })
   })
 
   describe('DELETE /v1/auth/spotify/:userId', () => {
@@ -564,6 +581,21 @@ describe('Oauth Spotify routes', () => {
         }
       })
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
+    })
+    test('should return 403 if user has not verified their email', async () => {
+      const ids = await insertUsers([userTwo], config.database)
+      const userId = ids[0]
+      const accessToken = await getAccessToken(
+        userId, userTwo.role, config.jwt, tokenTypes.ACCESS, userTwo.is_email_verified
+      )
+      const res = await request('/v1/auth/spotify/5298', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.FORBIDDEN)
     })
   })
 })

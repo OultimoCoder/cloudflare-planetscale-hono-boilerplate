@@ -12,7 +12,7 @@ import { tokenTypes } from '../../../src/config/tokens'
 import * as tokenService from '../../../src/services/token.service'
 import { discordAuthorisation, insertAuthorisations } from '../../fixtures/authorisations.fixture'
 import { getAccessToken, TokenResponse } from '../../fixtures/token.fixture'
-import { userOne, insertUsers, MockUser, UserResponse } from '../../fixtures/user.fixture'
+import { userOne, insertUsers, MockUser, UserResponse, userTwo } from '../../fixtures/user.fixture'
 import { clearDBTables } from '../../utils/clearDBTables'
 import { request } from '../../utils/testRequest'
 
@@ -705,6 +705,20 @@ describe('Auth routes', () => {
         }
       })
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
+    })
+    test('should return 403 if user has not verified their email', async () => {
+      const ids = await insertUsers([userTwo], config.database)
+      const userId = ids[0]
+      const accessToken = await getAccessToken(
+        userId, userTwo.role, config.jwt, tokenTypes.ACCESS, userTwo.is_email_verified
+      )
+      const res = await request('/v1/auth/authorisations', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.FORBIDDEN)
     })
   })
   describe('Auth middleware', () => {
