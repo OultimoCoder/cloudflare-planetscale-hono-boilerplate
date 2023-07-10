@@ -1,7 +1,7 @@
-import { JwtPayload } from '@tsndr/cloudflare-worker-jwt'
 import { Context } from 'hono'
 import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
+import { Environment } from '../../../../bindings'
 import { AuthProviderType } from '../../../config/authProviders'
 import { getConfig } from '../../../config/config'
 import { OauthUser } from '../../../models/authProvider.model'
@@ -11,7 +11,7 @@ import { ApiError } from '../../../utils/ApiError'
 import * as authValidation from '../../../validations/auth.validation'
 
 export const oauthCallback = async (
-  c: Context<string, { Bindings: Bindings }>,
+  c: Context<Environment>,
   oauthRequest: Promise<{user: unknown, tokens: unknown}>,
   providerType: AuthProviderType
 ): Promise<Response> => {
@@ -30,11 +30,11 @@ export const oauthCallback = async (
 }
 
 export const oauthLink = async (
-  c: Context<string, { Bindings: Bindings }>,
+  c: Context<Environment>,
   oauthRequest: Promise<{user: unknown, tokens: unknown}>,
   providerType: AuthProviderType
 ): Promise<Response> => {
-  const payload = c.get('payload') as JwtPayload
+  const payload = c.get('payload')
   const userId = Number(payload.sub)
   const config = getConfig(c.env)
   let providerUser: OauthUser
@@ -51,10 +51,10 @@ export const oauthLink = async (
 }
 
 export const deleteOauthLink = async (
-  c: Context<string, { Bindings: Bindings }>,
+  c: Context<Environment>,
   provider: AuthProviderType
 ): Promise<Response> => {
-  const payload = c.get('payload') as JwtPayload
+  const payload = c.get('payload')
   const userId = Number(payload.sub)
   const config = getConfig(c.env)
   await authService.deleteOauthLink(userId, provider, config.database)
@@ -62,9 +62,7 @@ export const deleteOauthLink = async (
   return c.body(null)
 }
 
-export const validateCallbackBody = async (
-  c: Context<string, { Bindings: Bindings }>
-): Promise<Request> => {
+export const validateCallbackBody = async (c: Context<Environment>): Promise<Request> => {
   const bodyParse = await c.req.json()
   const { code } = authValidation.oauthCallback.parse(bodyParse)
   const url = new URL(c.req.url)

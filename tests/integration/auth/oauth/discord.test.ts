@@ -42,8 +42,8 @@ describe('Oauth Discord routes', () => {
     let newUser: Omit<OauthUser, 'providerType'>
     beforeAll(async () => {
       newUser = {
-        id: faker.datatype.number(),
-        name: faker.name.fullName(),
+        id: faker.number.int(),
+        name: faker.person.fullName(),
         email: faker.internet.email()
       }
     })
@@ -219,8 +219,8 @@ describe('Oauth Discord routes', () => {
     let newUser: Omit<OauthUser, 'providerType'>
     beforeAll(async () => {
       newUser = {
-        id: faker.datatype.number(),
-        name: faker.name.fullName(),
+        id: faker.number.int(),
+        name: faker.person.fullName(),
         email: faker.internet.email(),
       }
     })

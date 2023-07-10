@@ -13,13 +13,10 @@
     "strict": true,
     "noImplicitAny": true,
     "noEmit": true,
-    "types": [
-      "@cloudflare/workers-types"
-    ]
+    "skipLibCheck": true
   },
   "ts-node": {
     "transpileOnly": true
   },
-  "include": ["./src/**/*", "bindings.d.ts", "./src/declarations/*"],
-  "exclude": ["node_modules"]
+  "include": ["./src/**/*", "bindings.d.ts"]
 }

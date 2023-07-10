@@ -43,9 +43,9 @@ describe('Oauth Facebook routes', () => {
     let newUser: Omit<FacebookUser, 'providerType' | 'name'>
     beforeAll(async () => {
       newUser = {
-        id: faker.datatype.number(),
-        first_name: faker.name.firstName(),
-        last_name: faker.name.lastName(),
+        id: faker.number.int(),
+        first_name: faker.person.firstName(),
+        last_name: faker.person.lastName(),
         email: faker.internet.email()
       }
     })
@@ -229,8 +229,8 @@ describe('Oauth Facebook routes', () => {
     let newUser: Omit<OauthUser, 'providerType'>
     beforeAll(async () => {
       newUser = {
-        id: faker.datatype.number(),
-        name: faker.name.fullName(),
+        id: faker.number.int(),
+        name: faker.person.fullName(),
         email: faker.internet.email(),
       }
     })

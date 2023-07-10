@@ -4,11 +4,12 @@ import httpStatus from 'http-status'
 import { facebook } from 'worker-auth-providers-typed'
 import { Facebook } from 'worker-auth-providers-typed/src/providers/facebook'
 import { OAuthTokens } from 'worker-auth-providers-typed/src/types'
+import { Environment } from '../../../../bindings'
 import { authProviders } from '../../../config/authProviders'
 import { getConfig } from '../../../config/config'
 import { oauthCallback, oauthLink, deleteOauthLink, validateCallbackBody } from './oauth.controller'
 
-export const facebookRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
+export const facebookRedirect: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
   const location = await facebook.redirect({
     options: {
@@ -19,7 +20,7 @@ export const facebookRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.redirect(location, httpStatus.FOUND as StatusCode)
 }
 
-export const facebookCallback: Handler<{ Bindings: Bindings }> = async (c) => {
+export const facebookCallback: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
   const request = await validateCallbackBody(c)
   const oauthRequest = facebook.users({
@@ -40,7 +41,7 @@ export const facebookCallback: Handler<{ Bindings: Bindings }> = async (c) => {
   return oauthCallback(c, oauthRequest, authProviders.FACEBOOK)
 }
 
-export const linkFacebook: Handler<{ Bindings: Bindings }> = async (c) => {
+export const linkFacebook: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
   const request = await validateCallbackBody(c)
   const oauthRequest = facebook.users({
@@ -54,6 +55,6 @@ export const linkFacebook: Handler<{ Bindings: Bindings }> = async (c) => {
   return oauthLink(c, oauthRequest, authProviders.FACEBOOK)
 }
 
-export const deleteFacebookLink: Handler<{ Bindings: Bindings }> = async (c) => {
+export const deleteFacebookLink: Handler<Environment> = async (c) => {
   return deleteOauthLink(c, authProviders.FACEBOOK)
 }

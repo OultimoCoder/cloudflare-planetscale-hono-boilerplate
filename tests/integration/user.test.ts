@@ -22,7 +22,7 @@ describe('User routes', () => {
 
     beforeEach(() => {
       newUser = {
-        name: faker.name.fullName(),
+        name: faker.person.fullName(),
         email: faker.internet.email().toLowerCase(),
         password: 'password1',
         role: 'user',
@@ -603,7 +603,7 @@ describe('User routes', () => {
       const ids = await insertUsers([userOne], config.database)
       const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
       const updateBody = {
-        name: faker.name.fullName(),
+        name: faker.person.fullName(),
         email: faker.internet.email().toLowerCase()
       }
 
@@ -647,7 +647,7 @@ describe('User routes', () => {
 
     test('should return 401 error if access token is missing', async () => {
       const ids = await insertUsers([userOne], config.database)
-      const updateBody = { name: faker.name.fullName() }
+      const updateBody = { name: faker.person.fullName() }
       const res = await request(`/v1/users/${ids[0]}`, {
         method: 'PATCH',
         body: JSON.stringify(updateBody),
@@ -661,7 +661,7 @@ describe('User routes', () => {
     test('should return 403 if user is updating another user', async () => {
       const ids = await insertUsers([userOne, userTwo], config.database)
       const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
-      const updateBody = { name: faker.name.fullName() }
+      const updateBody = { name: faker.person.fullName() }
       const res = await request(`/v1/users/${ids[1]}`, {
         method: 'PATCH',
         body: JSON.stringify(updateBody),
@@ -676,7 +676,7 @@ describe('User routes', () => {
     test('should return 200 and update user if admin is updating another user', async () => {
       const ids = await insertUsers([userOne, admin], config.database)
       const adminAccessToken = await getAccessToken(ids[1], admin.role, config.jwt)
-      const updateBody = { name: faker.name.fullName() }
+      const updateBody = { name: faker.person.fullName() }
       const res = await request(`/v1/users/${ids[0]}`, {
         method: 'PATCH',
         body: JSON.stringify(updateBody),
@@ -691,7 +691,7 @@ describe('User routes', () => {
     test('should return 404 if admin is updating another user that is not found', async () => {
       const ids = await insertUsers([admin], config.database)
       const adminAccessToken = await getAccessToken(ids[0], admin.role, config.jwt)
-      const updateBody = { name: faker.name.fullName() }
+      const updateBody = { name: faker.person.fullName() }
       const res = await request('/v1/users/123123222', {
         method: 'PATCH',
         body: JSON.stringify(updateBody),
@@ -706,7 +706,7 @@ describe('User routes', () => {
     test('should return 400 error if userId is not a number', async () => {
       const ids = await insertUsers([admin], config.database)
       const adminAccessToken = await getAccessToken(ids[0], admin.role, config.jwt)
-      const updateBody = { name: faker.name.fullName() }
+      const updateBody = { name: faker.person.fullName() }
       const res = await request('/v1/users/notanumber123', {
         method: 'PATCH',
         body: JSON.stringify(updateBody),

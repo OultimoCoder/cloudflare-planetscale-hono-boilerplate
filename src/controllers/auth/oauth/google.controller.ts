@@ -2,11 +2,12 @@ import { Handler } from 'hono'
 import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
 import { google } from 'worker-auth-providers-typed'
+import { Environment } from '../../../../bindings'
 import { authProviders } from '../../../config/authProviders'
 import { getConfig } from '../../../config/config'
 import { oauthCallback, oauthLink, deleteOauthLink, validateCallbackBody } from './oauth.controller'
 
-export const googleCallback: Handler<{ Bindings: Bindings }> = async (c) => {
+export const googleCallback: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
   const request = await validateCallbackBody(c)
   const oauthRequest = google.users({
@@ -20,7 +21,7 @@ export const googleCallback: Handler<{ Bindings: Bindings }> = async (c) => {
   return oauthCallback(c, oauthRequest, authProviders.GOOGLE)
 }
 
-export const googleRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
+export const googleRedirect: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
   const location = await google.redirect({
     options: {
@@ -31,7 +32,7 @@ export const googleRedirect: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.redirect(location, httpStatus.FOUND as StatusCode)
 }
 
-export const linkGoogle: Handler<{ Bindings: Bindings }> = async (c) => {
+export const linkGoogle: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
   const request = await validateCallbackBody(c)
   const oauthRequest = google.users({
@@ -45,6 +46,6 @@ export const linkGoogle: Handler<{ Bindings: Bindings }> = async (c) => {
   return oauthLink(c, oauthRequest, authProviders.GOOGLE)
 }
 
-export const deleteGoogleLink: Handler<{ Bindings: Bindings }> = async (c) => {
+export const deleteGoogleLink: Handler<Environment> = async (c) => {
   return deleteOauthLink(c, authProviders.GOOGLE)
 }
