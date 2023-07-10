@@ -137,11 +137,12 @@ export const deleteOauthLink = async (
         .selectFrom('user')
         .select('password')
         .select(count<number>('authorisations.provider_user_id').as('authorisations'))
-        .innerJoin('authorisations', 'authorisations.user_id', 'user.id')
+        .leftJoin('authorisations', 'authorisations.user_id', 'user.id')
+        .where('user.id', '=', userId)
         .groupBy('user.password')
         .executeTakeFirstOrThrow()
-      loginsNo = logins.password ? logins.authorisations + 1 : logins.authorisations
-    } catch (_) {
+      loginsNo = logins.password !== null ? logins.authorisations + 1 : logins.authorisations
+    } catch {
       throw new ApiError(httpStatus.BAD_REQUEST, 'Account not linked')
     }
     const minLoginMethods = 1
