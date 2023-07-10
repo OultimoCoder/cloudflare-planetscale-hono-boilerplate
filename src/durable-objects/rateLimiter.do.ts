@@ -4,6 +4,7 @@ import { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
 import { z, ZodError } from 'zod'
 import { generateErrorMessage, ErrorMessageOptions } from 'zod-error'
+import { Environment } from '../../bindings'
 
 interface Config {
   scope: string
@@ -25,10 +26,10 @@ const zodErrorOptions: ErrorMessageOptions = {
 
 export class RateLimiter {
   state: DurableObjectState
-  env: Bindings
+  env: Environment['Bindings']
   app: Hono = new Hono()
 
-  constructor(state: DurableObjectState, env: Bindings) {
+  constructor(state: DurableObjectState, env: Environment['Bindings']) {
     this.state = state
     this.env = env
 
@@ -77,7 +78,7 @@ export class RateLimiter {
   }
 
   async getConfig(c: Context) {
-    const body = await c.req.clone().json<Config>()
+    const body = await c.req.json<Config>()
     const config = configValidation.parse(body)
     return config
   }

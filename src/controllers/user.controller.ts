@@ -1,12 +1,13 @@
 import { Handler } from 'hono'
 import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
+import { Environment } from '../../bindings'
 import { getConfig } from '../config/config'
 import * as userService from '../services/user.service'
 import { ApiError } from '../utils/ApiError'
 import * as userValidation from '../validations/user.validation'
 
-export const createUser: Handler<{ Bindings: Bindings }> = async (c) => {
+export const createUser: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
   const bodyParse = await c.req.json()
   const body = await userValidation.createUser.parseAsync(bodyParse)
@@ -14,7 +15,7 @@ export const createUser: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.json(user, httpStatus.CREATED as StatusCode)
 }
 
-export const getUsers: Handler<{ Bindings: Bindings }> = async (c) => {
+export const getUsers: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
   const queryParse = c.req.query()
   const query = userValidation.getUsers.parse(queryParse)
@@ -24,7 +25,7 @@ export const getUsers: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.json(result, httpStatus.OK as StatusCode)
 }
 
-export const getUser: Handler<{ Bindings: Bindings }> = async (c) => {
+export const getUser: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
   const paramsParse = c.req.param()
   const params = userValidation.getUser.parse(paramsParse)
@@ -35,7 +36,7 @@ export const getUser: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.json(user, httpStatus.OK as StatusCode)
 }
 
-export const updateUser: Handler<{ Bindings: Bindings }> = async (c) => {
+export const updateUser: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
   const paramsParse = c.req.param()
   const bodyParse = await c.req.json()
@@ -44,7 +45,7 @@ export const updateUser: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.json(user, httpStatus.OK as StatusCode)
 }
 
-export const deleteUser: Handler<{ Bindings: Bindings }> = async (c) => {
+export const deleteUser: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
   const paramsParse = c.req.param()
   const params = userValidation.deleteUser.parse(paramsParse)

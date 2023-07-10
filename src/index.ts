@@ -1,13 +1,14 @@
-import { sentry } from '@honojs/sentry'
+import { sentry } from '@hono/sentry'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import httpStatus from 'http-status'
+import { Environment } from '../bindings'
 import { errorHandler } from './middlewares/error'
 import { defaultRoutes } from './routes'
 import { ApiError } from './utils/ApiError'
 export { RateLimiter } from './durable-objects/rateLimiter.do'
 
-const app = new Hono<{ Bindings: Bindings }>()
+const app = new Hono<Environment>()
 
 app.use('*', sentry())
 app.use('*', cors())

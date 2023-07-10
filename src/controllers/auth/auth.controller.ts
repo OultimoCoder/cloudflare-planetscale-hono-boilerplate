@@ -2,6 +2,7 @@ import { JwtPayload } from '@tsndr/cloudflare-worker-jwt'
 import { Handler } from 'hono'
 import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
+import { Environment } from '../../../bindings'
 import { getConfig } from '../../config/config'
 import * as authService from '../../services/auth.service'
 import * as emailService from '../../services/email.service'
@@ -9,7 +10,7 @@ import * as tokenService from '../../services/token.service'
 import * as userService from '../../services/user.service'
 import * as authValidation from '../../validations/auth.validation'
 
-export const register: Handler<{ Bindings: Bindings }> = async (c) => {
+export const register: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
   const bodyParse = await c.req.json()
   const body = await authValidation.register.parseAsync(bodyParse)
@@ -18,7 +19,7 @@ export const register: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.json({ user, tokens }, httpStatus.CREATED as StatusCode)
 }
 
-export const login: Handler<{ Bindings: Bindings }> = async (c) => {
+export const login: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
   const bodyParse = await c.req.json()
   const { email, password } = authValidation.login.parse(bodyParse)
@@ -27,7 +28,7 @@ export const login: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.json({ user, tokens }, httpStatus.OK as StatusCode)
 }
 
-export const refreshTokens: Handler<{ Bindings: Bindings }> = async (c) => {
+export const refreshTokens: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
   const bodyParse = await c.req.json()
   const { refresh_token } = authValidation.refreshTokens.parse(bodyParse)
@@ -35,7 +36,7 @@ export const refreshTokens: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.json({ ...tokens }, httpStatus.OK as StatusCode)
 }
 
-export const forgotPassword: Handler<{ Bindings: Bindings }> = async (c) => {
+export const forgotPassword: Handler<Environment> = async (c) => {
   const bodyParse = await c.req.json()
   const config = getConfig(c.env)
   const { email } = authValidation.forgotPassword.parse(bodyParse)
@@ -56,7 +57,7 @@ export const forgotPassword: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.body(null)
 }
 
-export const resetPassword: Handler<{ Bindings: Bindings }> = async (c) => {
+export const resetPassword: Handler<Environment> = async (c) => {
   const queryParse = c.req.query()
   const bodyParse = await c.req.json()
   const config = getConfig(c.env)
@@ -69,7 +70,7 @@ export const resetPassword: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.body(null)
 }
 
-export const sendVerificationEmail: Handler<{ Bindings: Bindings }> = async (c) => {
+export const sendVerificationEmail: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
   const payload = c.get('payload') as JwtPayload
   const userId = Number(payload.sub)
@@ -94,7 +95,7 @@ export const sendVerificationEmail: Handler<{ Bindings: Bindings }> = async (c) 
   return c.body(null)
 }
 
-export const verifyEmail: Handler<{ Bindings: Bindings }> = async (c) => {
+export const verifyEmail: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
   const queryParse = c.req.query()
   const { token } = authValidation.verifyEmail.parse(queryParse)
@@ -103,7 +104,7 @@ export const verifyEmail: Handler<{ Bindings: Bindings }> = async (c) => {
   return c.body(null)
 }
 
-export const getAuthorisations: Handler<{ Bindings: Bindings }> = async (c) => {
+export const getAuthorisations: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
   const payload = c.get('payload') as JwtPayload
   const userId = Number(payload.sub)

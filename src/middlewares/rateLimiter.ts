@@ -1,5 +1,6 @@
 import { Context, MiddlewareHandler } from 'hono'
 import httpStatus from 'http-status'
+import { Environment } from '../../bindings'
 import { ApiError } from '../utils/ApiError'
 
 const fakeDomain = 'http://rate-limiter.com'
@@ -23,7 +24,7 @@ const isRateLimited = async (res: Response) => {
 export const rateLimit = (
   interval: number,
   limit: number
-): MiddlewareHandler<string, { Bindings: Bindings }> => {
+): MiddlewareHandler<Environment> => {
   return async (c, next) => {
     const key = getRateLimitKey(c)
     const endpoint = new URL(c.req.url).pathname

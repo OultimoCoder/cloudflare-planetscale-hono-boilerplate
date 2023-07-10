@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { Environment } from '../../bindings'
 
 const envVarsSchema = z.object({
   ENV: z.union([z.literal('production'), z.literal('development'), z.literal('test')]),
@@ -105,7 +106,7 @@ export interface Config {
 
 let config: Config
 
-export const getConfig = (env: Bindings) => {
+export const getConfig = (env: Environment['Bindings']) => {
   if (config) {
     return config
   }

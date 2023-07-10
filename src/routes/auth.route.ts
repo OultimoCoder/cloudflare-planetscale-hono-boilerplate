@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { Environment } from '../../bindings'
 import * as authController from '../controllers/auth/auth.controller'
 import * as discordController from '../controllers/auth/oauth/discord.controller'
 import * as facebookController from '../controllers/auth/oauth/facebook.controller'
@@ -8,7 +9,8 @@ import * as spotifyController from '../controllers/auth/oauth/spotify.controller
 import { auth } from '../middlewares/auth'
 import { rateLimit } from '../middlewares/rateLimiter'
 
-export const route = new Hono<{ Bindings: Bindings }>()
+export const route = new Hono<Environment>()
+
 const twoMinutes = 120
 const oneRequest = 1
 

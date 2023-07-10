@@ -1,10 +1,11 @@
-import { getSentry } from '@honojs/sentry'
+import { getSentry } from '@hono/sentry'
 import type { ErrorHandler } from 'hono'
 import { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
-import Toucan from 'toucan-js'
+import type { Toucan } from 'toucan-js'
 import { ZodError } from 'zod'
 import { generateErrorMessage, ErrorMessageOptions } from 'zod-error'
+import { Environment } from '../../bindings'
 import { getConfig } from '../config/config'
 import { ApiError } from '../utils/ApiError'
 
@@ -33,7 +34,7 @@ export const errorConverter = (err: unknown, sentry: Toucan): ApiError => {
   return error as ApiError
 }
 
-export const errorHandler: ErrorHandler<{ Bindings: Bindings }> = (err, c) => {
+export const errorHandler: ErrorHandler<Environment> = (err, c) => {
   const config = getConfig(c.env)
   const sentry = getSentry(c)
   const error = errorConverter(err, sentry)
