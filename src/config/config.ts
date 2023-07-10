@@ -49,8 +49,7 @@ const envVarsSchema = z.object({
   OAUTH_SPOTIFY_REDIRECT_URL: z.string(),
   OAUTH_FACEBOOK_CLIENT_ID: z.string(),
   OAUTH_FACEBOOK_CLIENT_SECRET: z.string(),
-  OAUTH_FACEBOOK_REDIRECT_URL: z.string(),
-  STRIPE_SECRET_KEY: z.string()
+  OAUTH_FACEBOOK_REDIRECT_URL: z.string()
 })
 
 export interface Config {
