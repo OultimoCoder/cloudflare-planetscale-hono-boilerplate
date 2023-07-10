@@ -24,6 +24,7 @@ route.post(
   authController.sendVerificationEmail
 )
 route.post('/verify-email', authController.verifyEmail)
+route.get('/authorisations', auth(), authController.getAuthorisations)
 
 route.get('/github/redirect', githubController.githubRedirect)
 route.get('/google/redirect', googleController.googleRedirect)

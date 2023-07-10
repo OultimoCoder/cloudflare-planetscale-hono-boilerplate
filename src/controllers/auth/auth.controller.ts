@@ -102,3 +102,11 @@ export const verifyEmail: Handler<{ Bindings: Bindings }> = async (c) => {
   c.status(httpStatus.NO_CONTENT as StatusCode)
   return c.body(null)
 }
+
+export const getAuthorisations: Handler<{ Bindings: Bindings }> = async (c) => {
+  const config = getConfig(c.env)
+  const payload = c.get('payload') as JwtPayload
+  const userId = Number(payload.sub)
+  const authorisations = await userService.getAuthorisations(userId, config.database)
+  return c.json(authorisations, httpStatus.OK as StatusCode)
+}

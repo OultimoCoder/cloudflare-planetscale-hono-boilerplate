@@ -236,7 +236,8 @@ describe('Auth routes', () => {
         tokenTypes.REFRESH,
         userOne.role,
         expires,
-        config.jwt.secret
+        config.jwt.secret,
+        userOne.is_email_verified
       )
 
       const res = await request('/v1/auth/refresh-tokens', {
@@ -271,7 +272,8 @@ describe('Auth routes', () => {
         tokenTypes.REFRESH,
         userOne.role,
         expires,
-        'random secret'
+        'random secret',
+        userOne.is_email_verified
       )
 
       const res = await request('/v1/auth/refresh-tokens', {
@@ -291,7 +293,8 @@ describe('Auth routes', () => {
         tokenTypes.REFRESH,
         userOne.role,
         expires,
-        config.jwt.secret
+        config.jwt.secret,
+        userOne.is_email_verified
       )
 
       const res = await request('/v1/auth/refresh-tokens', {
@@ -309,7 +312,8 @@ describe('Auth routes', () => {
         tokenTypes.REFRESH,
         userOne.role,
         expires,
-        config.jwt.secret
+        config.jwt.secret,
+        userOne.is_email_verified
       )
 
       const res = await request('/v1/auth/refresh-tokens', {
@@ -489,7 +493,8 @@ describe('Auth routes', () => {
         tokenTypes.RESET_PASSWORD,
         userOne.role,
         expires,
-        config.jwt.secret
+        config.jwt.secret,
+        userOne.is_email_verified
       )
       const res = await request(`/v1/auth/reset-password?token=${resetPasswordToken}`, {
         method: 'POST',
@@ -532,7 +537,8 @@ describe('Auth routes', () => {
         tokenTypes.RESET_PASSWORD,
         userOne.role,
         expires,
-        config.jwt.secret
+        config.jwt.secret,
+        userOne.is_email_verified
       )
       const res = await request(`/v1/auth/reset-password?token=${resetPasswordToken}`, {
         method: 'POST',
@@ -552,7 +558,8 @@ describe('Auth routes', () => {
         tokenTypes.RESET_PASSWORD,
         userOne.role,
         expires,
-        config.jwt.secret
+        config.jwt.secret,
+        userOne.is_email_verified
       )
       const res = await request(`/v1/auth/reset-password?token=${resetPasswordToken}`, {
         method: 'POST',
@@ -572,7 +579,8 @@ describe('Auth routes', () => {
         tokenTypes.RESET_PASSWORD,
         userOne.role,
         expires,
-        config.jwt.secret
+        config.jwt.secret,
+        userOne.is_email_verified
       )
       const res = await request(`/v1/auth/reset-password?token=${resetPasswordToken}`, {
         method: 'POST',
@@ -621,7 +629,8 @@ describe('Auth routes', () => {
         tokenTypes.VERIFY_EMAIL,
         userOne.role,
         expires,
-        config.jwt.secret
+        config.jwt.secret,
+        userOne.is_email_verified
       )
       const res = await request(`/v1/auth/verify-email?token=${verifyEmailToken}`, {
         method: 'POST',
@@ -659,7 +668,8 @@ describe('Auth routes', () => {
         tokenTypes.VERIFY_EMAIL,
         userOne.role,
         expires,
-        config.jwt.secret
+        config.jwt.secret,
+        userOne.is_email_verified
       )
       const res = await request(`/v1/auth/verify-email?token=${verifyEmailToken}`, {
         method: 'POST',
@@ -678,7 +688,8 @@ describe('Auth routes', () => {
         tokenTypes.ACCESS,
         userOne.role,
         expires,
-        config.jwt.secret
+        config.jwt.secret,
+        userOne.is_email_verified
       )
       const res = await request(`/v1/auth/verify-email?token=${verifyEmailToken}`, {
         method: 'POST',
@@ -696,7 +707,8 @@ describe('Auth routes', () => {
         tokenTypes.VERIFY_EMAIL,
         userOne.role,
         expires,
-        config.jwt.secret
+        config.jwt.secret,
+        userOne.is_email_verified
       )
       const res = await request(`/v1/auth/verify-email?token=${verifyEmailToken}`, {
         method: 'POST',
@@ -705,6 +717,83 @@ describe('Auth routes', () => {
         }
       })
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
+    })
+  })
+  describe('GET /v1/auth/authorisations', () => {
+    test('should 200 and list of user authentication methods with local true', async () => {
+      const ids = await insertUsers([userOne], config.database)
+      const accessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
+      const res = await request('/v1/auth/authorisations', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      })
+      const body = await res.json()
+      expect(res.status).toBe(httpStatus.OK)
+      expect(body).toEqual({
+        local: true,
+        facebook: false,
+        github: false,
+        google: false,
+        spotify: false,
+        discord: false
+      })
+    })
+
+    test('should 200 and list of user authentication methods with discord true', async () => {
+      const user = { ...userOne }
+      user.password = null
+      const ids = await insertUsers([user], config.database)
+      const userOneId = ids[0]
+      const discordAuth = discordAuthorisation(userOneId)
+      await insertAuthorisations([discordAuth], config.database)
+      const accessToken = await getAccessToken(ids[0], user.role, config.jwt)
+      const res = await request('/v1/auth/authorisations', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      })
+      const body = await res.json()
+      expect(res.status).toBe(httpStatus.OK)
+      expect(body).toEqual({
+        local: false,
+        facebook: false,
+        github: false,
+        google: false,
+        spotify: false,
+        discord: true
+      })
+    })
+    test('should 200 and list of user authentication methods with all true', async () => {
+      const ids = await insertUsers([userOne], config.database)
+      const userOneId = ids[0]
+      const discordAuth = discordAuthorisation(userOneId)
+      const spotifyAuth = spotifyAuthorisation(userOneId)
+      const googleAuth = googleAuthorisation(userOneId)
+      const githubAuth = githubAuthorisation(userOneId)
+      const facebookAuth = facebookAuthorisation(userOneId)
+      await insertAuthorisations(
+        [discordAuth, spotifyAuth, googleAuth, facebookAuth, githubAuth], config.database
+      )
+      const accessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
+      const res = await request('/v1/auth/authorisations', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      })
+      const body = await res.json()
+      expect(res.status).toBe(httpStatus.OK)
+      expect(body).toEqual({
+        local: true,
+        facebook: true,
+        github: true,
+        google: true,
+        spotify: true,
+        discord: true
+      })
     })
     test('should return 403 if user has not verified their email', async () => {
       const ids = await insertUsers([userTwo], config.database)

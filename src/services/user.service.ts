@@ -166,3 +166,35 @@ export const deleteUserById = async (
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found')
   }
 }
+
+export const getAuthorisations = async (
+  userId: number,
+  databaseConfig: Config['database']
+) => {
+  const db = getDBClient(databaseConfig)
+  const auths = await db
+    .selectFrom('user')
+    .leftJoin('authorisations', 'authorisations.user_id', 'user.id')
+    .selectAll()
+    .where('user.id', '=', userId)
+    .execute()
+
+  if (!auths) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
+  }
+  const response = {
+    local: auths[0].password !== null ? true : false,
+    google: false,
+    facebook: false,
+    discord: false,
+    spotify: false,
+    github: false
+  }
+  for (const auth of auths) {
+    if (auth.provider_type === null) {
+      continue
+    }
+    response[auth.provider_type as AuthProviderType] = true
+  }
+  return response
+}
