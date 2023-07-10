@@ -14,32 +14,32 @@ const envVarsSchema = z.object({
   JWT_SECRET: z.string(),
   // Minutes after which access tokens expire
   JWT_ACCESS_EXPIRATION_MINUTES: z
-    .string()
-    .default('30')
-    .transform((str) => parseInt(str, 10)),
+    .coerce
+    .number()
+    .default(30),
   // Days after which refresh tokens expire
   JWT_REFRESH_EXPIRATION_DAYS: z
-    .string()
-    .default('30')
-    .transform((str) => parseInt(str, 10)),
+    .coerce
+    .number()
+    .default(30),
   // Minutes after which reset password token expires
   JWT_RESET_PASSWORD_EXPIRATION_MINUTES: z
-    .string()
-    .default('10')
-    .transform((str) => parseInt(str, 10)),
+    .coerce
+    .number()
+    .default(10),
   // Minutes after which verify email token expires
   JWT_VERIFY_EMAIL_EXPIRATION_MINUTES: z
-    .string()
-    .default('10')
-    .transform((str) => parseInt(str, 10)),
+    .coerce
+    .number()
+    .default(10),
   AWS_ACCESS_KEY_ID: z.string(),
   AWS_SECRET_ACCESS_KEY: z.string(),
   AWS_REGION: z.string(),
   EMAIL_SENDER: z.string(),
   OAUTH_GITHUB_CLIENT_ID: z.string(),
   OAUTH_GITHUB_CLIENT_SECRET: z.string(),
-  OUATH_GOOGLE_CLIENT_ID: z.string(),
-  OUATH_GOOGLE_CLIENT_SECRET: z.string(),
+  OAUTH_GOOGLE_CLIENT_ID: z.string(),
+  OAUTH_GOOGLE_CLIENT_SECRET: z.string(),
   OAUTH_GOOGLE_REDIRECT_URL: z.string(),
   OAUTH_DISCORD_CLIENT_ID: z.string(),
   OAUTH_DISCORD_CLIENT_SECRET: z.string(),
@@ -49,7 +49,8 @@ const envVarsSchema = z.object({
   OAUTH_SPOTIFY_REDIRECT_URL: z.string(),
   OAUTH_FACEBOOK_CLIENT_ID: z.string(),
   OAUTH_FACEBOOK_CLIENT_SECRET: z.string(),
-  OAUTH_FACEBOOK_REDIRECT_URL: z.string()
+  OAUTH_FACEBOOK_REDIRECT_URL: z.string(),
+  STRIPE_SECRET_KEY: z.string()
 })
 
 export interface Config {
