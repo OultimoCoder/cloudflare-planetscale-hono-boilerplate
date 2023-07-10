@@ -140,8 +140,8 @@ export const getConfig = (env: Bindings) => {
         clientSecret: envVars.OAUTH_GITHUB_CLIENT_SECRET
       },
       google: {
-        clientId: envVars.OUATH_GOOGLE_CLIENT_ID,
-        clientSecret: envVars.OUATH_GOOGLE_CLIENT_SECRET,
+        clientId: envVars.OAUTH_GOOGLE_CLIENT_ID,
+        clientSecret: envVars.OAUTH_GOOGLE_CLIENT_SECRET,
         redirectUrl: envVars.OAUTH_GOOGLE_REDIRECT_URL
       },
       spotify: {
