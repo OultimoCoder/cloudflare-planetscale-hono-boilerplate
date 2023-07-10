@@ -1,7 +1,7 @@
 import { z } from 'zod'
-import { Role } from '../config/roles'
 import { password } from './custom.refine.validation'
 import { hashPassword } from './custom.transform.validation'
+import { roleZodType } from './custom.type.validation'
 
 export const register = z.object({
   email: z.string().email(),
@@ -11,10 +11,7 @@ export const register = z.object({
     .any()
     .optional()
     .transform(() => false),
-  role: z
-    .any()
-    .optional()
-    .transform(() => 'user' as Role)
+  role: roleZodType
 })
 
 export const login = z.object({
