@@ -44,8 +44,8 @@ describe('Oauth Facebook routes', () => {
     beforeAll(async () => {
       newUser = {
         id: faker.datatype.number(),
-        first_name: faker.name.firstName(),
-        last_name: faker.name.lastName(),
+        first_name: faker.person.firstName(),
+        last_name: faker.person.lastName(),
         email: faker.internet.email()
       }
     })
@@ -230,7 +230,7 @@ describe('Oauth Facebook routes', () => {
     beforeAll(async () => {
       newUser = {
         id: faker.datatype.number(),
-        name: faker.name.fullName(),
+        name: faker.person.fullName(),
         email: faker.internet.email(),
       }
     })

@@ -20,7 +20,7 @@ export interface UserResponse {
 }
 
 export const userOne: MockUser = {
-  name: faker.name.fullName(),
+  name: faker.person.fullName(),
   email: faker.internet.email().toLowerCase(),
   password,
   role: 'user',
@@ -28,7 +28,7 @@ export const userOne: MockUser = {
 }
 
 export const userTwo: MockUser = {
-  name: faker.name.fullName(),
+  name: faker.person.fullName(),
   email: faker.internet.email().toLowerCase(),
   password,
   role: 'user',
@@ -36,7 +36,7 @@ export const userTwo: MockUser = {
 }
 
 export const admin: MockUser = {
-  name: faker.name.fullName(),
+  name: faker.person.fullName(),
   email: faker.internet.email().toLowerCase(),
   password,
   role: 'admin',

@@ -43,7 +43,7 @@ describe('Oauth Google routes', () => {
     beforeAll(async () => {
       newUser = {
         id: faker.datatype.number(),
-        name: faker.name.fullName(),
+        name: faker.person.fullName(),
         email: faker.internet.email(),
       }
     })
@@ -219,7 +219,7 @@ describe('Oauth Google routes', () => {
     beforeAll(async () => {
       newUser = {
         id: faker.datatype.number(),
-        name: faker.name.fullName(),
+        name: faker.person.fullName(),
         email: faker.internet.email(),
       }
     })

@@ -34,7 +34,7 @@ describe('Auth routes', () => {
     let newUser: MockUser
     beforeEach(() => {
       newUser = {
-        name: faker.name.fullName(),
+        name: faker.person.fullName(),
         email: faker.internet.email().toLowerCase(),
         password: 'password1',
         is_email_verified: false,
