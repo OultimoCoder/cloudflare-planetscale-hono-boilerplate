@@ -103,7 +103,7 @@
     "dayjs": "^1.11.9",
     "hono": "^3.2.7",
     "http-status": "^1.6.2",
-    "kysely": "^0.26.1",
+    "kysely": "^0.23.0",
     "kysely-planetscale": "^1.2.0",
     "toucan-js": "3.1.0",
     "worker-auth-providers-typed": "^0.0.10-beta7-7",
