@@ -19,7 +19,7 @@ const authenticate = async (jwtToken: string, secret: string) => {
   return { authorized, payload }
 }
 
-export const jwtAuth =
+export const auth =
   (...requiredRights: Permission[]): MiddlewareHandler<string, { Bindings: Bindings }> =>
   async (c, next) => {
     const credentials = c.req.headers.get('Authorization')
