@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { Selectable } from 'kysely'
+import { Insertable } from 'kysely'
 import { authProviders } from '../../src/config/authProviders'
 import { Config } from '../../src/config/config'
 import { getDBClient } from '../../src/config/database'
@@ -36,7 +36,7 @@ const facebookAuthorisation = (userId: number) => ({
 })
 
 const insertAuthorisations = async (
-  authorisations: Selectable<AuthProviderTable>[],
+  authorisations: Insertable<AuthProviderTable>[],
   databaseConfig: Config['database']
 ) => {
   const client = getDBClient(databaseConfig)
