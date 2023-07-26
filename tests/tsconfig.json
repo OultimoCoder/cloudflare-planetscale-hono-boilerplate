@@ -2,6 +2,7 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "types": [
+      "@types/jest",
       "@types/bcryptjs",
       "miniflare"
     ]

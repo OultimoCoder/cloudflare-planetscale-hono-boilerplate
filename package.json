@@ -66,6 +66,7 @@
     "@cloudflare/workers-types": "^4.20230724.0",
     "@faker-js/faker": "^8.0.2",
     "@types/bcryptjs": "^2.4.2",
+    "@types/jest": "^29.5.3",
     "@typescript-eslint/eslint-plugin": "^6.2.0",
     "@typescript-eslint/parser": "^6.2.0",
     "aws-sdk-client-mock": "^3.0.0",
