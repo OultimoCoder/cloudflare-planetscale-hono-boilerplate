@@ -1,7 +1,7 @@
 import { Handler } from 'hono'
 import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
-import { discord } from 'worker-auth-providers-typed'
+import { discord } from 'worker-auth-providers'
 import { Environment } from '../../../../bindings'
 import { authProviders } from '../../../config/authProviders'
 import { getConfig } from '../../../config/config'
