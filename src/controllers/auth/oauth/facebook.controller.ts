@@ -2,7 +2,6 @@ import { Handler } from 'hono'
 import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
 import { facebook } from 'worker-auth-providers'
-import { Facebook } from 'worker-auth-providers/src/providers/facebook'
 import { OAuthTokens } from 'worker-auth-providers/src/types'
 import { Environment } from '../../../../bindings'
 import { authProviders } from '../../../config/authProviders'
@@ -12,10 +11,8 @@ import { oauthCallback, oauthLink, deleteOauthLink, validateCallbackBody } from 
 export const facebookRedirect: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
   const location = await facebook.redirect({
-    options: {
-      clientId: config.oauth.facebook.clientId,
-      redirectUrl: config.oauth.facebook.redirectUrl,
-    }
+    clientId: config.oauth.facebook.clientId,
+    redirectUrl: config.oauth.facebook.redirectUrl
   })
   return c.redirect(location, httpStatus.FOUND as StatusCode)
 }
