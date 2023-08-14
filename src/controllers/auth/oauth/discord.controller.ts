@@ -5,6 +5,7 @@ import { discord } from 'worker-auth-providers'
 import { Environment } from '../../../../bindings'
 import { authProviders } from '../../../config/authProviders'
 import { getConfig } from '../../../config/config'
+import { DiscordUserType } from '../../../types/oauth.types'
 import { oauthCallback, oauthLink, deleteOauthLink, validateCallbackBody } from './oauth.controller'
 
 export const discordRedirect: Handler<Environment> = async (c) => {
@@ -29,8 +30,8 @@ export const discordCallback: Handler<Environment> = async (c) => {
       redirectUrl: config.oauth.discord.redirectUrl
     },
     request
-  })
-  return oauthCallback(c, oauthRequest, authProviders.DISCORD)
+  }) as Promise<{ user: DiscordUserType, tokens: unknown }>
+  return oauthCallback<typeof authProviders.DISCORD>(c, oauthRequest, authProviders.DISCORD)
 }
 
 export const linkDiscord: Handler<Environment> = async (c) => {
@@ -43,8 +44,8 @@ export const linkDiscord: Handler<Environment> = async (c) => {
       redirectUrl: config.oauth.discord.redirectUrl
     },
     request
-  })
-  return oauthLink(c, oauthRequest, authProviders.DISCORD)
+  }) as Promise<{ user: DiscordUserType, tokens: unknown }>
+  return oauthLink<typeof authProviders.DISCORD>(c, oauthRequest, authProviders.DISCORD)
 }
 
 export const deleteDiscordLink: Handler<Environment> = async (c) => {

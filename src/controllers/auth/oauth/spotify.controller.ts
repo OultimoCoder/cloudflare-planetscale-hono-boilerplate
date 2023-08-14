@@ -5,6 +5,7 @@ import { spotify } from 'worker-auth-providers'
 import { Environment } from '../../../../bindings'
 import { authProviders } from '../../../config/authProviders'
 import { getConfig } from '../../../config/config'
+import { SpotifyUserType } from '../../../types/oauth.types'
 import { oauthCallback, oauthLink, deleteOauthLink, validateCallbackBody } from './oauth.controller'
 
 export const spotifyRedirect: Handler<Environment> = async (c) => {
@@ -28,8 +29,8 @@ export const spotifyCallback: Handler<Environment> = async (c) => {
       redirectUrl: config.oauth.spotify.redirectUrl
     },
     request
-  })
-  return oauthCallback(c, oauthRequest, authProviders.SPOTIFY)
+  }) as Promise<{ user: SpotifyUserType, tokens: unknown }>
+  return oauthCallback<typeof authProviders.SPOTIFY>(c, oauthRequest, authProviders.SPOTIFY)
 }
 
 export const linkSpotify: Handler<Environment> = async (c) => {
@@ -42,8 +43,8 @@ export const linkSpotify: Handler<Environment> = async (c) => {
       redirectUrl: config.oauth.spotify.redirectUrl
     },
     request
-  })
-  return oauthLink(c, oauthRequest, authProviders.SPOTIFY)
+  }) as Promise<{ user: SpotifyUserType, tokens: unknown }>
+  return oauthLink<typeof authProviders.SPOTIFY>(c, oauthRequest, authProviders.SPOTIFY)
 }
 
 export const deleteSpotifyLink: Handler<Environment> = async (c) => {

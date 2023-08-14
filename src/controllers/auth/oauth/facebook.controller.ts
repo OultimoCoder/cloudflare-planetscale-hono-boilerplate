@@ -2,7 +2,6 @@ import { Handler } from 'hono'
 import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
 import { facebook } from 'worker-auth-providers'
-import { OAuthTokens } from 'worker-auth-providers/src/types'
 import { Environment } from '../../../../bindings'
 import { authProviders } from '../../../config/authProviders'
 import { getConfig } from '../../../config/config'
@@ -27,15 +26,8 @@ export const facebookCallback: Handler<Environment> = async (c) => {
       redirectUrl: config.oauth.facebook.redirectUrl
     },
     request
-  }).then((result) => {
-    const res = result as {
-      tokens: OAuthTokens,
-      user: Facebook.UserResponse & {name: string}
-    }
-    res.user.name = `${res.user.first_name} ${res.user.last_name}`
-    return res
   })
-  return oauthCallback(c, oauthRequest, authProviders.FACEBOOK)
+  return oauthCallback<typeof authProviders.FACEBOOK>(c, oauthRequest, authProviders.FACEBOOK)
 }
 
 export const linkFacebook: Handler<Environment> = async (c) => {
@@ -49,7 +41,7 @@ export const linkFacebook: Handler<Environment> = async (c) => {
     },
     request
   })
-  return oauthLink(c, oauthRequest, authProviders.FACEBOOK)
+  return oauthLink<typeof authProviders.FACEBOOK>(c, oauthRequest, authProviders.FACEBOOK)
 }
 
 export const deleteFacebookLink: Handler<Environment> = async (c) => {

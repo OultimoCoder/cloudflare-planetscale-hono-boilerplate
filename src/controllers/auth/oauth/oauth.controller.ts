@@ -7,14 +7,14 @@ import { providerUserFactory } from '../../../factories/oauth.factory'
 import { OAuthUserModel } from '../../../models/oauth/oauthBase.model'
 import * as authService from '../../../services/auth.service'
 import * as tokenService from '../../../services/token.service'
-import { AuthProviderType } from '../../../types/oauth.types'
+import { AuthProviderType, OauthUserTypes } from '../../../types/oauth.types'
 import { ApiError } from '../../../utils/ApiError'
 import * as authValidation from '../../../validations/auth.validation'
 
-export const oauthCallback = async (
+export const oauthCallback = async <T extends AuthProviderType> (
   c: Context<Environment>,
-  oauthRequest: Promise<{user: unknown, tokens: unknown}>,
-  providerType: AuthProviderType
+  oauthRequest: Promise<{user: OauthUserTypes[T], tokens: unknown}>,
+  providerType: T
 ): Promise<Response> => {
   const config = getConfig(c.env)
   let providerUser: OAuthUserModel
@@ -30,10 +30,10 @@ export const oauthCallback = async (
   return c.json({ user, tokens }, httpStatus.OK as StatusCode)
 }
 
-export const oauthLink = async (
+export const oauthLink = async <T extends AuthProviderType> (
   c: Context<Environment>,
-  oauthRequest: Promise<{user: unknown, tokens: unknown}>,
-  providerType: AuthProviderType
+  oauthRequest: Promise<{user: OauthUserTypes[T], tokens: unknown}>,
+  providerType: T
 ): Promise<Response> => {
   const payload = c.get('payload')
   const userId = Number(payload.sub)

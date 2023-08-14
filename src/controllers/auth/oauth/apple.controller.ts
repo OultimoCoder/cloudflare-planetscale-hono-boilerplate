@@ -29,7 +29,7 @@ export const appleCallback: Handler<Environment> = async (c) => {
     },
     request
   })
-  return oauthCallback(c, oauthRequest, authProviders.APPLE)
+  return oauthCallback<typeof authProviders.APPLE>(c, oauthRequest, authProviders.APPLE)
 }
 
 export const linkApple: Handler<Environment> = async (c) => {
@@ -43,7 +43,7 @@ export const linkApple: Handler<Environment> = async (c) => {
     },
     request
   })
-  return oauthLink(c, oauthRequest, authProviders.APPLE)
+  return oauthLink<typeof authProviders.APPLE>(c, oauthRequest, authProviders.APPLE)
 }
 
 export const deleteAppleLink: Handler<Environment> = async (c) => {

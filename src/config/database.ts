@@ -1,6 +1,6 @@
 import { Kysely } from 'kysely'
 import { PlanetScaleDialect } from 'kysely-planetscale'
-import { AuthProviderTable } from '../models/authProvider.model'
+import { AuthProviderTable } from '../models/oauth/oauthBase.model'
 import { UserTable } from '../models/user.model'
 import { Config } from './config'
 

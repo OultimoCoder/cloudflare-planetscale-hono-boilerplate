@@ -45,10 +45,7 @@ export const forgotPassword: Handler<Environment> = async (c) => {
     const resetPasswordToken = await tokenService.generateResetPasswordToken(user, config.jwt)
     await emailService.sendResetPasswordEmail(
       user.email,
-      {
-        name: user.name,
-        token: resetPasswordToken
-      },
+      { name: user.name || '', token: resetPasswordToken },
       config
     )
   }
@@ -83,10 +80,7 @@ export const sendVerificationEmail: Handler<Environment> = async (c) => {
     const verifyEmailToken = await tokenService.generateVerifyEmailToken(user, config.jwt)
     await emailService.sendVerificationEmail(
       user.email,
-      {
-        name: user.name,
-        token: verifyEmailToken
-      },
+      { name: user.name || '', token: verifyEmailToken },
       config
     )
   } catch (err) {}

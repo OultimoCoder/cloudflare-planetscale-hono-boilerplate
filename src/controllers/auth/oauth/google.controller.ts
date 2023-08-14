@@ -5,6 +5,7 @@ import { google } from 'worker-auth-providers'
 import { Environment } from '../../../../bindings'
 import { authProviders } from '../../../config/authProviders'
 import { getConfig } from '../../../config/config'
+import { GoogleUserType } from '../../../types/oauth.types'
 import { oauthCallback, oauthLink, deleteOauthLink, validateCallbackBody } from './oauth.controller'
 
 export const googleCallback: Handler<Environment> = async (c) => {
@@ -17,8 +18,8 @@ export const googleCallback: Handler<Environment> = async (c) => {
       redirectUrl: config.oauth.google.redirectUrl
     },
     request
-  })
-  return oauthCallback(c, oauthRequest, authProviders.GOOGLE)
+  }) as Promise<{ user: GoogleUserType, tokens: unknown }>
+  return oauthCallback<typeof authProviders.GOOGLE>(c, oauthRequest, authProviders.GOOGLE)
 }
 
 export const googleRedirect: Handler<Environment> = async (c) => {
@@ -42,8 +43,8 @@ export const linkGoogle: Handler<Environment> = async (c) => {
       redirectUrl: config.oauth.facebook.redirectUrl
     },
     request
-  })
-  return oauthLink(c, oauthRequest, authProviders.GOOGLE)
+  }) as Promise<{ user: GoogleUserType, tokens: unknown }>
+  return oauthLink<typeof authProviders.GOOGLE>(c, oauthRequest, authProviders.GOOGLE)
 }
 
 export const deleteGoogleLink: Handler<Environment> = async (c) => {

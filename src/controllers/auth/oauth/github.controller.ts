@@ -27,7 +27,7 @@ export const githubCallback: Handler<Environment> = async (c) => {
     },
     request
   })
-  return oauthCallback(c, oauthRequest, authProviders.GITHUB)
+  return oauthCallback<typeof authProviders.GITHUB>(c, oauthRequest, authProviders.GITHUB)
 }
 
 export const linkGithub: Handler<Environment> = async (c) => {

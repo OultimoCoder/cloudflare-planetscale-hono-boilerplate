@@ -1,10 +1,10 @@
 import httpStatus from 'http-status'
 import { InsertResult, UpdateResult } from 'kysely'
-import { AuthProviderType } from '../config/authProviders'
 import { Config } from '../config/config'
 import { getDBClient } from '../config/database'
-import { OauthUserModel } from '../models/authProvider.model'
+import { OAuthUserModel } from '../models/oauth/oauthBase.model'
 import { User, UserTable } from '../models/user.model'
+import { AuthProviderType } from '../types/oauth.types'
 import { ApiError } from '../utils/ApiError'
 import { CreateUser, UpdateUser } from '../validations/user.validation'
 
@@ -34,7 +34,7 @@ export const createUser = async (
 }
 
 export const createOauthUser = async (
-  providerUser: OauthUserModel,
+  providerUser: OAuthUserModel,
   databaseConfig: Config['database']
 ): Promise<User> => {
   const db = getDBClient(databaseConfig)
@@ -195,7 +195,7 @@ export const getAuthorisations = async (
     if (auth.provider_type === null) {
       continue
     }
-    response[auth.provider_type] = true
+    response[auth.provider_type as AuthProviderType] = true
   }
   return response
 }
