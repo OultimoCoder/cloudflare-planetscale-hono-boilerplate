@@ -3,7 +3,7 @@ import { InsertResult, UpdateResult } from 'kysely'
 import { AuthProviderType } from '../config/authProviders'
 import { Config } from '../config/config'
 import { getDBClient } from '../config/database'
-import { OauthUser } from '../models/authProvider.model'
+import { OauthUserModel } from '../models/authProvider.model'
 import { User, UserTable } from '../models/user.model'
 import { ApiError } from '../utils/ApiError'
 import { CreateUser, UpdateUser } from '../validations/user.validation'
@@ -34,7 +34,7 @@ export const createUser = async (
 }
 
 export const createOauthUser = async (
-  providerUser: OauthUser,
+  providerUser: OauthUserModel,
   databaseConfig: Config['database']
 ): Promise<User> => {
   const db = getDBClient(databaseConfig)
@@ -43,8 +43,8 @@ export const createOauthUser = async (
       const userId = await trx
         .insertInto('user')
         .values({
-          name: providerUser.name,
-          email: providerUser.email,
+          name: providerUser._name,
+          email: providerUser._email,
           is_email_verified: true,
           password: null,
           role: 'user'
@@ -55,7 +55,7 @@ export const createOauthUser = async (
         .values({
           user_id: Number(userId.insertId),
           provider_type: providerUser.providerType,
-          provider_user_id: providerUser.id.toString()
+          provider_user_id: providerUser._id
         })
         .executeTakeFirstOrThrow()
       return userId
@@ -67,7 +67,7 @@ export const createOauthUser = async (
     )
   }
   const user = (await getUserByProviderIdType(
-    providerUser.id.toString(),
+    providerUser._id,
     providerUser.providerType,
     databaseConfig
   )) as User
@@ -188,13 +188,14 @@ export const getAuthorisations = async (
     facebook: false,
     discord: false,
     spotify: false,
-    github: false
+    github: false,
+    apple: false
   }
   for (const auth of auths) {
     if (auth.provider_type === null) {
       continue
     }
-    response[auth.provider_type as AuthProviderType] = true
+    response[auth.provider_type] = true
   }
   return response
 }

@@ -4,7 +4,7 @@ import { Role } from '../../src/config/roles'
 import { tokenTypes, TokenType } from '../../src/config/tokens'
 import * as tokenService from '../../src/services/token.service'
 
-interface TokenResponse {
+export interface TokenResponse {
   access: {
     token: string
     expires: string
@@ -15,7 +15,7 @@ interface TokenResponse {
   }
 }
 
-const getAccessToken = async (
+export const getAccessToken = async (
   userId: number,
   role: Role,
   jwtConfig: Config['jwt'],
@@ -33,5 +33,3 @@ const getAccessToken = async (
   )
   return token
 }
-
-export { TokenResponse, getAccessToken }

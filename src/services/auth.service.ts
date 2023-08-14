@@ -1,11 +1,11 @@
 import httpStatus from 'http-status'
-import { AuthProviderType } from '../config/authProviders'
 import { Config } from '../config/config'
 import { getDBClient } from '../config/database'
 import { tokenTypes } from '../config/tokens'
-import { OauthUser } from '../models/authProvider.model'
+import { OAuthUserModel } from '../models/oauth/oauthBase.model'
 import { TokenResponse } from '../models/token.model'
 import { User } from '../models/user.model'
+import { AuthProviderType } from '../types/oauth.types'
 import { ApiError } from '../utils/ApiError'
 import * as tokenService from './token.service'
 import * as userService from './user.service'
@@ -84,11 +84,11 @@ export const verifyEmail = async (verifyEmailToken: string, config: Config): Pro
 }
 
 export const loginOrCreateUserWithOauth = async (
-  providerUser: OauthUser,
+  providerUser: OAuthUserModel,
   databaseConfig: Config['database']
 ): Promise<User> => {
   const user = await userService.getUserByProviderIdType(
-    providerUser.id.toString(),
+    providerUser._id,
     providerUser.providerType,
     databaseConfig
   )
@@ -98,7 +98,7 @@ export const loginOrCreateUserWithOauth = async (
 
 export const linkUserWithOauth = async (
   userId: number,
-  providerUser: OauthUser,
+  providerUser: OAuthUserModel,
   databaseConfig: Config['database']
 ): Promise<void> => {
   const db = getDBClient(databaseConfig)
@@ -116,7 +116,7 @@ export const linkUserWithOauth = async (
       .insertInto('authorisations')
       .values({
         user_id: userId,
-        provider_user_id: providerUser.id.toString(),
+        provider_user_id: providerUser._id,
         provider_type: providerUser.providerType
       })
       .executeTakeFirstOrThrow()

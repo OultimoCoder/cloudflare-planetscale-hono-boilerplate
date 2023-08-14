@@ -5,7 +5,7 @@ import { authProviders } from '../../../../src/config/authProviders'
 import { getConfig } from '../../../../src/config/config'
 import { Database, getDBClient } from '../../../../src/config/database'
 import { tokenTypes } from '../../../../src/config/tokens'
-import { FacebookUser, OauthUser } from '../../../../src/models/authProvider.model'
+import { FacebookUserType } from '../../../../src/types/oauth.types'
 import {
   facebookAuthorisation,
   githubAuthorisation,
@@ -40,10 +40,10 @@ describe('Oauth Facebook routes', () => {
   })
 
   describe('POST /v1/auth/facebook/callback', () => {
-    let newUser: Omit<FacebookUser, 'providerType' | 'name'>
+    let newUser: FacebookUserType
     beforeAll(async () => {
       newUser = {
-        id: faker.number.int(),
+        id: faker.number.int().toString(),
         first_name: faker.person.firstName(),
         last_name: faker.person.lastName(),
         email: faker.internet.email()
@@ -122,7 +122,7 @@ describe('Oauth Facebook routes', () => {
       const userId = ids[0]
       const facebookUser = facebookAuthorisation(userId)
       await insertAuthorisations([facebookUser], config.database)
-      newUser.id = parseInt(facebookUser.provider_user_id)
+      newUser.id = facebookUser.provider_user_id
 
       const fetchMock = getMiniflareFetchMock()
       const facebookApiMock = fetchMock.get('https://graph.facebook.com')
@@ -226,11 +226,12 @@ describe('Oauth Facebook routes', () => {
     })
   })
   describe('POST /v1/auth/facebook/:userId', () => {
-    let newUser: Omit<OauthUser, 'providerType'>
+    let newUser: FacebookUserType
     beforeAll(async () => {
       newUser = {
-        id: faker.number.int(),
-        name: faker.person.fullName(),
+        id: faker.number.int().toString(),
+        first_name: faker.person.firstName(),
+        last_name: faker.person.lastName(),
         email: faker.internet.email(),
       }
     })

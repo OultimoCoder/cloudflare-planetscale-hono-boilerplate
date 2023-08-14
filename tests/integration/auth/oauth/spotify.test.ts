@@ -5,7 +5,7 @@ import { authProviders } from '../../../../src/config/authProviders'
 import { getConfig } from '../../../../src/config/config'
 import { Database, getDBClient } from '../../../../src/config/database'
 import { tokenTypes } from '../../../../src/config/tokens'
-import { OauthUser } from '../../../../src/models/authProvider.model'
+import { SpotifyUserType } from '../../../../src/types/oauth.types'
 import {
   spotifyAuthorisation,
   insertAuthorisations,
@@ -40,11 +40,11 @@ describe('Oauth Spotify routes', () => {
   })
 
   describe('POST /v1/auth/spotify/callback', () => {
-    let newUser: Omit<OauthUser, 'providerType'>
+    let newUser: SpotifyUserType
     beforeAll(async () => {
       newUser = {
-        id: faker.number.int(),
-        name: faker.person.fullName(),
+        id: faker.number.int().toString(),
+        display_name: faker.person.fullName(),
         email: faker.internet.email(),
       }
     })
@@ -77,7 +77,7 @@ describe('Oauth Spotify routes', () => {
       expect(body.user).not.toHaveProperty('password')
       expect(body.user).toEqual({
         id: expect.anything(),
-        name: newUser.name,
+        name: newUser.display_name,
         email: newUser.email,
         role: 'user',
         is_email_verified: 1
@@ -94,7 +94,7 @@ describe('Oauth Spotify routes', () => {
 
       expect(dbUser.password).toBeNull()
       expect(dbUser).toMatchObject({
-        name: newUser.name,
+        name: newUser.display_name,
         password: null,
         email: newUser.email,
         role: 'user',
@@ -123,7 +123,7 @@ describe('Oauth Spotify routes', () => {
       const userId = ids[0]
       const spotifyUser = spotifyAuthorisation(userId)
       await insertAuthorisations([spotifyUser], config.database)
-      newUser.id = parseInt(spotifyUser.provider_user_id)
+      newUser.id = spotifyUser.provider_user_id
       const providerId = '123456'
 
       const fetchMock = getMiniflareFetchMock()
@@ -234,11 +234,11 @@ describe('Oauth Spotify routes', () => {
     })
   })
   describe('POST /v1/auth/spotify/:userId', () => {
-    let newUser: Omit<OauthUser, 'providerType'>
+    let newUser: SpotifyUserType
     beforeAll(async () => {
       newUser = {
-        id: faker.number.int(),
-        name: faker.person.fullName(),
+        id: faker.number.int().toString(),
+        display_name: faker.person.fullName(),
         email: faker.internet.email(),
       }
     })

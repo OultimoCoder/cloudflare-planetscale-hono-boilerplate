@@ -5,7 +5,7 @@ import { authProviders } from '../../../../src/config/authProviders'
 import { getConfig } from '../../../../src/config/config'
 import { Database, getDBClient } from '../../../../src/config/database'
 import { tokenTypes } from '../../../../src/config/tokens'
-import { OauthUser } from '../../../../src/models/authProvider.model'
+import { GithubUserType } from '../../../../src/types/oauth.types'
 import {
   facebookAuthorisation,
   githubAuthorisation,
@@ -53,7 +53,7 @@ describe('Oauth routes', () => {
   })
 
   describe('POST /v1/auth/github/:userId', () => {
-    let newUser: Omit<OauthUser, 'providerType'>
+    let newUser: GithubUserType
     beforeAll(async () => {
       newUser = {
         id: faker.number.int(),
@@ -392,7 +392,7 @@ describe('Oauth routes', () => {
   })
 
   describe('POST /v1/auth/github/callback', () => {
-    let newUser: Omit<OauthUser, 'providerType'>
+    let newUser: GithubUserType
     beforeAll(async () => {
       newUser = {
         id: faker.number.int(),

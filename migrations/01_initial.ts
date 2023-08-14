@@ -5,7 +5,7 @@ export async function up(db: Kysely<Database>) {
   await db.schema
     .createTable('user')
     .addColumn('id', 'integer', (col) => col.autoIncrement().primaryKey())
-    .addColumn('name', 'varchar(255)', (col) => col.notNull())
+    .addColumn('name', 'varchar(255)')
     .addColumn('password', 'varchar(255)')
     .addColumn('email', 'varchar(255)', (col) => col.notNull().unique())
     .addColumn('is_email_verified', 'boolean', (col) => col.defaultTo(false))

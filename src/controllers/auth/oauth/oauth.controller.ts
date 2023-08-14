@@ -2,11 +2,12 @@ import { Context } from 'hono'
 import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
 import { Environment } from '../../../../bindings'
-import { AuthProviderType } from '../../../config/authProviders'
 import { getConfig } from '../../../config/config'
-import { OauthUser } from '../../../models/authProvider.model'
+import { providerUserFactory } from '../../../factories/oauth.factory'
+import { OAuthUserModel } from '../../../models/oauth/oauthBase.model'
 import * as authService from '../../../services/auth.service'
 import * as tokenService from '../../../services/token.service'
+import { AuthProviderType } from '../../../types/oauth.types'
 import { ApiError } from '../../../utils/ApiError'
 import * as authValidation from '../../../validations/auth.validation'
 
@@ -16,11 +17,11 @@ export const oauthCallback = async (
   providerType: AuthProviderType
 ): Promise<Response> => {
   const config = getConfig(c.env)
-  let providerUser: OauthUser
+  let providerUser: OAuthUserModel
   try {
     const result = await oauthRequest
-    providerUser = result.user as OauthUser
-    providerUser.providerType = providerType
+    const UserModel = providerUserFactory[providerType]
+    providerUser = new UserModel(result.user)
   } catch (err) {
     throw new ApiError(httpStatus.UNAUTHORIZED as StatusCode, 'Unauthorized')
   }
@@ -37,11 +38,11 @@ export const oauthLink = async (
   const payload = c.get('payload')
   const userId = Number(payload.sub)
   const config = getConfig(c.env)
-  let providerUser: OauthUser
+  let providerUser: OAuthUserModel
   try {
     const result = await oauthRequest
-    providerUser = result.user as OauthUser
-    providerUser.providerType = providerType
+    const UserModel = providerUserFactory[providerType]
+    providerUser = new UserModel(result.user)
   } catch (err) {
     throw new ApiError(httpStatus.UNAUTHORIZED as StatusCode, 'Unauthorized')
   }

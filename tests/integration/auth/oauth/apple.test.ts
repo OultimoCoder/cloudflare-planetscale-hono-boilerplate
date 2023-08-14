@@ -5,9 +5,9 @@ import { authProviders } from '../../../../src/config/authProviders'
 import { getConfig } from '../../../../src/config/config'
 import { Database, getDBClient } from '../../../../src/config/database'
 import { tokenTypes } from '../../../../src/config/tokens'
-import { DiscordUserType } from '../../../../src/types/oauth.types'
+import { AppleUserType } from '../../../../src/types/oauth.types'
 import {
-  discordAuthorisation,
+  appleAuthorisation,
   facebookAuthorisation,
   githubAuthorisation,
   insertAuthorisations
@@ -23,43 +23,38 @@ const client = getDBClient(config.database)
 
 clearDBTables(['user' as TableReference<Database>], config.database)
 
-describe('Oauth Discord routes', () => {
-  describe('GET /v1/auth/discord/redirect', () => {
-    test('should return 302 and successfully redirect to discord', async () => {
-      const urlEncodedRedirectUrl = encodeURIComponent(config.oauth.discord.redirectUrl)
-      const res = await request('/v1/auth/discord/redirect', {
+describe('Oauth Apple routes', () => {
+  describe('GET /v1/auth/apple/redirect', () => {
+    test('should return 302 and successfully redirect to apple', async () => {
+      const urlEncodedRedirectUrl = encodeURIComponent(config.oauth.apple.redirectUrl)
+      const res = await request('/v1/auth/apple/redirect', {
         method: 'GET',
       })
       expect(res.status).toBe(httpStatus.FOUND)
-      expect(res.headers.get('location')).toBe(
-        `https://discord.com/api/oauth2/authorize?client_id=${config.oauth.discord.clientId}&` +
-        `redirect_uri=${urlEncodedRedirectUrl}&response_type=code&scope=identify%20email`
+      expect(res.headers.get('location')).toContain(
+        'https://appleid.apple.com/auth/authorize?client_id=myclientid&redirect_uri=' +
+        `${urlEncodedRedirectUrl}&response_mode=query&response_type=code&scope=`
       )
     })
   })
 
-  describe('POST /v1/auth/discord/callback', () => {
-    let newUser: DiscordUserType
+  describe('POST /v1/auth/apple/callback', () => {
+    let newUser: AppleUserType
     beforeAll(async () => {
       newUser = {
-        id: faker.number.int().toString(),
-        username: faker.person.fullName(),
+        sub: faker.number.int().toString(),
+        name: faker.person.fullName(),
         email: faker.internet.email()
       }
     })
     test('should return 200 and successfully register user if request data is ok', async () => {
       const fetchMock = getMiniflareFetchMock()
-      const discordApiMock = fetchMock.get('https://discord.com')
-      discordApiMock
-        .intercept({method: 'GET', path: '/api/users/@me'})
-        .reply(200, JSON.stringify(newUser))
-      const discordMock = fetchMock.get('https://discordapp.com')
-      discordMock
-        .intercept({method: 'POST', path: '/api/oauth2/token'})
+      const appleMock = fetchMock.get('https://appleid.apple.com')
+      appleMock
+        .intercept({method: 'POST', path: '/apple/auth/token'})
         .reply(200, JSON.stringify({access_token: '1234'}))
-
       const providerId = '123456'
-      const res = await request('/v1/auth/discord/callback', {
+      const res = await request('/v1/auth/apple/callback', {
         method: 'POST',
         body: JSON.stringify({code: providerId}),
         headers: {
@@ -71,7 +66,7 @@ describe('Oauth Discord routes', () => {
       expect(body.user).not.toHaveProperty('password')
       expect(body.user).toEqual({
         id: expect.anything(),
-        name: newUser.username,
+        name: newUser.name,
         email: newUser.email,
         role: 'user',
         is_email_verified: 1
@@ -88,7 +83,7 @@ describe('Oauth Discord routes', () => {
 
       expect(dbUser.password).toBeNull()
       expect(dbUser).toMatchObject({
-        name: newUser.username,
+        name: newUser.name,
         password: null,
         email: newUser.email,
         role: 'user',
@@ -98,7 +93,7 @@ describe('Oauth Discord routes', () => {
       const oauthUser = await client
         .selectFrom('authorisations')
         .selectAll()
-        .where('authorisations.provider_type', '=', authProviders.DISCORD)
+        .where('authorisations.provider_type', '=', authProviders.APPLE)
         .where('authorisations.user_id', '=', body.user.id)
         .where('authorisations.provider_user_id', '=', String(newUser.id))
         .executeTakeFirst()
@@ -115,22 +110,22 @@ describe('Oauth Discord routes', () => {
     test('should return 200 and successfully login user if already created', async () => {
       const ids = await insertUsers([userOne], config.database)
       const userId = ids[0]
-      const discordUser = discordAuthorisation(userId)
-      await insertAuthorisations([discordUser], config.database)
-      newUser.id = discordUser.provider_user_id
+      const appleUser = appleAuthorisation(userId)
+      await insertAuthorisations([appleUser], config.database)
+      newUser.sub = appleUser.provider_user_id
 
       const fetchMock = getMiniflareFetchMock()
-      const discordApiMock = fetchMock.get('https://discord.com')
-      discordApiMock
+      const appleApiMock = fetchMock.get('https://apple.com')
+      appleApiMock
         .intercept({method: 'GET', path: '/api/users/@me'})
         .reply(200, JSON.stringify(newUser))
-      const discordMock = fetchMock.get('https://discordapp.com')
-      discordMock
+      const appleMock = fetchMock.get('https://appleapp.com')
+      appleMock
         .intercept({method: 'POST', path: '/api/oauth2/token'})
         .reply(200, JSON.stringify({access_token: '1234'}))
 
       const providerId = '123456'
-      const res = await request('/v1/auth/discord/callback', {
+      const res = await request('/v1/auth/apple/callback', {
         method: 'POST',
         body: JSON.stringify({code: providerId}),
         headers: {
@@ -154,22 +149,22 @@ describe('Oauth Discord routes', () => {
       })
     })
 
-    test('should return 403 if user exists but has not linked their discord', async () => {
+    test('should return 403 if user exists but has not linked their apple', async () => {
       await insertUsers([userOne], config.database)
       newUser.email = userOne.email
 
       const fetchMock = getMiniflareFetchMock()
-      const discordApiMock = fetchMock.get('https://discord.com')
-      discordApiMock
+      const appleApiMock = fetchMock.get('https://apple.com')
+      appleApiMock
         .intercept({method: 'GET', path: '/api/users/@me'})
         .reply(200, JSON.stringify(newUser))
-      const discordMock = fetchMock.get('https://discordapp.com')
-      discordMock
+      const appleMock = fetchMock.get('https://appleapp.com')
+      appleMock
         .intercept({method: 'POST', path: '/api/oauth2/token'})
         .reply(200, JSON.stringify({access_token: '1234'}))
 
       const providerId = '123456'
-      const res = await request('/v1/auth/discord/callback', {
+      const res = await request('/v1/auth/apple/callback', {
         method: 'POST',
         body: JSON.stringify({code: providerId}),
         headers: {
@@ -180,20 +175,20 @@ describe('Oauth Discord routes', () => {
       expect(res.status).toBe(httpStatus.FORBIDDEN)
       expect(body).toEqual({
         code: httpStatus.FORBIDDEN,
-        message: 'Cannot signup with discord, user already exists with that email'
+        message: 'Cannot signup with apple, user already exists with that email'
       })
     })
 
 
     test('should return 401 if code is invalid', async () => {
       const fetchMock = getMiniflareFetchMock()
-      const discordMock = fetchMock.get('https://discordapp.com')
-      discordMock
+      const appleMock = fetchMock.get('https://appleapp.com')
+      appleMock
         .intercept({method: 'POST', path: '/api/oauth2/token'})
         .reply(httpStatus.UNAUTHORIZED, JSON.stringify({error: 'error'}))
 
       const providerId = '123456'
-      const res = await request('/v1/auth/discord/callback', {
+      const res = await request('/v1/auth/apple/callback', {
         method: 'POST',
         body: JSON.stringify({code: providerId}),
         headers: {
@@ -204,7 +199,7 @@ describe('Oauth Discord routes', () => {
     })
 
     test('should return 400 if no code provided', async () => {
-      const res = await request('/v1/auth/discord/callback', {
+      const res = await request('/v1/auth/apple/callback', {
         method: 'POST',
         body: JSON.stringify({}),
         headers: {
@@ -215,32 +210,32 @@ describe('Oauth Discord routes', () => {
     })
   })
 
-  describe('POST /v1/auth/discord/:userId', () => {
-    let newUser: Omit<OauthUserModel, 'providerType'>
+  describe('POST /v1/auth/apple/:userId', () => {
+    let newUser: AppleUserType
     beforeAll(async () => {
       newUser = {
-        id: faker.number.int(),
+        sub: faker.number.int().toString(),
         name: faker.person.fullName(),
         email: faker.internet.email(),
       }
     })
-    test('should return 200 and successfully link discord account', async () => {
+    test('should return 200 and successfully link apple account', async () => {
       const ids = await insertUsers([userOne], config.database)
       const userId = ids[0]
       const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
 
       const fetchMock = getMiniflareFetchMock()
-      const discordApiMock = fetchMock.get('https://discord.com')
-      discordApiMock
+      const appleApiMock = fetchMock.get('https://apple.com')
+      appleApiMock
         .intercept({method: 'GET', path: '/api/users/@me'})
         .reply(200, JSON.stringify(newUser))
-      const discordMock = fetchMock.get('https://discordapp.com')
-      discordMock
+      const appleMock = fetchMock.get('https://appleapp.com')
+      appleMock
         .intercept({method: 'POST', path: '/api/oauth2/token'})
         .reply(200, JSON.stringify({access_token: '1234'}))
 
       const providerId = '123456'
-      const res = await request(`/v1/auth/discord/${userId}`, {
+      const res = await request(`/v1/auth/apple/${userId}`, {
         method: 'POST',
         body: JSON.stringify({code: providerId}),
         headers: {
@@ -271,7 +266,7 @@ describe('Oauth Discord routes', () => {
       const oauthUser = await client
         .selectFrom('authorisations')
         .selectAll()
-        .where('authorisations.provider_type', '=', authProviders.DISCORD)
+        .where('authorisations.provider_type', '=', authProviders.APPLE)
         .where('authorisations.user_id', '=', userId)
         .where('authorisations.provider_user_id', '=', String(newUser.id))
         .executeTakeFirst()
@@ -290,17 +285,17 @@ describe('Oauth Discord routes', () => {
         .execute()
 
       const fetchMock = getMiniflareFetchMock()
-      const discordApiMock = fetchMock.get('https://discord.com')
-      discordApiMock
+      const appleApiMock = fetchMock.get('https://apple.com')
+      appleApiMock
         .intercept({method: 'GET', path: '/api/users/@me'})
         .reply(200, JSON.stringify(newUser))
-      const discordMock = fetchMock.get('https://discordapp.com')
-      discordMock
+      const appleMock = fetchMock.get('https://appleapp.com')
+      appleMock
         .intercept({method: 'POST', path: '/api/oauth2/token'})
         .reply(200, JSON.stringify({access_token: '1234'}))
 
       const providerId = '123456'
-      const res = await request(`/v1/auth/discord/${userId}`, {
+      const res = await request(`/v1/auth/apple/${userId}`, {
         method: 'POST',
         body: JSON.stringify({code: providerId}),
         headers: {
@@ -313,7 +308,7 @@ describe('Oauth Discord routes', () => {
       const oauthUser = await client
         .selectFrom('authorisations')
         .selectAll()
-        .where('authorisations.provider_type', '=', authProviders.DISCORD)
+        .where('authorisations.provider_type', '=', authProviders.APPLE)
         .where('authorisations.user_id', '=', userId)
         .where('authorisations.provider_user_id', '=', String(newUser.id))
         .executeTakeFirst()
@@ -327,13 +322,13 @@ describe('Oauth Discord routes', () => {
       const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
 
       const fetchMock = getMiniflareFetchMock()
-      const discordMock = fetchMock.get('https://discordapp.com')
-      discordMock
+      const appleMock = fetchMock.get('https://appleapp.com')
+      appleMock
         .intercept({method: 'POST', path: '/api/oauth2/token'})
         .reply(httpStatus.UNAUTHORIZED, JSON.stringify({error: 'error'}))
 
       const providerId = '123456'
-      const res = await request(`/v1/auth/discord/${userId}`, {
+      const res = await request(`/v1/auth/apple/${userId}`, {
         method: 'POST',
         body: JSON.stringify({code: providerId}),
         headers: {
@@ -350,7 +345,7 @@ describe('Oauth Discord routes', () => {
       const userOneAccessToken = await getAccessToken(userId, userOne.role, config.jwt)
 
       const providerId = '123456'
-      const res = await request('/v1/auth/discord/5298', {
+      const res = await request('/v1/auth/apple/5298', {
         method: 'POST',
         body: JSON.stringify({code: providerId}),
         headers: {
@@ -366,7 +361,7 @@ describe('Oauth Discord routes', () => {
       const userId = ids[0]
       const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
 
-      const res = await request(`/v1/auth/discord/${userId}`, {
+      const res = await request(`/v1/auth/apple/${userId}`, {
         method: 'POST',
         body: JSON.stringify({}),
         headers: {
@@ -378,7 +373,7 @@ describe('Oauth Discord routes', () => {
     })
 
     test('should return 401 error if access token is missing', async () => {
-      const res = await request('/v1/auth/discord/1234', {
+      const res = await request('/v1/auth/apple/1234', {
         method: 'POST',
         body: JSON.stringify({}),
         headers: {
@@ -393,7 +388,7 @@ describe('Oauth Discord routes', () => {
       const accessToken = await getAccessToken(
         userId, userTwo.role, config.jwt, tokenTypes.ACCESS, userTwo.is_email_verified
       )
-      const res = await request('/v1/auth/discord/5298', {
+      const res = await request('/v1/auth/apple/5298', {
         method: 'POST',
         body: JSON.stringify({}),
         headers: {
@@ -405,15 +400,15 @@ describe('Oauth Discord routes', () => {
     })
   })
 
-  describe('DELETE /v1/auth/discord/:userId', () => {
-    test('should return 200 and successfully remove discord account link', async () => {
+  describe('DELETE /v1/auth/apple/:userId', () => {
+    test('should return 200 and successfully remove apple account link', async () => {
       const ids = await insertUsers([userOne], config.database)
       const userId = ids[0]
       const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
-      const discordUser = discordAuthorisation(userId)
-      await insertAuthorisations([discordUser], config.database)
+      const appleUser = appleAuthorisation(userId)
+      await insertAuthorisations([appleUser], config.database)
 
-      const res = await request(`/v1/auth/discord/${userId}`, {
+      const res = await request(`/v1/auth/apple/${userId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${userOneAccessToken}`
@@ -424,7 +419,7 @@ describe('Oauth Discord routes', () => {
       const oauthUser = await client
         .selectFrom('authorisations')
         .selectAll()
-        .where('authorisations.provider_type', '=', authProviders.DISCORD)
+        .where('authorisations.provider_type', '=', authProviders.APPLE)
         .where('authorisations.user_id', '=', userId)
         .executeTakeFirst()
 
@@ -437,10 +432,10 @@ describe('Oauth Discord routes', () => {
       const ids = await insertUsers([newUser], config.database)
       const userId = ids[0]
       const userOneAccessToken = await getAccessToken(ids[0], newUser.role, config.jwt)
-      const discordUser = discordAuthorisation(userId)
-      await insertAuthorisations([discordUser], config.database)
+      const appleUser = appleAuthorisation(userId)
+      await insertAuthorisations([appleUser], config.database)
 
-      const res = await request(`/v1/auth/discord/${userId}`, {
+      const res = await request(`/v1/auth/apple/${userId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${userOneAccessToken}`
@@ -451,14 +446,14 @@ describe('Oauth Discord routes', () => {
       const oauthUser = await client
         .selectFrom('authorisations')
         .selectAll()
-        .where('authorisations.provider_type', '=', authProviders.DISCORD)
+        .where('authorisations.provider_type', '=', authProviders.APPLE)
         .where('authorisations.user_id', '=', userId)
         .executeTakeFirst()
 
       expect(oauthUser).toBeDefined()
     })
 
-    test('should return 400 if user does not have discord link', async () => {
+    test('should return 400 if user does not have apple link', async () => {
       const newUser = { ...userOne, password: null }
       const ids = await insertUsers([newUser], config.database)
       const userId = ids[0]
@@ -468,7 +463,7 @@ describe('Oauth Discord routes', () => {
       const facebookUser = facebookAuthorisation(userId)
       await insertAuthorisations([facebookUser], config.database)
 
-      const res = await request(`/v1/auth/discord/${userId}`, {
+      const res = await request(`/v1/auth/apple/${userId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${userOneAccessToken}`
@@ -483,7 +478,7 @@ describe('Oauth Discord routes', () => {
       const userId = ids[0]
       const userOneAccessToken = await getAccessToken(ids[0], newUser.role, config.jwt)
 
-      const res = await request(`/v1/auth/discord/${userId}`, {
+      const res = await request(`/v1/auth/apple/${userId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${userOneAccessToken}`
@@ -497,11 +492,11 @@ describe('Oauth Discord routes', () => {
       const ids = await insertUsers([newUser], config.database)
       const userId = ids[0]
       const userOneAccessToken = await getAccessToken(ids[0], newUser.role, config.jwt)
-      const discordUser = discordAuthorisation(userId)
+      const appleUser = appleAuthorisation(userId)
       const facebookUser = facebookAuthorisation(userId)
-      await insertAuthorisations([discordUser, facebookUser], config.database)
+      await insertAuthorisations([appleUser, facebookUser], config.database)
 
-      const res = await request(`/v1/auth/discord/${userId}`, {
+      const res = await request(`/v1/auth/apple/${userId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${userOneAccessToken}`
@@ -509,14 +504,14 @@ describe('Oauth Discord routes', () => {
       })
       expect(res.status).toBe(httpStatus.NO_CONTENT)
 
-      const oauthDiscordUser = await client
+      const oauthAppleUser = await client
         .selectFrom('authorisations')
         .selectAll()
-        .where('authorisations.provider_type', '=', authProviders.DISCORD)
+        .where('authorisations.provider_type', '=', authProviders.APPLE)
         .where('authorisations.user_id', '=', userId)
         .executeTakeFirst()
 
-      expect(oauthDiscordUser).toBeUndefined()
+      expect(oauthAppleUser).toBeUndefined()
 
       const oauthFacebookUser = await client
       .selectFrom('authorisations')
@@ -533,7 +528,7 @@ describe('Oauth Discord routes', () => {
       const userId = ids[0]
       const userOneAccessToken = await getAccessToken(userId, userOne.role, config.jwt)
 
-      const res = await request('/v1/auth/discord/5298', {
+      const res = await request('/v1/auth/apple/5298', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -544,7 +539,7 @@ describe('Oauth Discord routes', () => {
     })
 
     test('should return 401 error if access token is missing', async () => {
-      const res = await request('/v1/auth/discord/1234', {
+      const res = await request('/v1/auth/apple/1234', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -558,7 +553,7 @@ describe('Oauth Discord routes', () => {
       const accessToken = await getAccessToken(
         userId, userTwo.role, config.jwt, tokenTypes.ACCESS, userTwo.is_email_verified
       )
-      const res = await request('/v1/auth/discord/5298', {
+      const res = await request('/v1/auth/apple/5298', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

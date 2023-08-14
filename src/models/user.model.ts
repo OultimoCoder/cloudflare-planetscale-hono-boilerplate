@@ -5,7 +5,7 @@ import { BaseModel } from './base.model'
 
 export interface UserTable {
   id: Generated<number>
-  name: string
+  name: string | null // null if not available on oauth account linking
   email: string
   password: string | null // null if user is created via OAuth
   is_email_verified: boolean

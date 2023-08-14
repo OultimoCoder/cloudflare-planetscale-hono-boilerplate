@@ -3,7 +3,6 @@ export const authProviders = {
   SPOTIFY: 'spotify',
   DISCORD: 'discord',
   GOOGLE: 'google',
-  FACEBOOK: 'facebook'
+  FACEBOOK: 'facebook',
+  APPLE: 'apple'
 } as const
-
-export type AuthProviderType = typeof authProviders[keyof typeof authProviders]

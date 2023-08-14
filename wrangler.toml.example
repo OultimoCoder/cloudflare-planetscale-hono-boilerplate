@@ -39,6 +39,8 @@ OAUTH_GOOGLE_CLIENT_ID='myclientid'
 OAUTH_GOOGLE_REDIRECT_URL='https://frontend.com/login'
 OAUTH_FACEBOOK_CLIENT_ID='myclientid'
 OAUTH_FACEBOOK_REDIRECT_URL='https://frontend.com/login'
+OAUTH_APPLE_CLIENT_ID='myclientid'
+OAUTH_APPLE_REDIRECT_URL='https://frontend.com/login'
 
 [env.production.vars]
 ENV = 'production'
@@ -60,6 +62,8 @@ OAUTH_GOOGLE_CLIENT_ID='myclientid'
 OAUTH_GOOGLE_REDIRECT_URL='https://frontend.com/login'
 OAUTH_FACEBOOK_CLIENT_ID='myclientid'
 OAUTH_FACEBOOK_REDIRECT_URL='https://frontend.com/login'
+OAUTH_APPLE_CLIENT_ID='myclientid'
+OAUTH_APPLE_REDIRECT_URL='https://frontend.com/login'
 
 [build]
 command = "npm run build"
@@ -75,3 +79,4 @@ command = "npm run build"
 # OAUTH_SPOTIFY_CLIENT_SECRET
 # OAUTH_GOOGLE_CLIENT_SECRET
 # OAUTH_FACEBOOK_CLIENT_SECRET
+# OAUTH_APPLE_CLIENT_SECRET

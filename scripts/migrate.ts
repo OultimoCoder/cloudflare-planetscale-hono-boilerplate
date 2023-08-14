@@ -10,7 +10,6 @@ import { User } from '../src/models/user.model'
 
 const envFile = {
   'dev': '.env',
-  'prod': '.env.prod',
   'test': '.env.test'
 }
 

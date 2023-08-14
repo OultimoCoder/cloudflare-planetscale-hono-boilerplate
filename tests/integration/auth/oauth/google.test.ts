@@ -5,7 +5,7 @@ import { authProviders } from '../../../../src/config/authProviders'
 import { getConfig } from '../../../../src/config/config'
 import { Database, getDBClient } from '../../../../src/config/database'
 import { tokenTypes } from '../../../../src/config/tokens'
-import { OauthUser } from '../../../../src/models/authProvider.model'
+import { GoogleUserType } from '../../../../src/types/oauth.types'
 import {
   facebookAuthorisation,
   githubAuthorisation,
@@ -39,10 +39,10 @@ describe('Oauth Google routes', () => {
     })
   })
   describe('POST /v1/auth/google/callback', () => {
-    let newUser: Omit<OauthUser, 'providerType'>
+    let newUser: GoogleUserType
     beforeAll(async () => {
       newUser = {
-        id: faker.number.int(),
+        id: faker.number.int().toString(),
         name: faker.person.fullName(),
         email: faker.internet.email(),
       }
@@ -117,7 +117,7 @@ describe('Oauth Google routes', () => {
       const userId = ids[0]
       const googleUser = googleAuthorisation(userId)
       await insertAuthorisations([googleUser], config.database)
-      newUser.id = parseInt(googleUser.provider_user_id)
+      newUser.id = googleUser.provider_user_id
 
       const fetchMock = getMiniflareFetchMock()
       const googleApiMock = fetchMock.get('https://www.googleapis.com')
@@ -215,10 +215,10 @@ describe('Oauth Google routes', () => {
     })
   })
   describe('POST /v1/auth/google/:userId', () => {
-    let newUser: Omit<OauthUser, 'providerType'>
+    let newUser: GoogleUserType
     beforeAll(async () => {
       newUser = {
-        id: faker.number.int(),
+        id: faker.number.int().toString(),
         name: faker.person.fullName(),
         email: faker.internet.email(),
       }

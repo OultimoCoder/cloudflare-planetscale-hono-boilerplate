@@ -32,7 +32,10 @@ type Environment = {
     OAUTH_SPOTIFY_REDIRECT_URL: string,
     OAUTH_FACEBOOK_CLIENT_ID: string,
     OAUTH_FACEBOOK_CLIENT_SECRET: string,
-    OAUTH_FACEBOOK_REDIRECT_URL: string
+    OAUTH_FACEBOOK_REDIRECT_URL: string,
+    OAUTH_APPLE_CLIENT_ID: string,
+    OAUTH_APPLE_CLIENT_SECRET: string,
+    OAUTH_APPLE_REDIRECT_URL: string
   },
   Variables: {
     payload: JwtPayload,

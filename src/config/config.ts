@@ -50,7 +50,10 @@ const envVarsSchema = z.object({
   OAUTH_SPOTIFY_REDIRECT_URL: z.string(),
   OAUTH_FACEBOOK_CLIENT_ID: z.string(),
   OAUTH_FACEBOOK_CLIENT_SECRET: z.string(),
-  OAUTH_FACEBOOK_REDIRECT_URL: z.string()
+  OAUTH_FACEBOOK_REDIRECT_URL: z.string(),
+  OAUTH_APPLE_CLIENT_ID: z.string(),
+  OAUTH_APPLE_CLIENT_SECRET: z.string(),
+  OAUTH_APPLE_REDIRECT_URL: z.string()
 })
 
 export interface Config {
@@ -97,6 +100,11 @@ export interface Config {
       redirectUrl: string
     }
     facebook: {
+      clientId: string
+      clientSecret: string
+      redirectUrl: string
+    }
+    apple: {
       clientId: string
       clientSecret: string
       redirectUrl: string
@@ -158,6 +166,11 @@ export const getConfig = (env: Environment['Bindings']) => {
         clientId: envVars.OAUTH_FACEBOOK_CLIENT_ID,
         clientSecret: envVars.OAUTH_FACEBOOK_CLIENT_SECRET,
         redirectUrl: envVars.OAUTH_FACEBOOK_REDIRECT_URL
+      },
+      apple: {
+        clientId: envVars.OAUTH_APPLE_CLIENT_ID,
+        clientSecret: envVars.OAUTH_APPLE_CLIENT_SECRET,
+        redirectUrl: envVars.OAUTH_APPLE_REDIRECT_URL
       }
     }
   }
