@@ -11,6 +11,7 @@ import { Database, getDBClient } from '../../../src/config/database'
 import { tokenTypes } from '../../../src/config/tokens'
 import * as tokenService from '../../../src/services/token.service'
 import {
+  appleAuthorisation,
   discordAuthorisation,
   facebookAuthorisation,
   githubAuthorisation,
@@ -744,7 +745,8 @@ describe('Auth routes', () => {
         github: false,
         google: false,
         spotify: false,
-        discord: false
+        discord: false,
+        apple: false
       })
     })
 
@@ -770,7 +772,8 @@ describe('Auth routes', () => {
         github: false,
         google: false,
         spotify: false,
-        discord: true
+        discord: true,
+        apple: false
       })
     })
     test('should 200 and list of user authentication methods with all true', async () => {
@@ -781,8 +784,9 @@ describe('Auth routes', () => {
       const googleAuth = googleAuthorisation(userOneId)
       const githubAuth = githubAuthorisation(userOneId)
       const facebookAuth = facebookAuthorisation(userOneId)
+      const appleAuth = appleAuthorisation(userOneId)
       await insertAuthorisations(
-        [discordAuth, spotifyAuth, googleAuth, facebookAuth, githubAuth], config.database
+        [discordAuth, spotifyAuth, googleAuth, facebookAuth, githubAuth, appleAuth], config.database
       )
       const accessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
       const res = await request('/v1/auth/authorisations', {
@@ -799,7 +803,8 @@ describe('Auth routes', () => {
         github: true,
         google: true,
         spotify: true,
-        discord: true
+        discord: true,
+        apple: true
       })
     })
     test('should return 403 if user has not verified their email', async () => {
