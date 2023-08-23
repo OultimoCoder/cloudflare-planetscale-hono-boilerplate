@@ -1,3 +1,4 @@
+import dayjs from 'dayjs'
 import { Context, MiddlewareHandler } from 'hono'
 import httpStatus from 'http-status'
 import { Environment } from '../../bindings'
@@ -16,9 +17,17 @@ const getCacheKey = (endpoint: string, key: number | string, limit: number, inte
   return `${fakeDomain}${endpoint}/${key}/${limit}/${interval}`
 }
 
-const isRateLimited = async (res: Response) => {
-  const body = await res.json<{ blocked: boolean }>()
-  return body.blocked
+const setRateLimitHeaders = (
+  c: Context,
+  secondsExpires: number,
+  limit: number,
+  remaining: number,
+  interval: number
+) => {
+  c.header('X-RateLimit-Limit', limit.toString())
+  c.header('X-RateLimit-Remaining', remaining.toString())
+  c.header('X-RateLimit-Reset', secondsExpires.toString())
+  c.header('X-RateLimit-Policy', `${limit};w=${interval};comment="Sliding window"`)
 }
 
 export const rateLimit = (
@@ -34,7 +43,6 @@ export const rateLimit = (
     const cache = await caches.open('rate-limiter')
     const cacheKey = getCacheKey(endpoint, key, limit, interval)
     const cached = await cache.match(cacheKey)
-
     let res: Response
     if (!cached) {
       res = await rateLimiter.fetch(
@@ -48,12 +56,20 @@ export const rateLimit = (
           })
         })
       )
-      c.executionCtx.waitUntil(cache.put(cacheKey, res.clone()))
     } else {
       res = cached
     }
-    if (await isRateLimited(res))
+    const clonedRes = res.clone()
+    const body = await clonedRes.json<{ blocked: boolean, remaining: number, expires: string }>()
+    const secondsExpires = dayjs(body.expires).unix() - dayjs().unix()
+    setRateLimitHeaders(c, secondsExpires, limit, body.remaining, interval)
+    if (body.blocked) {
+      if (!cached) {
+        // Only cache blocked responses
+        c.executionCtx.waitUntil(cache.put(cacheKey, res))
+      }
       throw new ApiError(httpStatus.TOO_MANY_REQUESTS, 'Too many requests')
+    }
     await next()
   }
 }

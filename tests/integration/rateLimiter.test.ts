@@ -36,7 +36,7 @@ describe('Durable Object RateLimiter', () => {
       )
       const body = await res.json()
       expect(res.status).toBe(httpStatus.OK)
-      expect(body).toEqual({ blocked: false })
+      expect(body).toEqual({ blocked: false, remaining: 0, expires: expect.any(String) })
     })
 
     test('should return 200 and rate limit if limit hit', async () => {
@@ -63,7 +63,7 @@ describe('Durable Object RateLimiter', () => {
       )
       const body = await res.json()
       expect(res.status).toBe(httpStatus.OK)
-      expect(body).toEqual({ blocked: true })
+      expect(body).toEqual({ blocked: true, remaining: 0, expires: expect.any(String) })
 
       const expires = dayjs(res.headers.get('expires'))
       expect(start.isSameOrBefore(expires)).toBe(true)
@@ -95,7 +95,7 @@ describe('Durable Object RateLimiter', () => {
       )
       const body = await res.json()
       expect(res.status).toBe(httpStatus.OK)
-      expect(body).toEqual({ blocked: true })
+      expect(body).toEqual({ blocked: true, remaining: 0, expires: expect.any(String) })
 
       config.scope = '/v1/different-endpoint'
       const res2 = await rateLimiter.fetch(
@@ -106,7 +106,7 @@ describe('Durable Object RateLimiter', () => {
       )
       const body2 = await res2.json()
       expect(res2.status).toBe(httpStatus.OK)
-      expect(body2).toEqual({ blocked: false })
+      expect(body2).toEqual({ blocked: false, remaining: 199, expires: expect.any(String) })
     })
 
     test('should return 200 and not rate limit if different key used', async () => {
@@ -132,8 +132,7 @@ describe('Durable Object RateLimiter', () => {
       )
       const body = await res.json()
       expect(res.status).toBe(httpStatus.OK)
-      expect(body).toEqual({ blocked: true })
-
+      expect(body).toEqual({ blocked: true, remaining: 0, expires: expect.any(String) })
       config.key = '192.169.2.1'
       const res2 = await rateLimiter.fetch(
         new Request(fakeDomain, {
@@ -143,7 +142,7 @@ describe('Durable Object RateLimiter', () => {
       )
       const body2 = await res2.json()
       expect(res2.status).toBe(httpStatus.OK)
-      expect(body2).toEqual({ blocked: false })
+      expect(body2).toEqual({ blocked: false, remaining: 199, expires: expect.any(String) })
     })
 
     test('should return 200 and not rate limit if window expired', async () => {
@@ -157,9 +156,7 @@ describe('Durable Object RateLimiter', () => {
       const storageKey =
         `${config.scope}|${config.key.toString()}|${config.limit}|` +
         `${config.interval}|${currentWindow}`
-
-      await storage.put(storageKey, config.limit + 1)
-
+      await storage.put(storageKey, config.limit)
       const rateLimiter = env.RATE_LIMITER.get(id)
       const res = await rateLimiter.fetch(
         new Request(fakeDomain, {
@@ -169,7 +166,7 @@ describe('Durable Object RateLimiter', () => {
       )
       const body = await res.json()
       expect(res.status).toBe(httpStatus.OK)
-      expect(body).toEqual({ blocked: true })
+      expect(body).toEqual({ blocked: true, remaining: 0, expires: expect.any(String) })
       const expires = dayjs(res.headers.get('expires'))
       MockDate.set(expires.add(1, 'second').toDate())
       const res2 = await rateLimiter.fetch(
@@ -180,7 +177,7 @@ describe('Durable Object RateLimiter', () => {
       )
       const body2 = await res2.json()
       expect(res2.status).toBe(httpStatus.OK)
-      expect(body2).toEqual({ blocked: false })
+      expect(body2).toEqual({ blocked: false, remaining: 0, expires: expect.any(String) })
     })
 
     test('should return 200 and rate limit if just before window expiry', async () => {
@@ -206,7 +203,7 @@ describe('Durable Object RateLimiter', () => {
       )
       const body = await res.json()
       expect(res.status).toBe(httpStatus.OK)
-      expect(body).toEqual({ blocked: true })
+      expect(body).toEqual({ blocked: true, remaining: 0, expires: expect.any(String) })
 
       const expires = dayjs(res.headers.get('expires')).subtract(1, 'second')
       MockDate.set(expires.toDate())
@@ -219,7 +216,7 @@ describe('Durable Object RateLimiter', () => {
       )
       const body2 = await res2.json()
       expect(res2.status).toBe(httpStatus.OK)
-      expect(body2).toEqual({ blocked: true })
+      expect(body2).toEqual({ blocked: true, remaining: 0, expires: expect.any(String) })
     })
 
     test('should return 400 if config is invalid', async () => {

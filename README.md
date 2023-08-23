@@ -30,6 +30,7 @@ npm init cf-planetscale-app <project-name>
   - [Authentication](#authentication)
   - [Emails](#emails)
   - [Authorisation](#authorisation)
+  - [Rate Limiting](#rate-limiting)
   - [Contributing](#contributing)
   - [Inspirations](#inspirations)
   - [License](#license)
@@ -89,7 +90,7 @@ npm run prettier:fix
 Migrations:
 
 To deploy to production you must first deploy to a test/dev branch on Planetscale and then create
-a deploy request and merge the schema into production. 
+a deploy request and merge the schema into production.
 
 ```bash
 # run all migrations for dev/test
@@ -227,6 +228,45 @@ The permissions are role-based. You can view the permissions/rights of each role
 
 If the user making the request does not have the required permissions to access this route, a
 Forbidden (403) error is thrown.
+
+## Rate Limiting
+
+To apply rate limits for certain routes, you can use the `rateLimit` middleware.
+
+```javascript
+import { Hono } from 'hono'
+import { Environment } from '../../bindings'
+import { auth } from '../middlewares/auth'
+import { rateLimit } from '../middlewares/rateLimiter'
+
+export const route = new Hono<Environment>()
+
+const twoMinutes = 120
+const oneRequest = 1
+
+route.post(
+  '/send-verification-email',
+  auth(),
+  rateLimit(twoMinutes, oneRequest),
+  authController.sendVerificationEmail
+)
+```
+
+This uses Cloudflare durable objects to apply rate limits using the sliding window algorithm. You
+can specify the interval size in seconds and how many requests are allowed per interval.
+
+If the rate limit is hit a `429` will be returned to the client.
+
+These headers are returned with each endpoint that has rate limiting applied:
+
+* `X-RateLimit-Limit` - How many requests are allowed per window
+* `X-RateLimit-Reset` - How many seconds until the current window resets
+* `X-RateLimit-Policy` - Details about the rate limit policy in this format `${limit};w=${interval};comment="Sliding window"`
+* `X-RateLimit-Remaining` - How many requests you can send until you will be rate limited. Please
+note this doesn't just reset to the limit when the reset period hits. Use it as indicator of your
+current throughput e.g. if you have 12 requests allowed every 1 second and remaining is 0
+you are at 100% throughput, but if it is 6 you are 50% throughput. This value constantly changes
+as the window progresses either increasing or decreasing based on your throughput
 
 ## Contributing
 

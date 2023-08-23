@@ -53,8 +53,13 @@ export class RateLimiter {
       }
       const rate = await this.calculateRate(config)
       const blocked = this.isRateLimited(rate, config.limit)
-      const headers = this.getHeaders(blocked, rate, config)
-      return c.json({ blocked }, httpStatus.OK as StatusCode, headers)
+      const headers = this.getHeaders(blocked, config)
+      const remaining = blocked ? 0 : Math.floor(config.limit - rate - 1)
+      // If the remaining requests is negative set it to 0 to indicate 100% throughput
+      const remainingHeader = remaining >= 0 ? remaining : 0
+      return c.json({
+        blocked, remaining: remainingHeader, expires: headers.expires
+      }, httpStatus.OK as StatusCode, headers)
     })
   }
 
@@ -103,7 +108,7 @@ export class RateLimiter {
     const currentKey = `${keyPrefix}|${currentWindow}`
     const previousKey = `${keyPrefix}|${currentWindow - 1}`
     const currentCount = await this.getRequestCount(currentKey)
-    const previousCount = (await this.getRequestCount(previousKey)) || config.limit
+    const previousCount = (await this.getRequestCount(previousKey)) || 0
     const rate =
       (previousCount * (config.interval - distanceFromLastWindow)) / config.interval + currentCount
     if (!this.isRateLimited(rate, config.limit)) {
@@ -116,22 +121,23 @@ export class RateLimiter {
     return rate >= limit
   }
 
-  getHeaders(blocked: boolean, rate: number, config: Config) {
-    let headers = {}
+  getHeaders(blocked: boolean, config: Config) {
+    const expires = this.expirySeconds(config)
+    const retryAfter = this.retryAfter(expires)
+    const headers:
+      { expires: string, 'cache-control'?: string } = { expires: retryAfter.toString() }
     if (!blocked) {
       return headers
     }
-    const expires = this.expirySeconds(rate, config)
-    const retryAfter = this.retryAfter(expires)
-    headers = {
-      expires: retryAfter.toString(),
-      'cache-control': `public, max-age=${expires}, s-maxage=${expires}, must-revalidate`
-    }
+    headers['cache-control'] = `public, max-age=${expires}, s-maxage=${expires}, must-revalidate`
     return headers
   }
 
-  expirySeconds(rate: number, config: Config) {
-    return Math.floor((rate / config.limit - 1) * config.interval) || config.interval
+  expirySeconds(config: Config) {
+    const currentWindowStart = Math.floor(this.nowUnix() / config.interval)
+    const currentWindowEnd = currentWindowStart + 1
+    const secondsRemaining = (currentWindowEnd * config.interval) - this.nowUnix()
+    return secondsRemaining
   }
 
   retryAfter(expires: number) {
