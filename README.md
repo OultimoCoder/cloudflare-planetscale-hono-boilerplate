@@ -47,8 +47,10 @@ npm init cf-planetscale-app <project-name>
 - **Git hooks**: with [Husky](https://github.com/typicode/husky)
 - **Linting**: with [ESLint](https://eslint.org) and [Prettier](https://prettier.io)
 - **Emails**: with [Amazon SES](https://aws.amazon.com/ses/)
-- **Oauth**: Support for Discord, Github, Spotify, Google and Facebook. Support coming for Apple and
-  Twitter.
+- **Oauth**: Support for Discord, Github, Spotify, Google, Apple and Facebook. Support coming for
+  Instagram and Twitter
+- **Rate Limiting**: using Cloudflare durable objects you can rate limit endpoints usin the sliding
+  window algorithm
 
 ## Commands
 
@@ -267,6 +269,9 @@ note this doesn't just reset to the limit when the reset period hits. Use it as 
 current throughput e.g. if you have 12 requests allowed every 1 second and remaining is 0
 you are at 100% throughput, but if it is 6 you are 50% throughput. This value constantly changes
 as the window progresses either increasing or decreasing based on your throughput
+
+The rate limit will be based on IP unless the user is authenticated then it will be based on the
+user ID.
 
 ## Contributing
 
