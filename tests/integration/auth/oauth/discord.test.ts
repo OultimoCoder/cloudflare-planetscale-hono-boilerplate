@@ -100,7 +100,7 @@ describe('Oauth Discord routes', () => {
         .selectAll()
         .where('authorisations.provider_type', '=', authProviders.DISCORD)
         .where('authorisations.user_id', '=', body.user.id)
-        .where('authorisations.provider_user_id', '=', String(newUser.id))
+        .where('authorisations.provider_user_id', '=', newUser.id)
         .executeTakeFirst()
 
       expect(oauthUser).toBeDefined()
@@ -216,12 +216,12 @@ describe('Oauth Discord routes', () => {
   })
 
   describe('POST /v1/auth/discord/:userId', () => {
-    let newUser: Omit<OauthUserModel, 'providerType'>
+    let newUser: DiscordUserType
     beforeAll(async () => {
       newUser = {
-        id: faker.number.int(),
-        name: faker.person.fullName(),
-        email: faker.internet.email(),
+        id: faker.number.int().toString(),
+        username: faker.person.fullName(),
+        email: faker.internet.email()
       }
     })
     test('should return 200 and successfully link discord account', async () => {
@@ -273,7 +273,7 @@ describe('Oauth Discord routes', () => {
         .selectAll()
         .where('authorisations.provider_type', '=', authProviders.DISCORD)
         .where('authorisations.user_id', '=', userId)
-        .where('authorisations.provider_user_id', '=', String(newUser.id))
+        .where('authorisations.provider_user_id', '=', newUser.id)
         .executeTakeFirst()
 
       expect(oauthUser).toBeDefined()
@@ -315,7 +315,7 @@ describe('Oauth Discord routes', () => {
         .selectAll()
         .where('authorisations.provider_type', '=', authProviders.DISCORD)
         .where('authorisations.user_id', '=', userId)
-        .where('authorisations.provider_user_id', '=', String(newUser.id))
+        .where('authorisations.provider_user_id', '=', newUser.id)
         .executeTakeFirst()
 
       expect(oauthUser).toBeUndefined()

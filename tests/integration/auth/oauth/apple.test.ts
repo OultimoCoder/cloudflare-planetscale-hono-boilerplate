@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker'
+import jwt from '@tsndr/cloudflare-worker-jwt'
 import httpStatus from 'http-status'
 import { TableReference } from 'kysely/dist/cjs/parser/table-parser'
 import { authProviders } from '../../../../src/config/authProviders'
@@ -49,10 +50,11 @@ describe('Oauth Apple routes', () => {
     })
     test('should return 200 and successfully register user if request data is ok', async () => {
       const fetchMock = getMiniflareFetchMock()
+      const mockJWT = await jwt.sign(newUser, 'randomSecret')
       const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
-        .intercept({method: 'POST', path: '/apple/auth/token'})
-        .reply(200, JSON.stringify({access_token: '1234'}))
+        .intercept({method: 'POST', path: '/auth/token'})
+        .reply(200, JSON.stringify({access_token: mockJWT}))
       const providerId = '123456'
       const res = await request('/v1/auth/apple/callback', {
         method: 'POST',
@@ -95,7 +97,7 @@ describe('Oauth Apple routes', () => {
         .selectAll()
         .where('authorisations.provider_type', '=', authProviders.APPLE)
         .where('authorisations.user_id', '=', body.user.id)
-        .where('authorisations.provider_user_id', '=', String(newUser.id))
+        .where('authorisations.provider_user_id', '=', newUser.sub)
         .executeTakeFirst()
 
       expect(oauthUser).toBeDefined()
@@ -115,14 +117,11 @@ describe('Oauth Apple routes', () => {
       newUser.sub = appleUser.provider_user_id
 
       const fetchMock = getMiniflareFetchMock()
-      const appleApiMock = fetchMock.get('https://apple.com')
-      appleApiMock
-        .intercept({method: 'GET', path: '/api/users/@me'})
-        .reply(200, JSON.stringify(newUser))
-      const appleMock = fetchMock.get('https://appleapp.com')
+      const mockJWT = await jwt.sign(newUser, 'randomSecret')
+      const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
-        .intercept({method: 'POST', path: '/api/oauth2/token'})
-        .reply(200, JSON.stringify({access_token: '1234'}))
+        .intercept({method: 'POST', path: '/auth/token'})
+        .reply(200, JSON.stringify({access_token: mockJWT}))
 
       const providerId = '123456'
       const res = await request('/v1/auth/apple/callback', {
@@ -154,14 +153,11 @@ describe('Oauth Apple routes', () => {
       newUser.email = userOne.email
 
       const fetchMock = getMiniflareFetchMock()
-      const appleApiMock = fetchMock.get('https://apple.com')
-      appleApiMock
-        .intercept({method: 'GET', path: '/api/users/@me'})
-        .reply(200, JSON.stringify(newUser))
-      const appleMock = fetchMock.get('https://appleapp.com')
+      const mockJWT = await jwt.sign(newUser, 'randomSecret')
+      const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
-        .intercept({method: 'POST', path: '/api/oauth2/token'})
-        .reply(200, JSON.stringify({access_token: '1234'}))
+        .intercept({method: 'POST', path: '/auth/token'})
+        .reply(200, JSON.stringify({access_token: mockJWT}))
 
       const providerId = '123456'
       const res = await request('/v1/auth/apple/callback', {
@@ -178,13 +174,29 @@ describe('Oauth Apple routes', () => {
         message: 'Cannot signup with apple, user already exists with that email'
       })
     })
-
-
+    test('should return xxx if no apple email is provided', async () => {
+      const fetchMock = getMiniflareFetchMock()
+      delete newUser.email
+      const mockJWT = await jwt.sign(newUser, 'randomSecret')
+      const appleMock = fetchMock.get('https://appleid.apple.com')
+      appleMock
+        .intercept({method: 'POST', path: '/auth/token'})
+        .reply(200, JSON.stringify({access_token: mockJWT}))
+      const providerId = '123456'
+      const res = await request('/v1/auth/apple/callback', {
+        method: 'POST',
+        body: JSON.stringify({code: providerId}),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      expect(res.status).toBe(httpStatus.UNAUTHORIZED)
+    })
     test('should return 401 if code is invalid', async () => {
       const fetchMock = getMiniflareFetchMock()
-      const appleMock = fetchMock.get('https://appleapp.com')
+      const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
-        .intercept({method: 'POST', path: '/api/oauth2/token'})
+        .intercept({method: 'POST', path: '/auth/token'})
         .reply(httpStatus.UNAUTHORIZED, JSON.stringify({error: 'error'}))
 
       const providerId = '123456'
@@ -225,14 +237,11 @@ describe('Oauth Apple routes', () => {
       const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
 
       const fetchMock = getMiniflareFetchMock()
-      const appleApiMock = fetchMock.get('https://apple.com')
-      appleApiMock
-        .intercept({method: 'GET', path: '/api/users/@me'})
-        .reply(200, JSON.stringify(newUser))
-      const appleMock = fetchMock.get('https://appleapp.com')
+      const mockJWT = await jwt.sign(newUser, 'randomSecret')
+      const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
-        .intercept({method: 'POST', path: '/api/oauth2/token'})
-        .reply(200, JSON.stringify({access_token: '1234'}))
+        .intercept({method: 'POST', path: '/auth/token'})
+        .reply(200, JSON.stringify({access_token: mockJWT}))
 
       const providerId = '123456'
       const res = await request(`/v1/auth/apple/${userId}`, {
@@ -268,7 +277,7 @@ describe('Oauth Apple routes', () => {
         .selectAll()
         .where('authorisations.provider_type', '=', authProviders.APPLE)
         .where('authorisations.user_id', '=', userId)
-        .where('authorisations.provider_user_id', '=', String(newUser.id))
+        .where('authorisations.provider_user_id', '=', newUser.sub)
         .executeTakeFirst()
 
       expect(oauthUser).toBeDefined()
@@ -285,14 +294,11 @@ describe('Oauth Apple routes', () => {
         .execute()
 
       const fetchMock = getMiniflareFetchMock()
-      const appleApiMock = fetchMock.get('https://apple.com')
-      appleApiMock
-        .intercept({method: 'GET', path: '/api/users/@me'})
-        .reply(200, JSON.stringify(newUser))
-      const appleMock = fetchMock.get('https://appleapp.com')
+      const mockJWT = await jwt.sign(newUser, 'randomSecret')
+      const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
-        .intercept({method: 'POST', path: '/api/oauth2/token'})
-        .reply(200, JSON.stringify({access_token: '1234'}))
+        .intercept({method: 'POST', path: '/auth/token'})
+        .reply(200, JSON.stringify({access_token: mockJWT}))
 
       const providerId = '123456'
       const res = await request(`/v1/auth/apple/${userId}`, {
@@ -322,9 +328,9 @@ describe('Oauth Apple routes', () => {
       const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
 
       const fetchMock = getMiniflareFetchMock()
-      const appleMock = fetchMock.get('https://appleapp.com')
+      const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
-        .intercept({method: 'POST', path: '/api/oauth2/token'})
+        .intercept({method: 'POST', path: '/auth/token'})
         .reply(httpStatus.UNAUTHORIZED, JSON.stringify({error: 'error'}))
 
       const providerId = '123456'
