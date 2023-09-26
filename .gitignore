@@ -13,3 +13,4 @@ wrangler.toml
 coverage
 .vscode
 pnpm-lock.yaml
+.dev.vars

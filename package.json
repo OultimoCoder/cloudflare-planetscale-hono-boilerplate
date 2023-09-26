@@ -38,7 +38,7 @@
   ],
   "scripts": {
     "build": "node ./build.js",
-    "dev": "wrangler dev dist/index.mjs --live-reload --log-level debug",
+    "dev": "wrangler dev dist/index.mjs --live-reload --log-level debug --port 8787",
     "tests": "npm run build && cross-env NODE_OPTIONS=--experimental-vm-modules jest -i --colors --verbose --detectOpenHandles --runInBand",
     "tests:coverage": "npm run build && cross-env NODE_OPTIONS=--experimental-vm-modules jest -i --colors --verbose --detectOpenHandles --runInBand --coverage",
     "tests:summary": "npm run build && cross-env NODE_OPTIONS=--experimental-vm-modules jest -i --colors --verbose --detectOpenHandles --runInBand --coverage --coverageReporters=\"text-summary\"",
@@ -90,7 +90,7 @@
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6",
-    "wrangler": "^3.3.0"
+    "wrangler": "^3.9.1"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.377.0",

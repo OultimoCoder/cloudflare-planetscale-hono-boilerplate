@@ -1,0 +1,12 @@
+# This file is used to set secrets for running a local dev server via npm run dev
+JWT_SECRET = "iamarandomjwtsecret"
+DATABASE_PASSWORD = "database password"
+AWS_ACCESS_KEY_ID = "realorfake"
+AWS_SECRET_ACCESS_KEY = "realorfake"
+SENTRY_DSN = "realorempty"
+OAUTH_GITHUB_CLIENT_SECRET = "realorfake"
+OAUTH_DISCORD_CLIENT_SECRET = "realorfake"
+OAUTH_SPOTIFY_CLIENT_SECRET = "realorfake"
+OAUTH_GOOGLE_CLIENT_SECRET = "realorfake"
+OAUTH_FACEBOOK_CLIENT_SECRET = "realorfake"
+OAUTH_APPLE_CLIENT_SECRET = "realorfake"
