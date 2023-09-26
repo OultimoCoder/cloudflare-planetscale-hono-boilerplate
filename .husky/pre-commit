@@ -1,4 +1,11 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-npm run lint
+STAGED_TS_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep ".ts$" || true)
+
+if [ -n "$STAGED_TS_FILES" ]; then
+    echo "Linting staged .ts files..."
+    npm run lint:files -- $STAGED_TS_FILES
+else
+    echo "No .ts files staged for commit."
+fi
