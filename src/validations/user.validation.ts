@@ -3,7 +3,7 @@ import { password } from './custom.refine.validation'
 import { hashPassword } from './custom.transform.validation'
 import { roleZodType } from './custom.type.validation'
 
-export const createUser = z.object({
+export const createUser = z.strictObject({
   email: z.string().email(),
   password: z.string().superRefine(password).transform(hashPassword),
   name: z.string(),
@@ -16,7 +16,7 @@ export const createUser = z.object({
 
 export type CreateUser = z.infer<typeof createUser>
 
-export const getUsers = z.object({
+export const getUsers = z.strictObject({
   email: z.string().optional(),
   sort_by: z.string().optional().default('id:asc'),
   limit: z.coerce.number().optional().default(10),
@@ -25,7 +25,7 @@ export const getUsers = z.object({
 
 export const getUser = z.object({ userId: z.coerce.number().positive().int() })
 
-export const updateUser = z.object({
+export const updateUser = z.strictObject({
   params: z.object({ userId: z.coerce.number().positive().int() }),
   body: z
     .object({
@@ -43,4 +43,4 @@ export type UpdateUser =
   | { password: string }
   | { is_email_verified: boolean }
 
-export const deleteUser = z.object({ userId: z.coerce.number().positive().int() })
+export const deleteUser = z.strictObject({ userId: z.coerce.number().positive().int() })
