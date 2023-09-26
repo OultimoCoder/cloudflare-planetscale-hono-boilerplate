@@ -8,11 +8,15 @@ import { Environment } from '../../bindings'
 import { ApiError } from '../utils/ApiError'
 import { generateZodErrorMessage } from '../utils/zod'
 
+const genericJSONErrMsg = 'Unexpected end of JSON input'
+
 export const errorConverter = (err: unknown, sentry: Toucan): ApiError => {
   let error = err
   if (error instanceof ZodError) {
     const errorMessage = generateZodErrorMessage(error)
     error = new ApiError(httpStatus.BAD_REQUEST, errorMessage)
+  } else if (error instanceof SyntaxError && error.message.includes(genericJSONErrMsg)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid JSON payload')
   } else if (!(error instanceof ApiError)) {
     const castedErr = (typeof error === 'object' ? error : {}) as Record<string, unknown>
     const statusCode: number =
