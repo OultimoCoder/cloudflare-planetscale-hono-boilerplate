@@ -16,7 +16,7 @@ export const createUser = z.strictObject({
 
 export type CreateUser = z.infer<typeof createUser>
 
-export const getUsers = z.strictObject({
+export const getUsers = z.object({
   email: z.string().optional(),
   sort_by: z.string().optional().default('id:asc'),
   limit: z.coerce.number().optional().default(10),

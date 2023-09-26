@@ -13,7 +13,7 @@ export const register: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
   const bodyParse = await c.req.json()
   const body = await authValidation.register.parseAsync(bodyParse)
-  const user = await userService.createUser(body, config.database)
+  const user = await authService.register(body, config.database)
   const tokens = await tokenService.generateAuthTokens(user, config.jwt)
   return c.json({ user, tokens }, httpStatus.CREATED as StatusCode)
 }

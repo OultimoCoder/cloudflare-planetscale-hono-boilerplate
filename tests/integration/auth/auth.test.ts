@@ -10,6 +10,7 @@ import { getConfig } from '../../../src/config/config'
 import { Database, getDBClient } from '../../../src/config/database'
 import { tokenTypes } from '../../../src/config/tokens'
 import * as tokenService from '../../../src/services/token.service'
+import { Register } from '../../../src/validations/auth.validation'
 import {
   appleAuthorisation,
   discordAuthorisation,
@@ -20,7 +21,7 @@ import {
   spotifyAuthorisation
 } from '../../fixtures/authorisations.fixture'
 import { getAccessToken, TokenResponse } from '../../fixtures/token.fixture'
-import { userOne, insertUsers, MockUser, UserResponse, userTwo } from '../../fixtures/user.fixture'
+import { userOne, insertUsers, UserResponse, userTwo } from '../../fixtures/user.fixture'
 import { clearDBTables } from '../../utils/clearDBTables'
 import { request } from '../../utils/testRequest'
 
@@ -32,14 +33,12 @@ clearDBTables(['user' as TableReference<Database>], config.database)
 
 describe('Auth routes', () => {
   describe('POST /v1/auth/register', () => {
-    let newUser: MockUser
+    let newUser: Register
     beforeEach(() => {
       newUser = {
         name: faker.person.fullName(),
         email: faker.internet.email().toLowerCase(),
-        password: 'password1',
-        is_email_verified: false,
-        role: 'user'
+        password: 'password1'
       }
     })
 
@@ -74,8 +73,8 @@ describe('Auth routes', () => {
         name: newUser.name,
         password: expect.anything(),
         email: newUser.email,
-        role: 'user',
-        is_email_verified: 0
+        is_email_verified: 0,
+        role: 'user'
       })
 
       expect(body.tokens).toEqual({
@@ -118,6 +117,28 @@ describe('Auth routes', () => {
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
     })
 
+    test('should return 400 error if role is set', async () => {
+      const res = await request('/v1/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ ...newUser, role: 'admin' }),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const body = await res.json<{code: number, message: string}>()
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+      expect(body.message).toContain('Message: Unrecognized key(s) in object: \'role\'')
+    })
+    test('should return 400 error if is_email_verified is set', async () => {
+      const res = await request('/v1/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ ...newUser, is_email_verified: true }),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const body = await res.json<{code: number, message: string}>()
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+      expect(body.message).toContain(
+        'Message: Unrecognized key(s) in object: \'is_email_verified\''
+      )
+    })
     test('should return 400 if password does not contain both letters and numbers', async () => {
       newUser.password = 'password'
 

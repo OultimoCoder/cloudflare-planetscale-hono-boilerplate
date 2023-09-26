@@ -1,14 +1,17 @@
 import httpStatus from 'http-status'
 import { Config } from '../config/config'
 import { getDBClient } from '../config/database'
+import { Role } from '../config/roles'
 import { tokenTypes } from '../config/tokens'
 import { OAuthUserModel } from '../models/oauth/oauthBase.model'
 import { TokenResponse } from '../models/token.model'
 import { User } from '../models/user.model'
 import { AuthProviderType } from '../types/oauth.types'
 import { ApiError } from '../utils/ApiError'
+import { Register } from '../validations/auth.validation'
 import * as tokenService from './token.service'
 import * as userService from './user.service'
+import { createUser } from './user.service'
 
 export const loginUserWithEmailAndPassword = async (
   email: string,
@@ -41,6 +44,13 @@ export const refreshAuth = async (refreshToken: string, config: Config): Promise
   } catch (error) {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
   }
+}
+
+export const register = async (body: Register, databaseConfig: Config['database']
+): Promise<User> => {
+  const registerBody = { ...body, role: 'user' as Role, is_email_verified: false }
+  const newUser = await createUser(registerBody, databaseConfig)
+  return newUser
 }
 
 export const resetPassword = async (

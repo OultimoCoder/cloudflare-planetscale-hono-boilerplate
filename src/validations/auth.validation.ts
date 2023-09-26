@@ -1,18 +1,14 @@
 import { z } from 'zod'
 import { password } from './custom.refine.validation'
 import { hashPassword } from './custom.transform.validation'
-import { roleZodType } from './custom.type.validation'
 
 export const register = z.strictObject({
   email: z.string().email(),
   password: z.string().superRefine(password).transform(hashPassword),
-  name: z.string(),
-  is_email_verified: z
-    .any()
-    .optional()
-    .transform(() => false),
-  role: roleZodType
+  name: z.string()
 })
+
+export type Register = z.infer<typeof register>
 
 export const login = z.strictObject({
   email: z.string(),
