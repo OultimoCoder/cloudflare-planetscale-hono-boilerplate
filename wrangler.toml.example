@@ -1,4 +1,4 @@
-name = "cf-workers-hono-planetscale-app"
+name = 'cf-workers-hono-planetscale-app'
 main = 'dist/index.mjs'
 
 workers_dev = true
@@ -66,8 +66,7 @@ OAUTH_APPLE_CLIENT_ID='myclientid'
 OAUTH_APPLE_REDIRECT_URL='https://frontend.com/login'
 
 [build]
-command = "npm run build"
-
+command = 'npm run build'
 # [secrets]
 # JWT_SECRET
 # DATABASE_PASSWORD
