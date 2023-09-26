@@ -1,5 +1,8 @@
-import { z } from 'zod'
+import httpStatus from 'http-status'
+import { ZodError, z } from 'zod'
 import { Environment } from '../../bindings'
+import { ApiError } from '../utils/ApiError'
+import { generateZodErrorMessage } from '../utils/zod'
 
 const envVarsSchema = z.object({
   ENV: z.union([z.literal('production'), z.literal('development'), z.literal('test')]),
@@ -55,6 +58,8 @@ const envVarsSchema = z.object({
   OAUTH_APPLE_CLIENT_SECRET: z.string(),
   OAUTH_APPLE_REDIRECT_URL: z.string()
 })
+
+export type EnvVarsSchemaType = z.infer<typeof envVarsSchema>
 
 export interface Config {
   env: 'production' | 'development' | 'test'
@@ -118,7 +123,19 @@ export const getConfig = (env: Environment['Bindings']) => {
   if (config) {
     return config
   }
-  const envVars = envVarsSchema.parse(env)
+  let envVars: EnvVarsSchemaType
+  try {
+    envVars = envVarsSchema.parse(env)
+  } catch(err) {
+    if (env.ENV && env.ENV === 'production') {
+      throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Invalid server configuration')
+    }
+    if (err instanceof ZodError) {
+      const errorMessage = generateZodErrorMessage(err)
+      throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, errorMessage)
+    }
+    throw err
+  }
   config = {
     env: envVars.ENV,
     database: {

@@ -38,7 +38,7 @@
   ],
   "scripts": {
     "build": "node ./build.js",
-    "dev": "wrangler dev dist/index.mjs --live-reload --log-level debug --port 8787",
+    "dev": "wrangler dev dist/index.mjs --live-reload --log-level info --port 8787",
     "tests": "npm run build && cross-env NODE_OPTIONS=--experimental-vm-modules jest -i --colors --verbose --detectOpenHandles --runInBand",
     "tests:coverage": "npm run build && cross-env NODE_OPTIONS=--experimental-vm-modules jest -i --colors --verbose --detectOpenHandles --runInBand --coverage",
     "tests:summary": "npm run build && cross-env NODE_OPTIONS=--experimental-vm-modules jest -i --colors --verbose --detectOpenHandles --runInBand --coverage --coverageReporters=\"text-summary\"",
