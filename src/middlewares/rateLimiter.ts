@@ -36,7 +36,6 @@ export const rateLimit = (interval: number, limit: number): MiddlewareHandler<En
     const endpoint = new URL(c.req.url).pathname
     const id = c.env.RATE_LIMITER.idFromName(key)
     const rateLimiter = c.env.RATE_LIMITER.get(id)
-
     const cache = await caches.open('rate-limiter')
     const cacheKey = getCacheKey(endpoint, key, limit, interval)
     const cached = await cache.match(cacheKey)
@@ -57,6 +56,8 @@ export const rateLimit = (interval: number, limit: number): MiddlewareHandler<En
       res = cached
     }
     const clonedRes = res.clone()
+    // eslint-disable-next-line no-console
+    console.log() // This randomly fixes isolated storage errors
     const body = await clonedRes.json<{ blocked: boolean; remaining: number; expires: string }>()
     const secondsExpires = dayjs(body.expires).unix() - dayjs().unix()
     setRateLimitHeaders(c, secondsExpires, limit, body.remaining, interval)

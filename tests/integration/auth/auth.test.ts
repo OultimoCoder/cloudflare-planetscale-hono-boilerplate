@@ -127,7 +127,7 @@ describe('Auth routes', () => {
       })
       const body = await res.json<{ code: number; message: string }>()
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
-      expect(body.message).toContain("Message: Unrecognized key(s) in object: 'role'")
+      expect(body.message).toContain("Validation error: Unrecognized key(s) in object: 'role'")
     })
     test('should return 400 error if is_email_verified is set', async () => {
       const res = await request('/v1/auth/register', {
@@ -137,7 +137,9 @@ describe('Auth routes', () => {
       })
       const body = await res.json<{ code: number; message: string }>()
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
-      expect(body.message).toContain("Message: Unrecognized key(s) in object: 'is_email_verified'")
+      expect(body.message).toContain(
+        "Validation error: Unrecognized key(s) in object: 'is_email_verified'"
+      )
     })
     test('should return 400 if password does not contain both letters and numbers', async () => {
       newUser.password = 'password'
