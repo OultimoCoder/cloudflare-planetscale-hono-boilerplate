@@ -354,10 +354,9 @@ describe('Auth routes', () => {
   })
 
   describe.only('POST /v1/auth/forgot-password', () => {
-    let sesMock: ReturnType<typeof mockClient>
+    let sesMock = mockClient(SESClient)
 
     beforeEach(() => {
-      sesMock = mockClient(SESClient)
       sesMock.reset()
     })
 
@@ -416,10 +415,9 @@ describe('Auth routes', () => {
   })
 
   describe('POST /v1/auth/send-verification-email', () => {
-    let sesMock: ReturnType<typeof mockClient>
+    let sesMock = mockClient(SESClient)
 
     beforeEach(() => {
-      sesMock = mockClient(SESClient)
       sesMock.reset()
     })
 
