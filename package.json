@@ -48,7 +48,6 @@
     "migrate:test:none": "node --experimental-specifier-resolution=node --loader ts-node/esm ./scripts/migrate.ts test none",
     "migrate:test:down": "node --experimental-specifier-resolution=node --loader ts-node/esm ./scripts/migrate.ts test down",
     "lint": "eslint .",
-    "lint:files": "eslint --fix",
     "lint:fix": "eslint . --fix",
     "prettier": "prettier --check **/*.ts",
     "prettier:fix": "prettier --write **/**/*.ts",
