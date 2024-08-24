@@ -1,5 +1,4 @@
 import { Handler } from 'hono'
-import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
 import { facebook } from 'worker-auth-providers'
 import { Environment } from '../../../../bindings'
@@ -13,7 +12,7 @@ export const facebookRedirect: Handler<Environment> = async (c) => {
     clientId: config.oauth.facebook.clientId,
     redirectUrl: config.oauth.facebook.redirectUrl
   })
-  return c.redirect(location, httpStatus.FOUND as StatusCode)
+  return c.redirect(location, httpStatus.FOUND)
 }
 
 export const facebookCallback: Handler<Environment> = async (c) => {

@@ -21,11 +21,7 @@ export async function up(db: Kysely<Database>) {
     .addUniqueConstraint('unique_provider_user', ['provider_type', 'provider_user_id'])
     .execute()
 
-  await db.schema
-    .createIndex('user_email_index')
-    .on('user')
-    .column('email')
-    .execute()
+  await db.schema.createIndex('user_email_index').on('user').column('email').execute()
 
   await db.schema
     .createIndex('authorisations_user_id_index')
@@ -35,6 +31,6 @@ export async function up(db: Kysely<Database>) {
 }
 
 export async function down(db: Kysely<Database>) {
-  await db.schema.dropTable('user').execute()
-  await db.schema.dropTable('authorisations').execute()
+  await db.schema.dropTable('user').ifExists().execute()
+  await db.schema.dropTable('authorisations').ifExists().execute()
 }

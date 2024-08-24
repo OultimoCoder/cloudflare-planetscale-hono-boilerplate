@@ -17,25 +17,13 @@ const envVarsSchema = z.object({
   // JWT secret key
   JWT_SECRET: z.string(),
   // Minutes after which access tokens expire
-  JWT_ACCESS_EXPIRATION_MINUTES: z
-    .coerce
-    .number()
-    .default(30),
+  JWT_ACCESS_EXPIRATION_MINUTES: z.coerce.number().default(30),
   // Days after which refresh tokens expire
-  JWT_REFRESH_EXPIRATION_DAYS: z
-    .coerce
-    .number()
-    .default(30),
+  JWT_REFRESH_EXPIRATION_DAYS: z.coerce.number().default(30),
   // Minutes after which reset password token expires
-  JWT_RESET_PASSWORD_EXPIRATION_MINUTES: z
-    .coerce
-    .number()
-    .default(10),
+  JWT_RESET_PASSWORD_EXPIRATION_MINUTES: z.coerce.number().default(10),
   // Minutes after which verify email token expires
-  JWT_VERIFY_EMAIL_EXPIRATION_MINUTES: z
-    .coerce
-    .number()
-    .default(10),
+  JWT_VERIFY_EMAIL_EXPIRATION_MINUTES: z.coerce.number().default(10),
   AWS_ACCESS_KEY_ID: z.string(),
   AWS_SECRET_ACCESS_KEY: z.string(),
   AWS_REGION: z.string(),
@@ -126,7 +114,7 @@ export const getConfig = (env: Environment['Bindings']) => {
   let envVars: EnvVarsSchemaType
   try {
     envVars = envVarsSchema.parse(env)
-  } catch(err) {
+  } catch (err) {
     if (env.ENV && env.ENV === 'production') {
       throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Invalid server configuration')
     }

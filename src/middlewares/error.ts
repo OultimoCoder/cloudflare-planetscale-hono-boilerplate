@@ -19,12 +19,14 @@ export const errorConverter = (err: unknown, sentry: Toucan): ApiError => {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid JSON payload')
   } else if (!(error instanceof ApiError)) {
     const castedErr = (typeof error === 'object' ? error : {}) as Record<string, unknown>
-    const statusCode: number =
+    const statusCode: StatusCode =
       typeof castedErr.statusCode === 'number'
-        ? castedErr.statusCode
+        ? (castedErr.statusCode as StatusCode)
         : httpStatus.INTERNAL_SERVER_ERROR
-    const message = (castedErr.description || castedErr.message || httpStatus[statusCode]) as string
-    if (statusCode >= 500) {
+    const message = (castedErr.description ||
+      castedErr.message ||
+      httpStatus[statusCode.toString() as keyof typeof httpStatus]) as string
+    if (statusCode >= httpStatus.INTERNAL_SERVER_ERROR) {
       // Log any unhandled application error
       sentry.captureException(error)
     }

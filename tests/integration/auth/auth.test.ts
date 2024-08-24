@@ -1,13 +1,13 @@
-import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
+// TODO: Add SES mock client back. It's not working with vitest
+// import { mockClient } from 'aws-sdk-client-mock'
 import { faker } from '@faker-js/faker'
-import { mockClient } from 'aws-sdk-client-mock'
-import 'aws-sdk-client-mock-jest'
 import bcrypt from 'bcryptjs'
+import { env } from 'cloudflare:test'
 import dayjs from 'dayjs'
 import httpStatus from 'http-status'
-import { TableReference } from 'kysely/dist/cjs/parser/table-parser'
+import { describe, expect, test, beforeEach } from 'vitest'
 import { getConfig } from '../../../src/config/config'
-import { Database, getDBClient } from '../../../src/config/database'
+import { getDBClient } from '../../../src/config/database'
 import { tokenTypes } from '../../../src/config/tokens'
 import * as tokenService from '../../../src/services/token.service'
 import { Register } from '../../../src/validations/auth.validation'
@@ -25,11 +25,10 @@ import { userOne, insertUsers, UserResponse, userTwo } from '../../fixtures/user
 import { clearDBTables } from '../../utils/clearDBTables'
 import { request } from '../../utils/testRequest'
 
-const env = getMiniflareBindings()
 const config = getConfig(env)
 const client = getDBClient(config.database)
 
-clearDBTables(['user' as TableReference<Database>], config.database)
+clearDBTables(['user'], config.database)
 
 describe('Auth routes', () => {
   describe('POST /v1/auth/register', () => {
@@ -123,9 +122,9 @@ describe('Auth routes', () => {
         body: JSON.stringify({ ...newUser, role: 'admin' }),
         headers: { 'Content-Type': 'application/json' }
       })
-      const body = await res.json<{code: number, message: string}>()
+      const body = await res.json<{ code: number; message: string }>()
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
-      expect(body.message).toContain('Message: Unrecognized key(s) in object: \'role\'')
+      expect(body.message).toContain("Message: Unrecognized key(s) in object: 'role'")
     })
     test('should return 400 error if is_email_verified is set', async () => {
       const res = await request('/v1/auth/register', {
@@ -133,11 +132,9 @@ describe('Auth routes', () => {
         body: JSON.stringify({ ...newUser, is_email_verified: true }),
         headers: { 'Content-Type': 'application/json' }
       })
-      const body = await res.json<{code: number, message: string}>()
+      const body = await res.json<{ code: number; message: string }>()
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
-      expect(body.message).toContain(
-        'Message: Unrecognized key(s) in object: \'is_email_verified\''
-      )
+      expect(body.message).toContain("Message: Unrecognized key(s) in object: 'is_email_verified'")
     })
     test('should return 400 if password does not contain both letters and numbers', async () => {
       newUser.password = 'password'
@@ -355,9 +352,10 @@ describe('Auth routes', () => {
   })
 
   describe('POST /v1/auth/forgot-password', () => {
-    const sesMock = mockClient(SESClient)
+    let sesMock: ReturnType<typeof mockClient>
 
     beforeEach(() => {
+      sesMock = mockClient(SESClient)
       sesMock.reset()
     })
 
@@ -416,9 +414,10 @@ describe('Auth routes', () => {
   })
 
   describe('POST /v1/auth/send-verification-email', () => {
-    const sesMock = mockClient(SESClient)
+    let sesMock: ReturnType<typeof mockClient>
 
     beforeEach(() => {
+      sesMock = mockClient(SESClient)
       sesMock.reset()
     })
 
@@ -807,7 +806,8 @@ describe('Auth routes', () => {
       const facebookAuth = facebookAuthorisation(userOneId)
       const appleAuth = appleAuthorisation(userOneId)
       await insertAuthorisations(
-        [discordAuth, spotifyAuth, googleAuth, facebookAuth, githubAuth, appleAuth], config.database
+        [discordAuth, spotifyAuth, googleAuth, facebookAuth, githubAuth, appleAuth],
+        config.database
       )
       const accessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
       const res = await request('/v1/auth/authorisations', {
@@ -832,7 +832,11 @@ describe('Auth routes', () => {
       const ids = await insertUsers([userTwo], config.database)
       const userId = ids[0]
       const accessToken = await getAccessToken(
-        userId, userTwo.role, config.jwt, tokenTypes.ACCESS, userTwo.is_email_verified
+        userId,
+        userTwo.role,
+        config.jwt,
+        tokenTypes.ACCESS,
+        userTwo.is_email_verified
       )
       const res = await request('/v1/auth/authorisations', {
         method: 'GET',

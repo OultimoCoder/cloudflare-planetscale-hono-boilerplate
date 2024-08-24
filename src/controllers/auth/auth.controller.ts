@@ -1,5 +1,4 @@
 import { Handler } from 'hono'
-import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
 import { Environment } from '../../../bindings'
 import { getConfig } from '../../config/config'
@@ -15,7 +14,7 @@ export const register: Handler<Environment> = async (c) => {
   const body = await authValidation.register.parseAsync(bodyParse)
   const user = await authService.register(body, config.database)
   const tokens = await tokenService.generateAuthTokens(user, config.jwt)
-  return c.json({ user, tokens }, httpStatus.CREATED as StatusCode)
+  return c.json({ user, tokens }, httpStatus.CREATED)
 }
 
 export const login: Handler<Environment> = async (c) => {
@@ -24,7 +23,7 @@ export const login: Handler<Environment> = async (c) => {
   const { email, password } = authValidation.login.parse(bodyParse)
   const user = await authService.loginUserWithEmailAndPassword(email, password, config.database)
   const tokens = await tokenService.generateAuthTokens(user, config.jwt)
-  return c.json({ user, tokens }, httpStatus.OK as StatusCode)
+  return c.json({ user, tokens }, httpStatus.OK)
 }
 
 export const refreshTokens: Handler<Environment> = async (c) => {
@@ -32,7 +31,7 @@ export const refreshTokens: Handler<Environment> = async (c) => {
   const bodyParse = await c.req.json()
   const { refresh_token } = authValidation.refreshTokens.parse(bodyParse)
   const tokens = await authService.refreshAuth(refresh_token, config)
-  return c.json({ ...tokens }, httpStatus.OK as StatusCode)
+  return c.json({ ...tokens }, httpStatus.OK)
 }
 
 export const forgotPassword: Handler<Environment> = async (c) => {
@@ -49,7 +48,7 @@ export const forgotPassword: Handler<Environment> = async (c) => {
       config
     )
   }
-  c.status(httpStatus.NO_CONTENT as StatusCode)
+  c.status(httpStatus.NO_CONTENT)
   return c.body(null)
 }
 
@@ -62,7 +61,7 @@ export const resetPassword: Handler<Environment> = async (c) => {
     body: bodyParse
   })
   await authService.resetPassword(query.token, body.password, config)
-  c.status(httpStatus.NO_CONTENT as StatusCode)
+  c.status(httpStatus.NO_CONTENT)
   return c.body(null)
 }
 
@@ -83,8 +82,8 @@ export const sendVerificationEmail: Handler<Environment> = async (c) => {
       { name: user.name || '', token: verifyEmailToken },
       config
     )
-  } catch (err) {}
-  c.status(httpStatus.NO_CONTENT as StatusCode)
+  } catch {}
+  c.status(httpStatus.NO_CONTENT)
   return c.body(null)
 }
 
@@ -93,7 +92,7 @@ export const verifyEmail: Handler<Environment> = async (c) => {
   const queryParse = c.req.query()
   const { token } = authValidation.verifyEmail.parse(queryParse)
   await authService.verifyEmail(token, config)
-  c.status(httpStatus.NO_CONTENT as StatusCode)
+  c.status(httpStatus.NO_CONTENT)
   return c.body(null)
 }
 
@@ -102,5 +101,5 @@ export const getAuthorisations: Handler<Environment> = async (c) => {
   const payload = c.get('payload')
   const userId = Number(payload.sub)
   const authorisations = await userService.getAuthorisations(userId, config.database)
-  return c.json(authorisations, httpStatus.OK as StatusCode)
+  return c.json(authorisations, httpStatus.OK)
 }

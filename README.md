@@ -155,7 +155,7 @@ const getUsers: Handler<{ Bindings: Bindings }> = async (c) => {
   const filter = { email: query.email }
   const options = { sortBy: query.sort_by, limit: query.limit, page: query.page }
   const result = await userService.queryUsers(filter, options, config.database)
-  return c.json(result, httpStatus.OK as StatusCode)
+  return c.json(result, httpStatus.OK)
 }
 ```
 

@@ -1,5 +1,4 @@
 import { Handler } from 'hono'
-import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
 import { google } from 'worker-auth-providers'
 import { Environment } from '../../../../bindings'
@@ -18,7 +17,7 @@ export const googleCallback: Handler<Environment> = async (c) => {
       redirectUrl: config.oauth.google.redirectUrl
     },
     request
-  }) as Promise<{ user: GoogleUserType, tokens: unknown }>
+  }) as Promise<{ user: GoogleUserType; tokens: unknown }>
   return oauthCallback<typeof authProviders.GOOGLE>(c, oauthRequest, authProviders.GOOGLE)
 }
 
@@ -27,10 +26,10 @@ export const googleRedirect: Handler<Environment> = async (c) => {
   const location = await google.redirect({
     options: {
       clientId: config.oauth.google.clientId,
-      redirectUrl: config.oauth.google.redirectUrl,
+      redirectUrl: config.oauth.google.redirectUrl
     }
   })
-  return c.redirect(location, httpStatus.FOUND as StatusCode)
+  return c.redirect(location, httpStatus.FOUND)
 }
 
 export const linkGoogle: Handler<Environment> = async (c) => {
@@ -43,7 +42,7 @@ export const linkGoogle: Handler<Environment> = async (c) => {
       redirectUrl: config.oauth.facebook.redirectUrl
     },
     request
-  }) as Promise<{ user: GoogleUserType, tokens: unknown }>
+  }) as Promise<{ user: GoogleUserType; tokens: unknown }>
   return oauthLink<typeof authProviders.GOOGLE>(c, oauthRequest, authProviders.GOOGLE)
 }
 

@@ -1,8 +1,9 @@
 import { faker } from '@faker-js/faker'
+import { env } from 'cloudflare:test'
 import httpStatus from 'http-status'
-import { TableReference } from 'kysely/dist/cjs/parser/table-parser'
+import { test, describe, expect, beforeEach } from 'vitest'
 import { getConfig } from '../../src/config/config'
-import { Database, getDBClient } from '../../src/config/database'
+import { getDBClient } from '../../src/config/database'
 import { tokenTypes } from '../../src/config/tokens'
 import { getAccessToken } from '../fixtures/token.fixture'
 import { MockUser, UserResponse } from '../fixtures/user.fixture'
@@ -10,11 +11,10 @@ import { userOne, userTwo, admin, insertUsers } from '../fixtures/user.fixture'
 import { clearDBTables } from '../utils/clearDBTables'
 import { request } from '../utils/testRequest'
 
-const env = getMiniflareBindings()
 const config = getConfig(env)
 const client = getDBClient(config.database)
 
-clearDBTables(['user' as TableReference<Database>], config.database)
+clearDBTables(['user'], config.database)
 
 describe('User routes', () => {
   describe('POST /v1/users', () => {
@@ -235,7 +235,11 @@ describe('User routes', () => {
       const ids = await insertUsers([userTwo], config.database)
       const userId = ids[0]
       const accessToken = await getAccessToken(
-        userId, userTwo.role, config.jwt, tokenTypes.ACCESS, userTwo.is_email_verified
+        userId,
+        userTwo.role,
+        config.jwt,
+        tokenTypes.ACCESS,
+        userTwo.is_email_verified
       )
       const res = await request('/v1/users', {
         method: 'POST',
@@ -384,7 +388,11 @@ describe('User routes', () => {
       const ids = await insertUsers([userTwo], config.database)
       const userId = ids[0]
       const accessToken = await getAccessToken(
-        userId, userTwo.role, config.jwt, tokenTypes.ACCESS, userTwo.is_email_verified
+        userId,
+        userTwo.role,
+        config.jwt,
+        tokenTypes.ACCESS,
+        userTwo.is_email_verified
       )
       const res = await request('/v1/users?limit=2&page=1', {
         method: 'GET',
@@ -486,7 +494,11 @@ describe('User routes', () => {
       const ids = await insertUsers([userTwo], config.database)
       const userId = ids[0]
       const accessToken = await getAccessToken(
-        userId, userTwo.role, config.jwt, tokenTypes.ACCESS, userTwo.is_email_verified
+        userId,
+        userTwo.role,
+        config.jwt,
+        tokenTypes.ACCESS,
+        userTwo.is_email_verified
       )
       const res = await request('/v1/users/1221212', {
         method: 'GET',
@@ -585,7 +597,11 @@ describe('User routes', () => {
       const ids = await insertUsers([userTwo], config.database)
       const userId = ids[0]
       const accessToken = await getAccessToken(
-        userId, userTwo.role, config.jwt, tokenTypes.ACCESS, userTwo.is_email_verified
+        userId,
+        userTwo.role,
+        config.jwt,
+        tokenTypes.ACCESS,
+        userTwo.is_email_verified
       )
       const res = await request('/v1/users/12345', {
         method: 'DELETE',
@@ -780,7 +796,11 @@ describe('User routes', () => {
       const ids = await insertUsers([userTwo], config.database)
       const userId = ids[0]
       const accessToken = await getAccessToken(
-        userId, userTwo.role, config.jwt, tokenTypes.ACCESS, userTwo.is_email_verified
+        userId,
+        userTwo.role,
+        config.jwt,
+        tokenTypes.ACCESS,
+        userTwo.is_email_verified
       )
       const updateBody = {}
       const res = await request('/v1/users/1234', {

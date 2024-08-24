@@ -1,5 +1,4 @@
 import { Handler } from 'hono'
-import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
 import { Environment } from '../../bindings'
 import { getConfig } from '../config/config'
@@ -12,7 +11,7 @@ export const createUser: Handler<Environment> = async (c) => {
   const bodyParse = await c.req.json()
   const body = await userValidation.createUser.parseAsync(bodyParse)
   const user = await userService.createUser(body, config.database)
-  return c.json(user, httpStatus.CREATED as StatusCode)
+  return c.json(user, httpStatus.CREATED)
 }
 
 export const getUsers: Handler<Environment> = async (c) => {
@@ -22,7 +21,7 @@ export const getUsers: Handler<Environment> = async (c) => {
   const filter = { email: query.email }
   const options = { sortBy: query.sort_by, limit: query.limit, page: query.page }
   const result = await userService.queryUsers(filter, options, config.database)
-  return c.json(result, httpStatus.OK as StatusCode)
+  return c.json(result, httpStatus.OK)
 }
 
 export const getUser: Handler<Environment> = async (c) => {
@@ -33,7 +32,7 @@ export const getUser: Handler<Environment> = async (c) => {
   if (!user) {
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found')
   }
-  return c.json(user, httpStatus.OK as StatusCode)
+  return c.json(user, httpStatus.OK)
 }
 
 export const updateUser: Handler<Environment> = async (c) => {
@@ -42,7 +41,7 @@ export const updateUser: Handler<Environment> = async (c) => {
   const bodyParse = await c.req.json()
   const { params, body } = userValidation.updateUser.parse({ params: paramsParse, body: bodyParse })
   const user = await userService.updateUserById(params.userId, body, config.database)
-  return c.json(user, httpStatus.OK as StatusCode)
+  return c.json(user, httpStatus.OK)
 }
 
 export const deleteUser: Handler<Environment> = async (c) => {
@@ -50,6 +49,6 @@ export const deleteUser: Handler<Environment> = async (c) => {
   const paramsParse = c.req.param()
   const params = userValidation.deleteUser.parse(paramsParse)
   await userService.deleteUserById(params.userId, config.database)
-  c.status(httpStatus.NO_CONTENT as StatusCode)
+  c.status(httpStatus.NO_CONTENT)
   return c.body(null)
 }

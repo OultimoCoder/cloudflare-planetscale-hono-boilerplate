@@ -1,10 +1,11 @@
 import { faker } from '@faker-js/faker'
 import jwt from '@tsndr/cloudflare-worker-jwt'
+import { env, fetchMock } from 'cloudflare:test'
 import httpStatus from 'http-status'
-import { TableReference } from 'kysely/dist/cjs/parser/table-parser'
+import { describe, expect, test, beforeAll } from 'vitest'
 import { authProviders } from '../../../../src/config/authProviders'
 import { getConfig } from '../../../../src/config/config'
-import { Database, getDBClient } from '../../../../src/config/database'
+import { getDBClient } from '../../../../src/config/database'
 import { tokenTypes } from '../../../../src/config/tokens'
 import { AppleUserType } from '../../../../src/types/oauth.types'
 import {
@@ -18,23 +19,22 @@ import { userOne, insertUsers, UserResponse, userTwo } from '../../../fixtures/u
 import { clearDBTables } from '../../../utils/clearDBTables'
 import { request } from '../../../utils/testRequest'
 
-const env = getMiniflareBindings()
 const config = getConfig(env)
 const client = getDBClient(config.database)
 
-clearDBTables(['user' as TableReference<Database>], config.database)
+clearDBTables(['user', 'authorisations'], config.database)
 
 describe('Oauth Apple routes', () => {
   describe('GET /v1/auth/apple/redirect', () => {
     test('should return 302 and successfully redirect to apple', async () => {
       const urlEncodedRedirectUrl = encodeURIComponent(config.oauth.apple.redirectUrl)
       const res = await request('/v1/auth/apple/redirect', {
-        method: 'GET',
+        method: 'GET'
       })
       expect(res.status).toBe(httpStatus.FOUND)
       expect(res.headers.get('location')).toContain(
         'https://appleid.apple.com/auth/authorize?client_id=myclientid&redirect_uri=' +
-        `${urlEncodedRedirectUrl}&response_mode=query&response_type=code&scope=`
+          `${urlEncodedRedirectUrl}&response_mode=query&response_type=code&scope=`
       )
     })
   })
@@ -49,16 +49,15 @@ describe('Oauth Apple routes', () => {
       }
     })
     test('should return 200 and successfully register user if request data is ok', async () => {
-      const fetchMock = getMiniflareFetchMock()
       const mockJWT = await jwt.sign(newUser, 'randomSecret')
       const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
-        .intercept({method: 'POST', path: '/auth/token'})
-        .reply(200, JSON.stringify({access_token: mockJWT}))
+        .intercept({ method: 'POST', path: '/auth/token' })
+        .reply(200, JSON.stringify({ access_token: mockJWT }))
       const providerId = '123456'
       const res = await request('/v1/auth/apple/callback', {
         method: 'POST',
-        body: JSON.stringify({code: providerId}),
+        body: JSON.stringify({ code: providerId }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -116,17 +115,16 @@ describe('Oauth Apple routes', () => {
       await insertAuthorisations([appleUser], config.database)
       newUser.sub = appleUser.provider_user_id
 
-      const fetchMock = getMiniflareFetchMock()
       const mockJWT = await jwt.sign(newUser, 'randomSecret')
       const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
-        .intercept({method: 'POST', path: '/auth/token'})
-        .reply(200, JSON.stringify({access_token: mockJWT}))
+        .intercept({ method: 'POST', path: '/auth/token' })
+        .reply(200, JSON.stringify({ access_token: mockJWT }))
 
       const providerId = '123456'
       const res = await request('/v1/auth/apple/callback', {
         method: 'POST',
-        body: JSON.stringify({code: providerId}),
+        body: JSON.stringify({ code: providerId }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -152,17 +150,16 @@ describe('Oauth Apple routes', () => {
       await insertUsers([userOne], config.database)
       newUser.email = userOne.email
 
-      const fetchMock = getMiniflareFetchMock()
       const mockJWT = await jwt.sign(newUser, 'randomSecret')
       const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
-        .intercept({method: 'POST', path: '/auth/token'})
-        .reply(200, JSON.stringify({access_token: mockJWT}))
+        .intercept({ method: 'POST', path: '/auth/token' })
+        .reply(200, JSON.stringify({ access_token: mockJWT }))
 
       const providerId = '123456'
       const res = await request('/v1/auth/apple/callback', {
         method: 'POST',
-        body: JSON.stringify({code: providerId}),
+        body: JSON.stringify({ code: providerId }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -175,17 +172,16 @@ describe('Oauth Apple routes', () => {
       })
     })
     test('should return xxx if no apple email is provided', async () => {
-      const fetchMock = getMiniflareFetchMock()
       delete newUser.email
       const mockJWT = await jwt.sign(newUser, 'randomSecret')
       const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
-        .intercept({method: 'POST', path: '/auth/token'})
-        .reply(200, JSON.stringify({access_token: mockJWT}))
+        .intercept({ method: 'POST', path: '/auth/token' })
+        .reply(200, JSON.stringify({ access_token: mockJWT }))
       const providerId = '123456'
       const res = await request('/v1/auth/apple/callback', {
         method: 'POST',
-        body: JSON.stringify({code: providerId}),
+        body: JSON.stringify({ code: providerId }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -193,16 +189,15 @@ describe('Oauth Apple routes', () => {
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
     })
     test('should return 401 if code is invalid', async () => {
-      const fetchMock = getMiniflareFetchMock()
       const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
-        .intercept({method: 'POST', path: '/auth/token'})
-        .reply(httpStatus.UNAUTHORIZED, JSON.stringify({error: 'error'}))
+        .intercept({ method: 'POST', path: '/auth/token' })
+        .reply(httpStatus.UNAUTHORIZED, JSON.stringify({ error: 'error' }))
 
       const providerId = '123456'
       const res = await request('/v1/auth/apple/callback', {
         method: 'POST',
-        body: JSON.stringify({code: providerId}),
+        body: JSON.stringify({ code: providerId }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -228,7 +223,7 @@ describe('Oauth Apple routes', () => {
       newUser = {
         sub: faker.number.int().toString(),
         name: faker.person.fullName(),
-        email: faker.internet.email(),
+        email: faker.internet.email()
       }
     })
     test('should return 200 and successfully link apple account', async () => {
@@ -236,17 +231,16 @@ describe('Oauth Apple routes', () => {
       const userId = ids[0]
       const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
 
-      const fetchMock = getMiniflareFetchMock()
       const mockJWT = await jwt.sign(newUser, 'randomSecret')
       const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
-        .intercept({method: 'POST', path: '/auth/token'})
-        .reply(200, JSON.stringify({access_token: mockJWT}))
+        .intercept({ method: 'POST', path: '/auth/token' })
+        .reply(200, JSON.stringify({ access_token: mockJWT }))
 
       const providerId = '123456'
       const res = await request(`/v1/auth/apple/${userId}`, {
         method: 'POST',
-        body: JSON.stringify({code: providerId}),
+        body: JSON.stringify({ code: providerId }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -288,22 +282,18 @@ describe('Oauth Apple routes', () => {
       const ids = await insertUsers([userOne], config.database)
       const userId = ids[0]
       const userOneAccessToken = await getAccessToken(userId, userOne.role, config.jwt)
-      await client
-        .deleteFrom('user')
-        .where('user.id', '=', userId)
-        .execute()
+      await client.deleteFrom('user').where('user.id', '=', userId).execute()
 
-      const fetchMock = getMiniflareFetchMock()
       const mockJWT = await jwt.sign(newUser, 'randomSecret')
       const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
-        .intercept({method: 'POST', path: '/auth/token'})
-        .reply(200, JSON.stringify({access_token: mockJWT}))
+        .intercept({ method: 'POST', path: '/auth/token' })
+        .reply(200, JSON.stringify({ access_token: mockJWT }))
 
       const providerId = '123456'
       const res = await request(`/v1/auth/apple/${userId}`, {
         method: 'POST',
-        body: JSON.stringify({code: providerId}),
+        body: JSON.stringify({ code: providerId }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -316,7 +306,7 @@ describe('Oauth Apple routes', () => {
         .selectAll()
         .where('authorisations.provider_type', '=', authProviders.APPLE)
         .where('authorisations.user_id', '=', userId)
-        .where('authorisations.provider_user_id', '=', String(newUser.id))
+        .where('authorisations.provider_user_id', '=', String(newUser.sub))
         .executeTakeFirst()
 
       expect(oauthUser).toBeUndefined()
@@ -327,16 +317,15 @@ describe('Oauth Apple routes', () => {
       const userId = ids[0]
       const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
 
-      const fetchMock = getMiniflareFetchMock()
       const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
-        .intercept({method: 'POST', path: '/auth/token'})
-        .reply(httpStatus.UNAUTHORIZED, JSON.stringify({error: 'error'}))
+        .intercept({ method: 'POST', path: '/auth/token' })
+        .reply(httpStatus.UNAUTHORIZED, JSON.stringify({ error: 'error' }))
 
       const providerId = '123456'
       const res = await request(`/v1/auth/apple/${userId}`, {
         method: 'POST',
-        body: JSON.stringify({code: providerId}),
+        body: JSON.stringify({ code: providerId }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -353,7 +342,7 @@ describe('Oauth Apple routes', () => {
       const providerId = '123456'
       const res = await request('/v1/auth/apple/5298', {
         method: 'POST',
-        body: JSON.stringify({code: providerId}),
+        body: JSON.stringify({ code: providerId }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -383,7 +372,7 @@ describe('Oauth Apple routes', () => {
         method: 'POST',
         body: JSON.stringify({}),
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         }
       })
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
@@ -392,7 +381,11 @@ describe('Oauth Apple routes', () => {
       const ids = await insertUsers([userTwo], config.database)
       const userId = ids[0]
       const accessToken = await getAccessToken(
-        userId, userTwo.role, config.jwt, tokenTypes.ACCESS, userTwo.is_email_verified
+        userId,
+        userTwo.role,
+        config.jwt,
+        tokenTypes.ACCESS,
+        userTwo.is_email_verified
       )
       const res = await request('/v1/auth/apple/5298', {
         method: 'POST',
@@ -520,11 +513,11 @@ describe('Oauth Apple routes', () => {
       expect(oauthAppleUser).toBeUndefined()
 
       const oauthFacebookUser = await client
-      .selectFrom('authorisations')
-      .selectAll()
-      .where('authorisations.provider_type', '=', authProviders.FACEBOOK)
-      .where('authorisations.user_id', '=', userId)
-      .executeTakeFirst()
+        .selectFrom('authorisations')
+        .selectAll()
+        .where('authorisations.provider_type', '=', authProviders.FACEBOOK)
+        .where('authorisations.user_id', '=', userId)
+        .executeTakeFirst()
 
       expect(oauthFacebookUser).toBeDefined()
     })
@@ -548,7 +541,7 @@ describe('Oauth Apple routes', () => {
       const res = await request('/v1/auth/apple/1234', {
         method: 'DELETE',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         }
       })
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
@@ -557,7 +550,11 @@ describe('Oauth Apple routes', () => {
       const ids = await insertUsers([userTwo], config.database)
       const userId = ids[0]
       const accessToken = await getAccessToken(
-        userId, userTwo.role, config.jwt, tokenTypes.ACCESS, userTwo.is_email_verified
+        userId,
+        userTwo.role,
+        config.jwt,
+        tokenTypes.ACCESS,
+        userTwo.is_email_verified
       )
       const res = await request('/v1/auth/apple/5298', {
         method: 'DELETE',

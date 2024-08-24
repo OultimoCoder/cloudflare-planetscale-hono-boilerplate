@@ -1,6 +1,8 @@
 export abstract class BaseModel {
   abstract private_fields: string[]
-  canAccessPrivateFields(): boolean { return false }
+  canAccessPrivateFields(): boolean {
+    return false
+  }
 
   toJSON() {
     const properties = Object.getOwnPropertyNames(this)

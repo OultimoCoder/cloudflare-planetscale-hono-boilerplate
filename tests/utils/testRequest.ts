@@ -1,13 +1,14 @@
+import { env } from 'cloudflare:test'
 import app from '../../src'
 import '../../src/routes'
 
 const devUrl = 'http://localhost'
-const env = getMiniflareBindings()
 
 class Context implements ExecutionContext {
   passThroughOnException(): void {
     throw new Error('Method not implemented.')
   }
+  abort(): void {}
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async waitUntil(promise: Promise<any>): Promise<void> {
     await promise

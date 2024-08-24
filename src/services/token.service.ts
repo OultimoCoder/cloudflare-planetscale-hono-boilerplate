@@ -1,4 +1,4 @@
-import jwt from '@tsndr/cloudflare-worker-jwt'
+import jwt, { JwtPayload } from '@tsndr/cloudflare-worker-jwt'
 import dayjs, { Dayjs } from 'dayjs'
 import { Selectable } from 'kysely'
 import { Config } from '../config/config'
@@ -62,7 +62,7 @@ export const verifyToken = async (token: string, type: TokenType, secret: string
     throw new Error('Token not valid')
   }
   const decoded = jwt.decode(token)
-  const payload = decoded.payload
+  const payload = decoded.payload as JwtPayload
   if (type !== payload.type) {
     throw new Error('Token not valid')
   }
@@ -70,7 +70,8 @@ export const verifyToken = async (token: string, type: TokenType, secret: string
 }
 
 export const generateVerifyEmailToken = async (
-  user: Selectable<User>, jwtConfig: Config['jwt']
+  user: Selectable<User>,
+  jwtConfig: Config['jwt']
 ) => {
   const expires = dayjs().add(jwtConfig.verifyEmailExpirationMinutes, 'minutes')
   const verifyEmailToken = await generateToken(

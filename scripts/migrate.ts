@@ -9,13 +9,13 @@ import { PlanetScaleDialect } from 'kysely-planetscale'
 import { User } from '../src/models/user.model'
 
 const envFile = {
-  'dev': '.env',
-  'test': '.env.test'
+  dev: '.env',
+  test: '.env.test'
 }
 
 const __filename = fileURLToPath(import.meta.url)
 
-dotenv.config({'path': path.join(path.dirname(__filename), `../${envFile[process.argv[2]]}`)})
+dotenv.config({ path: path.join(path.dirname(__filename), `../${envFile[process.argv[2]]}`) })
 
 interface Database {
   user: User
@@ -34,7 +34,7 @@ const migrator = new Migrator({
   provider: new FileMigrationProvider({
     fs,
     path,
-    migrationFolder: path.join(path.dirname(__filename), '../migrations'),
+    migrationFolder: path.join(path.dirname(__filename), '../migrations')
   })
 })
 

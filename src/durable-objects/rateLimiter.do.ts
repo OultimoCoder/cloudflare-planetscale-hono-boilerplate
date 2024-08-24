@@ -1,9 +1,8 @@
 import dayjs from 'dayjs'
 import { Context, Hono } from 'hono'
-import { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
 import { z, ZodError } from 'zod'
-import { generateErrorMessage, ErrorMessageOptions } from 'zod-error'
+import { fromError } from 'zod-validation-error'
 import { Environment } from '../../bindings'
 
 interface Config {
@@ -19,10 +18,6 @@ const configValidation = z.object({
   limit: z.number().int().positive(),
   interval: z.number().int().positive()
 })
-
-const zodErrorOptions: ErrorMessageOptions = {
-  transform: ({ errorMessage, index }) => `Error #${index + 1}: ${errorMessage}`
-}
 
 export class RateLimiter {
   state: DurableObjectState
@@ -41,14 +36,14 @@ export class RateLimiter {
       } catch (err: unknown) {
         let errorMessage
         if (err instanceof ZodError) {
-          errorMessage = generateErrorMessage(err.issues, zodErrorOptions)
+          errorMessage = fromError(err)
         }
         return c.json(
           {
             statusCode: httpStatus.BAD_REQUEST,
             error: errorMessage
           },
-          httpStatus.BAD_REQUEST as StatusCode
+          httpStatus.BAD_REQUEST
         )
       }
       const rate = await this.calculateRate(config)
@@ -57,9 +52,15 @@ export class RateLimiter {
       const remaining = blocked ? 0 : Math.floor(config.limit - rate - 1)
       // If the remaining requests is negative set it to 0 to indicate 100% throughput
       const remainingHeader = remaining >= 0 ? remaining : 0
-      return c.json({
-        blocked, remaining: remainingHeader, expires: headers.expires
-      }, httpStatus.OK as StatusCode, headers)
+      return c.json(
+        {
+          blocked,
+          remaining: remainingHeader,
+          expires: headers.expires
+        },
+        httpStatus.OK,
+        headers
+      )
     })
   }
 
@@ -124,8 +125,9 @@ export class RateLimiter {
   getHeaders(blocked: boolean, config: Config) {
     const expires = this.expirySeconds(config)
     const retryAfter = this.retryAfter(expires)
-    const headers:
-      { expires: string, 'cache-control'?: string } = { expires: retryAfter.toString() }
+    const headers: { expires: string; 'cache-control'?: string } = {
+      expires: retryAfter.toString()
+    }
     if (!blocked) {
       return headers
     }
@@ -136,7 +138,7 @@ export class RateLimiter {
   expirySeconds(config: Config) {
     const currentWindowStart = Math.floor(this.nowUnix() / config.interval)
     const currentWindowEnd = currentWindowStart + 1
-    const secondsRemaining = (currentWindowEnd * config.interval) - this.nowUnix()
+    const secondsRemaining = currentWindowEnd * config.interval - this.nowUnix()
     return secondsRemaining
   }
 

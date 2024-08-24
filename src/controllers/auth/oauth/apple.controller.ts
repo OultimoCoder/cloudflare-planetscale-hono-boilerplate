@@ -1,5 +1,4 @@
 import { Handler } from 'hono'
-import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
 import { apple } from 'worker-auth-providers'
 import { Environment } from '../../../../bindings'
@@ -15,7 +14,7 @@ export const appleRedirect: Handler<Environment> = async (c) => {
       redirectTo: config.oauth.apple.redirectUrl
     }
   })
-  return c.redirect(location, httpStatus.FOUND as StatusCode)
+  return c.redirect(location, httpStatus.FOUND)
 }
 
 export const appleCallback: Handler<Environment> = async (c) => {

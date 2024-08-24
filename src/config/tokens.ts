@@ -5,4 +5,4 @@ export const tokenTypes = {
   VERIFY_EMAIL: 'verifyEmail'
 } as const
 
-export type TokenType = typeof tokenTypes[keyof typeof tokenTypes]
+export type TokenType = (typeof tokenTypes)[keyof typeof tokenTypes]

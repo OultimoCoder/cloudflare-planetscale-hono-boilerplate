@@ -41,12 +41,14 @@ export const refreshAuth = async (refreshToken: string, config: Config): Promise
       throw new Error()
     }
     return tokenService.generateAuthTokens(user, config.jwt)
-  } catch (error) {
+  } catch {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
   }
 }
 
-export const register = async (body: Register, databaseConfig: Config['database']
+export const register = async (
+  body: Register,
+  databaseConfig: Config['database']
 ): Promise<User> => {
   const registerBody = { ...body, role: 'user' as Role, is_email_verified: false }
   const newUser = await createUser(registerBody, databaseConfig)
@@ -70,7 +72,7 @@ export const resetPassword = async (
       throw new Error()
     }
     await userService.updateUserById(user.id, { password: newPassword }, config.database)
-  } catch (error) {
+  } catch {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Password reset failed')
   }
 }
@@ -88,7 +90,7 @@ export const verifyEmail = async (verifyEmailToken: string, config: Config): Pro
       throw new Error()
     }
     await userService.updateUserById(user.id, { is_email_verified: true }, config.database)
-  } catch (error) {
+  } catch {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Email verification failed')
   }
 }
@@ -119,7 +121,7 @@ export const linkUserWithOauth = async (
         .selectAll()
         .where('user.id', '=', userId)
         .executeTakeFirstOrThrow()
-    } catch (err) {
+    } catch {
       throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
     }
     await trx

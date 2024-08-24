@@ -1,4 +1,5 @@
 import httpStatus from 'http-status'
+import { test, describe, expect } from 'vitest'
 import { request } from '../utils/testRequest'
 
 describe('Basic routing', () => {

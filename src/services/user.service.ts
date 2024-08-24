@@ -26,7 +26,7 @@ export const createUser = async (
   let result: InsertResult
   try {
     result = await db.insertInto('user').values(userBody).executeTakeFirstOrThrow()
-  } catch (error) {
+  } catch {
     throw new ApiError(httpStatus.BAD_REQUEST, 'User already exists')
   }
   const user = (await getUserById(Number(result.insertId), databaseConfig)) as User
@@ -60,7 +60,7 @@ export const createOauthUser = async (
         .executeTakeFirstOrThrow()
       return userId
     })
-  } catch (error) {
+  } catch {
     throw new ApiError(
       httpStatus.FORBIDDEN,
       `Cannot signup with ${providerUser.providerType}, user already exists with that email`
@@ -145,7 +145,7 @@ export const updateUserById = async (
       .set(updateBody)
       .where('id', '=', userId)
       .executeTakeFirst()
-  } catch (error) {
+  } catch {
     throw new ApiError(httpStatus.BAD_REQUEST, 'User already exists')
   }
   if (!result.numUpdatedRows || Number(result.numUpdatedRows) < 1) {
@@ -167,10 +167,7 @@ export const deleteUserById = async (
   }
 }
 
-export const getAuthorisations = async (
-  userId: number,
-  databaseConfig: Config['database']
-) => {
+export const getAuthorisations = async (userId: number, databaseConfig: Config['database']) => {
   const db = getDBClient(databaseConfig)
   const auths = await db
     .selectFrom('user')

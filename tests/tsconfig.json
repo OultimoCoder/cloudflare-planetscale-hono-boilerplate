@@ -1,11 +1,13 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
+    "moduleResolution": "bundler",
     "types": [
-      "@types/jest",
       "@types/bcryptjs",
-      "miniflare"
+      "@cloudflare/workers-types/experimental",
+      "@cloudflare/vitest-pool-workers",
+      "vitest"
     ]
   },
-  "include": ["../src/**/*", "**/*", "../bindings.d.ts"],
+  "include": ["../src/**/*", "**/*", "../bindings.d.ts", "cloudflare-test.d.ts", "vitest.d.ts"]
 }

@@ -5,5 +5,5 @@ export const roleRights = {
 
 export const roles = Object.keys(roleRights) as Role[]
 
-export type Permission = typeof roleRights[keyof typeof roleRights][number]
+export type Permission = (typeof roleRights)[keyof typeof roleRights][number]
 export type Role = keyof typeof roleRights

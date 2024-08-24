@@ -1,5 +1,4 @@
 import { Handler } from 'hono'
-import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
 import { spotify } from 'worker-auth-providers'
 import { Environment } from '../../../../bindings'
@@ -13,10 +12,10 @@ export const spotifyRedirect: Handler<Environment> = async (c) => {
   const location = await spotify.redirect({
     options: {
       clientId: config.oauth.spotify.clientId,
-      redirectUrl: config.oauth.spotify.redirectUrl,
+      redirectUrl: config.oauth.spotify.redirectUrl
     }
   })
-  return c.redirect(location, httpStatus.FOUND as StatusCode)
+  return c.redirect(location, httpStatus.FOUND)
 }
 
 export const spotifyCallback: Handler<Environment> = async (c) => {
@@ -29,7 +28,7 @@ export const spotifyCallback: Handler<Environment> = async (c) => {
       redirectUrl: config.oauth.spotify.redirectUrl
     },
     request
-  }) as Promise<{ user: SpotifyUserType, tokens: unknown }>
+  }) as Promise<{ user: SpotifyUserType; tokens: unknown }>
   return oauthCallback<typeof authProviders.SPOTIFY>(c, oauthRequest, authProviders.SPOTIFY)
 }
 
@@ -43,7 +42,7 @@ export const linkSpotify: Handler<Environment> = async (c) => {
       redirectUrl: config.oauth.spotify.redirectUrl
     },
     request
-  }) as Promise<{ user: SpotifyUserType, tokens: unknown }>
+  }) as Promise<{ user: SpotifyUserType; tokens: unknown }>
   return oauthLink<typeof authProviders.SPOTIFY>(c, oauthRequest, authProviders.SPOTIFY)
 }
 

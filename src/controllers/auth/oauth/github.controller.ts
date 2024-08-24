@@ -1,5 +1,4 @@
 import { Handler } from 'hono'
-import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
 import { github } from 'worker-auth-providers'
 import { Environment } from '../../../../bindings'
@@ -14,7 +13,7 @@ export const githubRedirect: Handler<Environment> = async (c) => {
       clientId: config.oauth.github.clientId
     }
   })
-  return c.redirect(location, httpStatus.FOUND as StatusCode)
+  return c.redirect(location, httpStatus.FOUND)
 }
 
 export const githubCallback: Handler<Environment> = async (c) => {

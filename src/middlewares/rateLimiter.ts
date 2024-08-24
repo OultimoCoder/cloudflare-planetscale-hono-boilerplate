@@ -7,7 +7,7 @@ import { ApiError } from '../utils/ApiError'
 const fakeDomain = 'http://rate-limiter.com/'
 
 const getRateLimitKey = (c: Context) => {
-  const ip = c.req.headers.get('cf-connecting-ip')
+  const ip = c.req.raw.headers.get('cf-connecting-ip')
   const user = c.get('payload')?.sub
   const uniqueKey = user ? user : ip
   return uniqueKey
@@ -30,10 +30,7 @@ const setRateLimitHeaders = (
   c.header('X-RateLimit-Policy', `${limit};w=${interval};comment="Sliding window"`)
 }
 
-export const rateLimit = (
-  interval: number,
-  limit: number
-): MiddlewareHandler<Environment> => {
+export const rateLimit = (interval: number, limit: number): MiddlewareHandler<Environment> => {
   return async (c, next) => {
     const key = getRateLimitKey(c)
     const endpoint = new URL(c.req.url).pathname
@@ -60,7 +57,7 @@ export const rateLimit = (
       res = cached
     }
     const clonedRes = res.clone()
-    const body = await clonedRes.json<{ blocked: boolean, remaining: number, expires: string }>()
+    const body = await clonedRes.json<{ blocked: boolean; remaining: number; expires: string }>()
     const secondsExpires = dayjs(body.expires).unix() - dayjs().unix()
     setRateLimitHeaders(c, secondsExpires, limit, body.remaining, interval)
     if (body.blocked) {

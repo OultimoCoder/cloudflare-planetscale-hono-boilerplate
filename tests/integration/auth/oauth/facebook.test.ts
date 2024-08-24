@@ -1,9 +1,10 @@
 import { faker } from '@faker-js/faker'
+import { env, fetchMock } from 'cloudflare:test'
 import httpStatus from 'http-status'
-import { TableReference } from 'kysely/dist/cjs/parser/table-parser'
+import { describe, expect, test, beforeAll } from 'vitest'
 import { authProviders } from '../../../../src/config/authProviders'
 import { getConfig } from '../../../../src/config/config'
-import { Database, getDBClient } from '../../../../src/config/database'
+import { getDBClient } from '../../../../src/config/database'
 import { tokenTypes } from '../../../../src/config/tokens'
 import { FacebookUserType } from '../../../../src/types/oauth.types'
 import {
@@ -17,24 +18,23 @@ import { userOne, insertUsers, UserResponse, userTwo } from '../../../fixtures/u
 import { clearDBTables } from '../../../utils/clearDBTables'
 import { request } from '../../../utils/testRequest'
 
-const env = getMiniflareBindings()
 const config = getConfig(env)
 const client = getDBClient(config.database)
 
-clearDBTables(['user' as TableReference<Database>], config.database)
+clearDBTables(['user', 'authorisations'], config.database)
 
 describe('Oauth Facebook routes', () => {
   describe('GET /v1/auth/facebook/redirect', () => {
     test('should return 302 and successfully redirect to facebook', async () => {
       const urlEncodedRedirectUrl = encodeURIComponent(config.oauth.facebook.redirectUrl)
       const res = await request('/v1/auth/facebook/redirect', {
-        method: 'GET',
+        method: 'GET'
       })
       expect(res.status).toBe(httpStatus.FOUND)
       expect(res.headers.get('location')).toBe(
         'https://www.facebook.com/v4.0/dialog/oauth?auth_type=rerequest&' +
-        `client_id=${config.oauth.facebook.clientId}&display=popup&` +
-        `redirect_uri=${urlEncodedRedirectUrl}&response_type=code&scope=email%2C%20user_friends`
+          `client_id=${config.oauth.facebook.clientId}&display=popup&` +
+          `redirect_uri=${urlEncodedRedirectUrl}&response_type=code&scope=email%2C%20user_friends`
       )
     })
   })
@@ -50,23 +50,22 @@ describe('Oauth Facebook routes', () => {
       }
     })
     test('should return 200 and successfully register user if request data is ok', async () => {
-      const fetchMock = getMiniflareFetchMock()
       const facebookApiMock = fetchMock.get('https://graph.facebook.com')
       facebookApiMock
         .intercept({
           method: 'GET',
-          path: '/me?fields=id,email,first_name,last_name&access_token=1234'}
-        )
+          path: '/me?fields=id,email,first_name,last_name&access_token=1234'
+        })
         .reply(200, JSON.stringify(newUser))
       const facebookMock = fetchMock.get('https://graph.facebook.com')
       facebookMock
-        .intercept({method: 'POST', path: '/v4.0/oauth/access_token'})
-        .reply(200, JSON.stringify({access_token: '1234'}))
+        .intercept({ method: 'POST', path: '/v4.0/oauth/access_token' })
+        .reply(200, JSON.stringify({ access_token: '1234' }))
 
       const providerId = '123456'
       const res = await request('/v1/auth/facebook/callback', {
         method: 'POST',
-        body: JSON.stringify({code: providerId}),
+        body: JSON.stringify({ code: providerId }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -124,23 +123,22 @@ describe('Oauth Facebook routes', () => {
       await insertAuthorisations([facebookUser], config.database)
       newUser.id = facebookUser.provider_user_id
 
-      const fetchMock = getMiniflareFetchMock()
       const facebookApiMock = fetchMock.get('https://graph.facebook.com')
       facebookApiMock
         .intercept({
           method: 'GET',
-          path: '/me?fields=id,email,first_name,last_name&access_token=1234'}
-        )
+          path: '/me?fields=id,email,first_name,last_name&access_token=1234'
+        })
         .reply(200, JSON.stringify(newUser))
       const facebookMock = fetchMock.get('https://graph.facebook.com')
       facebookMock
-        .intercept({method: 'POST', path: '/v4.0/oauth/access_token'})
-        .reply(200, JSON.stringify({access_token: '1234'}))
+        .intercept({ method: 'POST', path: '/v4.0/oauth/access_token' })
+        .reply(200, JSON.stringify({ access_token: '1234' }))
 
       const providerId = '123456'
       const res = await request('/v1/auth/facebook/callback', {
         method: 'POST',
-        body: JSON.stringify({code: providerId}),
+        body: JSON.stringify({ code: providerId }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -166,23 +164,22 @@ describe('Oauth Facebook routes', () => {
       await insertUsers([userOne], config.database)
       newUser.email = userOne.email
 
-      const fetchMock = getMiniflareFetchMock()
       const facebookApiMock = fetchMock.get('https://graph.facebook.com')
       facebookApiMock
         .intercept({
           method: 'GET',
-          path: '/me?fields=id,email,first_name,last_name&access_token=1234'}
-        )
+          path: '/me?fields=id,email,first_name,last_name&access_token=1234'
+        })
         .reply(200, JSON.stringify(newUser))
       const facebookMock = fetchMock.get('https://graph.facebook.com')
       facebookMock
-        .intercept({method: 'POST', path: '/v4.0/oauth/access_token'})
-        .reply(200, JSON.stringify({access_token: '1234'}))
+        .intercept({ method: 'POST', path: '/v4.0/oauth/access_token' })
+        .reply(200, JSON.stringify({ access_token: '1234' }))
 
       const providerId = '123456'
       const res = await request('/v1/auth/facebook/callback', {
         method: 'POST',
-        body: JSON.stringify({code: providerId}),
+        body: JSON.stringify({ code: providerId }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -195,18 +192,16 @@ describe('Oauth Facebook routes', () => {
       })
     })
 
-
     test('should return 401 if code is invalid', async () => {
-      const fetchMock = getMiniflareFetchMock()
       const facebookMock = fetchMock.get('https://graph.facebook.com')
       facebookMock
-        .intercept({method: 'POST', path: '/v4.0/oauth/access_token'})
-        .reply(httpStatus.UNAUTHORIZED, JSON.stringify({error: 'error'}))
+        .intercept({ method: 'POST', path: '/v4.0/oauth/access_token' })
+        .reply(httpStatus.UNAUTHORIZED, JSON.stringify({ error: 'error' }))
 
       const providerId = '123456'
       const res = await request('/v1/auth/facebook/callback', {
         method: 'POST',
-        body: JSON.stringify({code: providerId}),
+        body: JSON.stringify({ code: providerId }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -232,7 +227,7 @@ describe('Oauth Facebook routes', () => {
         id: faker.number.int().toString(),
         first_name: faker.person.firstName(),
         last_name: faker.person.lastName(),
-        email: faker.internet.email(),
+        email: faker.internet.email()
       }
     })
     test('should return 200 and successfully link facebook account', async () => {
@@ -240,23 +235,22 @@ describe('Oauth Facebook routes', () => {
       const userId = ids[0]
       const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
 
-      const fetchMock = getMiniflareFetchMock()
       const facebookApiMock = fetchMock.get('https://graph.facebook.com')
       facebookApiMock
         .intercept({
           method: 'GET',
-          path: '/me?fields=id,email,first_name,last_name&access_token=1234'}
-        )
+          path: '/me?fields=id,email,first_name,last_name&access_token=1234'
+        })
         .reply(200, JSON.stringify(newUser))
       const facebookMock = fetchMock.get('https://graph.facebook.com')
       facebookMock
-        .intercept({method: 'POST', path: '/v4.0/oauth/access_token'})
-        .reply(200, JSON.stringify({access_token: '1234'}))
+        .intercept({ method: 'POST', path: '/v4.0/oauth/access_token' })
+        .reply(200, JSON.stringify({ access_token: '1234' }))
 
       const providerId = '123456'
       const res = await request(`/v1/auth/facebook/${userId}`, {
         method: 'POST',
-        body: JSON.stringify({code: providerId}),
+        body: JSON.stringify({ code: providerId }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -298,28 +292,24 @@ describe('Oauth Facebook routes', () => {
       const ids = await insertUsers([userOne], config.database)
       const userId = ids[0]
       const userOneAccessToken = await getAccessToken(userId, userOne.role, config.jwt)
-      await client
-        .deleteFrom('user')
-        .where('user.id', '=', userId)
-        .execute()
+      await client.deleteFrom('user').where('user.id', '=', userId).execute()
 
-      const fetchMock = getMiniflareFetchMock()
       const facebookApiMock = fetchMock.get('https://graph.facebook.com')
       facebookApiMock
         .intercept({
           method: 'GET',
-          path: '/me?fields=id,email,first_name,last_name&access_token=1234'}
-        )
+          path: '/me?fields=id,email,first_name,last_name&access_token=1234'
+        })
         .reply(200, JSON.stringify(newUser))
       const facebookMock = fetchMock.get('https://graph.facebook.com')
       facebookMock
-        .intercept({method: 'POST', path: '/v4.0/oauth/access_token'})
-        .reply(200, JSON.stringify({access_token: '1234'}))
+        .intercept({ method: 'POST', path: '/v4.0/oauth/access_token' })
+        .reply(200, JSON.stringify({ access_token: '1234' }))
 
       const providerId = '123456'
       const res = await request(`/v1/auth/facebook/${userId}`, {
         method: 'POST',
-        body: JSON.stringify({code: providerId}),
+        body: JSON.stringify({ code: providerId }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -343,16 +333,15 @@ describe('Oauth Facebook routes', () => {
       const userId = ids[0]
       const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
 
-      const fetchMock = getMiniflareFetchMock()
       const facebookMock = fetchMock.get('https://graph.facebook.com')
       facebookMock
-        .intercept({method: 'POST', path: '/v4.0/oauth/access_token'})
-        .reply(httpStatus.UNAUTHORIZED, JSON.stringify({error: 'error'}))
+        .intercept({ method: 'POST', path: '/v4.0/oauth/access_token' })
+        .reply(httpStatus.UNAUTHORIZED, JSON.stringify({ error: 'error' }))
 
       const providerId = '123456'
       const res = await request(`/v1/auth/facebook/${userId}`, {
         method: 'POST',
-        body: JSON.stringify({code: providerId}),
+        body: JSON.stringify({ code: providerId }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -369,7 +358,7 @@ describe('Oauth Facebook routes', () => {
       const providerId = '123456'
       const res = await request('/v1/auth/facebook/5298', {
         method: 'POST',
-        body: JSON.stringify({code: providerId}),
+        body: JSON.stringify({ code: providerId }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -399,7 +388,7 @@ describe('Oauth Facebook routes', () => {
         method: 'POST',
         body: JSON.stringify({}),
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         }
       })
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
@@ -408,7 +397,11 @@ describe('Oauth Facebook routes', () => {
       const ids = await insertUsers([userTwo], config.database)
       const userId = ids[0]
       const accessToken = await getAccessToken(
-        userId, userTwo.role, config.jwt, tokenTypes.ACCESS, userTwo.is_email_verified
+        userId,
+        userTwo.role,
+        config.jwt,
+        tokenTypes.ACCESS,
+        userTwo.is_email_verified
       )
       const res = await request('/v1/auth/facebook/5298', {
         method: 'POST',
@@ -536,11 +529,11 @@ describe('Oauth Facebook routes', () => {
       expect(oauthFacebookUser).toBeUndefined()
 
       const oauthGithubUser = await client
-      .selectFrom('authorisations')
-      .selectAll()
-      .where('authorisations.provider_type', '=', authProviders.GITHUB)
-      .where('authorisations.user_id', '=', userId)
-      .executeTakeFirst()
+        .selectFrom('authorisations')
+        .selectAll()
+        .where('authorisations.provider_type', '=', authProviders.GITHUB)
+        .where('authorisations.user_id', '=', userId)
+        .executeTakeFirst()
 
       expect(oauthGithubUser).toBeDefined()
     })
@@ -564,7 +557,7 @@ describe('Oauth Facebook routes', () => {
       const res = await request('/v1/auth/facebook/1234', {
         method: 'DELETE',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         }
       })
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
@@ -573,7 +566,11 @@ describe('Oauth Facebook routes', () => {
       const ids = await insertUsers([userTwo], config.database)
       const userId = ids[0]
       const accessToken = await getAccessToken(
-        userId, userTwo.role, config.jwt, tokenTypes.ACCESS, userTwo.is_email_verified
+        userId,
+        userTwo.role,
+        config.jwt,
+        tokenTypes.ACCESS,
+        userTwo.is_email_verified
       )
       const res = await request('/v1/auth/facebook/5298', {
         method: 'DELETE',

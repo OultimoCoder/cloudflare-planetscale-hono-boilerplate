@@ -43,10 +43,7 @@ export const admin: MockUser = {
   is_email_verified: false
 }
 
-export const insertUsers = async (
-  users: MockUser[],
-  databaseConfig: Config['database']
-) => {
+export const insertUsers = async (users: MockUser[], databaseConfig: Config['database']) => {
   const hashedUsers = users.map((user) => ({
     ...user,
     password: user.password ? hashedPassword : null

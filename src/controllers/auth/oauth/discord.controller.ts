@@ -1,5 +1,4 @@
 import { Handler } from 'hono'
-import type { StatusCode } from 'hono/utils/http-status'
 import httpStatus from 'http-status'
 import { discord } from 'worker-auth-providers'
 import { Environment } from '../../../../bindings'
@@ -17,7 +16,7 @@ export const discordRedirect: Handler<Environment> = async (c) => {
       scope: 'identify email'
     }
   })
-  return c.redirect(location, httpStatus.FOUND as StatusCode)
+  return c.redirect(location, httpStatus.FOUND)
 }
 
 export const discordCallback: Handler<Environment> = async (c) => {
@@ -30,7 +29,7 @@ export const discordCallback: Handler<Environment> = async (c) => {
       redirectUrl: config.oauth.discord.redirectUrl
     },
     request
-  }) as Promise<{ user: DiscordUserType, tokens: unknown }>
+  }) as Promise<{ user: DiscordUserType; tokens: unknown }>
   return oauthCallback<typeof authProviders.DISCORD>(c, oauthRequest, authProviders.DISCORD)
 }
 
@@ -44,7 +43,7 @@ export const linkDiscord: Handler<Environment> = async (c) => {
       redirectUrl: config.oauth.discord.redirectUrl
     },
     request
-  }) as Promise<{ user: DiscordUserType, tokens: unknown }>
+  }) as Promise<{ user: DiscordUserType; tokens: unknown }>
   return oauthLink<typeof authProviders.DISCORD>(c, oauthRequest, authProviders.DISCORD)
 }
 

@@ -12,7 +12,7 @@ try {
       format: 'esm',
       target: 'esnext'
     })
-} catch(err) {
+} catch {
   process.exitCode = 1
 }
 

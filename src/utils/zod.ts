@@ -1,10 +1,6 @@
 import { ZodError } from 'zod'
-import { ErrorMessageOptions, generateErrorMessage } from 'zod-error'
-
-const zodErrorOptions: ErrorMessageOptions = {
-  transform: ({ errorMessage, index }) => `Error #${index + 1}: ${errorMessage}`
-}
+import { fromError } from 'zod-validation-error'
 
 export const generateZodErrorMessage = (error: ZodError): string => {
-  return generateErrorMessage(error.issues, zodErrorOptions)
+  return fromError(error).message
 }

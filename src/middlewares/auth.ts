@@ -1,4 +1,4 @@
-import jwt from '@tsndr/cloudflare-worker-jwt'
+import jwt, { JwtPayload } from '@tsndr/cloudflare-worker-jwt'
 import { MiddlewareHandler } from 'hono'
 import httpStatus from 'http-status'
 import { Environment } from '../../bindings'
@@ -14,16 +14,16 @@ const authenticate = async (jwtToken: string, secret: string) => {
   try {
     authorized = await jwt.verify(jwtToken, secret)
     const decoded = jwt.decode(jwtToken)
-    payload = decoded.payload
+    payload = decoded.payload as JwtPayload
     authorized = authorized && payload.type === tokenTypes.ACCESS
-  } catch (e) {}
+  } catch {}
   return { authorized, payload }
 }
 
 export const auth =
   (...requiredRights: Permission[]): MiddlewareHandler<Environment> =>
   async (c, next) => {
-    const credentials = c.req.headers.get('Authorization')
+    const credentials = c.req.raw.headers.get('Authorization')
     const config = getConfig(c.env)
     if (!credentials) {
       throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
