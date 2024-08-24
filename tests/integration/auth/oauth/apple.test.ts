@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker'
 import jwt from '@tsndr/cloudflare-worker-jwt'
 import { env, fetchMock } from 'cloudflare:test'
 import httpStatus from 'http-status'
-import { describe, expect, test, beforeAll } from 'vitest'
+import { describe, expect, test, beforeAll, afterEach } from 'vitest'
 import { authProviders } from '../../../../src/config/authProviders'
 import { getConfig } from '../../../../src/config/config'
 import { getDBClient } from '../../../../src/config/database'
@@ -47,7 +47,9 @@ describe('Oauth Apple routes', () => {
         name: faker.person.fullName(),
         email: faker.internet.email()
       }
+      fetchMock.activate()
     })
+    afterEach(() => fetchMock.assertNoPendingInterceptors())
     test('should return 200 and successfully register user if request data is ok', async () => {
       const mockJWT = await jwt.sign(newUser, 'randomSecret')
       const appleMock = fetchMock.get('https://appleid.apple.com')
