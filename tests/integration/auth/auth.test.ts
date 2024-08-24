@@ -23,13 +23,14 @@ import {
 } from '../../fixtures/authorisations.fixture'
 import { getAccessToken, TokenResponse } from '../../fixtures/token.fixture'
 import { userOne, insertUsers, UserResponse, userTwo } from '../../fixtures/user.fixture'
-import { mockClient } from '../../mocks/awsClientStub'
+import { expectExtension, mockClient } from '../../mocks/awsClientStub'
 import { clearDBTables } from '../../utils/clearDBTables'
 import { request } from '../../utils/testRequest'
 
 const config = getConfig(env)
 const client = getDBClient(config.database)
 
+expect.extend(expectExtension)
 clearDBTables(['user'], config.database)
 
 describe('Auth routes', () => {
@@ -353,14 +354,14 @@ describe('Auth routes', () => {
     })
   })
 
-  describe.only('POST /v1/auth/forgot-password', () => {
-    let sesMock = mockClient(SESClient)
+  describe('POST /v1/auth/forgot-password', () => {
+    const sesMock = mockClient(SESClient)
 
     beforeEach(() => {
       sesMock.reset()
     })
 
-    test.only('should return 204 and send reset password email to the user', async () => {
+    test('should return 204 and send reset password email to the user', async () => {
       await insertUsers([userOne], config.database)
       sesMock.on(SendEmailCommand).resolves({
         MessageId: 'message-id'
@@ -415,7 +416,7 @@ describe('Auth routes', () => {
   })
 
   describe('POST /v1/auth/send-verification-email', () => {
-    let sesMock = mockClient(SESClient)
+    const sesMock = mockClient(SESClient)
 
     beforeEach(() => {
       sesMock.reset()

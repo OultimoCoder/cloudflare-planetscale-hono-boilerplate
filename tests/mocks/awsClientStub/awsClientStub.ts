@@ -201,7 +201,9 @@ export class CommandBehavior<
    *
    * @param response Content to be returned
    */
-  resolves(response: Awaited<CommandResponse<TCommandOutput>>): AwsStub<TInput, TOutput, TConfiguration> {
+  resolves(
+    response: Awaited<CommandResponse<TCommandOutput>>
+  ): AwsStub<TInput, TOutput, TConfiguration> {
     this.send.mockImplementation(() => Promise.resolve(response) as unknown as Promise<TOutput>)
     return this.clientStub
   }
