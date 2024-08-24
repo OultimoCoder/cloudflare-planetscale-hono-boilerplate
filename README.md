@@ -42,7 +42,7 @@ npm init cf-planetscale-app <project-name>
 - **Authentication and authorization**: using JWT
 - **Validation**: request data validation using [Zod](https://github.com/colinhacks/zod)
 - **Logging**: using [Sentry](https://sentry.io/)
-- **Testing**: unit and integration tests using [Jest](https://jestjs.io)
+- **Testing**: unit and integration tests using [Vitest](https://vitest.dev/)
 - **Error handling**: centralised error handling mechanism provided by [Hono](https://honojs.dev/)
 - **Git hooks**: with [Husky](https://github.com/typicode/husky)
 - **Linting**: with [ESLint](https://eslint.org) and [Prettier](https://prettier.io)
@@ -68,9 +68,6 @@ npm run tests
 
 # run test coverage
 npm run tests:coverage
-
-# run test coverage summary
-npm run tests:summary
 ```
 
 Linting:
@@ -95,24 +92,21 @@ To deploy to production you must first deploy to a test/dev branch on Planetscal
 a deploy request and merge the schema into production.
 
 ```bash
-# run all migrations for dev/test
-npm run migrate:dev:latest
+# run all migrations for testing
 npm run migrate:test:latest
 
-# remove all migrations for dev/test
-npm run migrate:dev:none
+# remove all migrations for testing
 npm run migrate:test:none
 
-# revert last migration for dev/test
-npm run migrate:dev:down
+# revert last migration for testing
 npm run migrate:test:down
 ```
 
 Deploy to Cloudflare:
 
 ```bash
-npm run deploy:dev
-npm run deploy:prod
+npm run deploy
+npm run deploy
 ```
 
 ## Error Handling
