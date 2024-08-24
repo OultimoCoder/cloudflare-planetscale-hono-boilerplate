@@ -1,5 +1,6 @@
 // TODO: Add SES mock client back. It's not working with vitest
 // import { mockClient } from 'aws-sdk-client-mock'
+import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 import { faker } from '@faker-js/faker'
 import bcrypt from 'bcryptjs'
 import { env } from 'cloudflare:test'
@@ -22,6 +23,7 @@ import {
 } from '../../fixtures/authorisations.fixture'
 import { getAccessToken, TokenResponse } from '../../fixtures/token.fixture'
 import { userOne, insertUsers, UserResponse, userTwo } from '../../fixtures/user.fixture'
+import { mockClient } from '../../mocks/awsClientStub'
 import { clearDBTables } from '../../utils/clearDBTables'
 import { request } from '../../utils/testRequest'
 
@@ -351,7 +353,7 @@ describe('Auth routes', () => {
     })
   })
 
-  describe('POST /v1/auth/forgot-password', () => {
+  describe.only('POST /v1/auth/forgot-password', () => {
     let sesMock: ReturnType<typeof mockClient>
 
     beforeEach(() => {
@@ -359,7 +361,7 @@ describe('Auth routes', () => {
       sesMock.reset()
     })
 
-    test('should return 204 and send reset password email to the user', async () => {
+    test.only('should return 204 and send reset password email to the user', async () => {
       await insertUsers([userOne], config.database)
       sesMock.on(SendEmailCommand).resolves({
         MessageId: 'message-id'

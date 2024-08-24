@@ -87,6 +87,7 @@
     "@aws-sdk/client-ses": "^3.637.0",
     "@hono/sentry": "^1.2.0",
     "@planetscale/database": "^1.19.0",
+    "@smithy/types": "^3.3.0",
     "@tsndr/cloudflare-worker-jwt": "2.5.3",
     "bcryptjs": "^2.4.3",
     "dayjs": "^1.11.13",
