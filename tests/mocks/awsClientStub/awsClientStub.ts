@@ -14,7 +14,7 @@ export interface Behavior<
   TConfiguration
 > {
   on<TCmdInput extends TInput, TCmdOutput extends TOutput>(
-    command: new (input: TCmdInput) => AwsCommand<TCmdInput, TCmdOutput>,
+    command: new (input: TCmdInput) => AwsCommand<TCmdInput, TCmdOutput, TInput, TOutput>,
     input?: Partial<TCmdInput>,
     strict?: boolean
   ): Behavior<TInput, TOutput, TCmdOutput, TConfiguration>
@@ -159,7 +159,7 @@ export class AwsStub<TInput extends object, TOutput extends MetadataBearer, TCon
    * @param strict Should the payload match strictly (default false, will match if all defined payload properties match)
    */
   on<TCmdInput extends TInput, TCmdOutput extends TOutput>(
-    command: new (input: TCmdInput) => AwsCommand<TCmdInput, TCmdOutput>
+    command: new (input: TCmdInput) => AwsCommand<TCmdInput, TCmdOutput, TInput, TOutput>
   ): CommandBehavior<TInput, TOutput, TCmdOutput, TConfiguration> {
     const cmdStub: Mock<
       Inputs<TInput, TOutput, TConfiguration>,
