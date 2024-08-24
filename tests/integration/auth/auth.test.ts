@@ -1,5 +1,6 @@
 // TODO: Add SES mock client back. It's not working with vitest
 // import { mockClient } from 'aws-sdk-client-mock'
+import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 import { faker } from '@faker-js/faker'
 import bcrypt from 'bcryptjs'
 import { env } from 'cloudflare:test'
@@ -22,12 +23,14 @@ import {
 } from '../../fixtures/authorisations.fixture'
 import { getAccessToken, TokenResponse } from '../../fixtures/token.fixture'
 import { userOne, insertUsers, UserResponse, userTwo } from '../../fixtures/user.fixture'
+import { expectExtension, mockClient } from '../../mocks/awsClientStub'
 import { clearDBTables } from '../../utils/clearDBTables'
 import { request } from '../../utils/testRequest'
 
 const config = getConfig(env)
 const client = getDBClient(config.database)
 
+expect.extend(expectExtension)
 clearDBTables(['user'], config.database)
 
 describe('Auth routes', () => {
@@ -352,10 +355,9 @@ describe('Auth routes', () => {
   })
 
   describe('POST /v1/auth/forgot-password', () => {
-    let sesMock: ReturnType<typeof mockClient>
+    const sesMock = mockClient(SESClient)
 
     beforeEach(() => {
-      sesMock = mockClient(SESClient)
       sesMock.reset()
     })
 
@@ -414,10 +416,9 @@ describe('Auth routes', () => {
   })
 
   describe('POST /v1/auth/send-verification-email', () => {
-    let sesMock: ReturnType<typeof mockClient>
+    const sesMock = mockClient(SESClient)
 
     beforeEach(() => {
-      sesMock = mockClient(SESClient)
       sesMock.reset()
     })
 
