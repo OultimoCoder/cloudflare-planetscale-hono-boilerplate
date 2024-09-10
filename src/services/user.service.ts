@@ -1,11 +1,13 @@
 import httpStatus from 'http-status'
-import { InsertResult, UpdateResult } from 'kysely'
+import { UpdateResult } from 'kysely'
 import { Config } from '../config/config'
 import { getDBClient } from '../config/database'
 import { OAuthUserModel } from '../models/oauth/oauthBase.model'
-import { User, UserTable } from '../models/user.model'
+import { User } from '../models/user.model'
+import { UserTable } from '../tables/user.table'
 import { AuthProviderType } from '../types/oauth.types'
 import { ApiError } from '../utils/ApiError'
+import { generateId } from '../utils/utils'
 import { CreateUser, UpdateUser } from '../validations/user.validation'
 
 interface getUsersFilter {
@@ -23,13 +25,16 @@ export const createUser = async (
   databaseConfig: Config['database']
 ): Promise<User> => {
   const db = getDBClient(databaseConfig)
-  let result: InsertResult
+  const id = generateId()
   try {
-    result = await db.insertInto('user').values(userBody).executeTakeFirstOrThrow()
+    await db
+      .insertInto('user')
+      .values({ ...userBody, id })
+      .executeTakeFirstOrThrow()
   } catch {
     throw new ApiError(httpStatus.BAD_REQUEST, 'User already exists')
   }
-  const user = (await getUserById(Number(result.insertId), databaseConfig)) as User
+  const user = (await getUserById(id, databaseConfig)) as User
   return user
 }
 
@@ -39,10 +44,12 @@ export const createOauthUser = async (
 ): Promise<User> => {
   const db = getDBClient(databaseConfig)
   try {
+    const id = generateId()
     await db.transaction().execute(async (trx) => {
-      const userId = await trx
+      await trx
         .insertInto('user')
         .values({
+          id,
           name: providerUser._name,
           email: providerUser._email,
           is_email_verified: true,
@@ -53,12 +60,11 @@ export const createOauthUser = async (
       await trx
         .insertInto('authorisations')
         .values({
-          user_id: Number(userId.insertId),
+          user_id: id,
           provider_type: providerUser.providerType,
           provider_user_id: providerUser._id
         })
         .executeTakeFirstOrThrow()
-      return userId
     })
   } catch {
     throw new ApiError(
@@ -95,7 +101,7 @@ export const queryUsers = async (
 }
 
 export const getUserById = async (
-  id: number,
+  id: string,
   databaseConfig: Config['database']
 ): Promise<User | undefined> => {
   const db = getDBClient(databaseConfig)
@@ -133,7 +139,7 @@ export const getUserByProviderIdType = async (
 }
 
 export const updateUserById = async (
-  userId: number,
+  userId: string,
   updateBody: Partial<UpdateUser>,
   databaseConfig: Config['database']
 ): Promise<User> => {
@@ -156,7 +162,7 @@ export const updateUserById = async (
 }
 
 export const deleteUserById = async (
-  userId: number,
+  userId: string,
   databaseConfig: Config['database']
 ): Promise<void> => {
   const db = getDBClient(databaseConfig)
@@ -167,7 +173,7 @@ export const deleteUserById = async (
   }
 }
 
-export const getAuthorisations = async (userId: number, databaseConfig: Config['database']) => {
+export const getAuthorisations = async (userId: string, databaseConfig: Config['database']) => {
   const db = getDBClient(databaseConfig)
   const auths = await db
     .selectFrom('user')

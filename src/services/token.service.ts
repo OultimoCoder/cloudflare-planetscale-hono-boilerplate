@@ -7,7 +7,7 @@ import { TokenType, tokenTypes } from '../config/tokens'
 import { User } from '../models/user.model'
 
 export const generateToken = async (
-  userId: number,
+  userId: string,
   type: TokenType,
   role: Role,
   expires: Dayjs,

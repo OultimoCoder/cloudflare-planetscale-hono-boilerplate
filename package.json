@@ -90,6 +90,7 @@
     "http-status": "^1.7.4",
     "kysely": "^0.27.4",
     "kysely-planetscale": "^1.5",
+    "nanoid": "^5.0.7",
     "toucan-js": "4.0.0",
     "worker-auth-providers": "^0.0.13",
     "zod": "^3.23.8",

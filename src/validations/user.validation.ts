@@ -23,10 +23,10 @@ export const getUsers = z.object({
   page: z.coerce.number().optional().default(0)
 })
 
-export const getUser = z.object({ userId: z.coerce.number().positive().int() })
+export const getUser = z.object({ userId: z.string() })
 
 export const updateUser = z.strictObject({
-  params: z.object({ userId: z.coerce.number().positive().int() }),
+  params: z.object({ userId: z.string() }),
   body: z
     .object({
       email: z.string().email().optional(),
@@ -43,4 +43,4 @@ export type UpdateUser =
   | { password: string }
   | { is_email_verified: boolean }
 
-export const deleteUser = z.strictObject({ userId: z.coerce.number().positive().int() })
+export const deleteUser = z.strictObject({ userId: z.string() })

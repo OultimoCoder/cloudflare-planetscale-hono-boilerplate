@@ -36,7 +36,10 @@ export const refreshAuth = async (refreshToken: string, config: Config): Promise
       tokenTypes.REFRESH,
       config.jwt.secret
     )
-    const user = await userService.getUserById(Number(refreshTokenDoc.sub), config.database)
+    if (!refreshTokenDoc.sub) {
+      throw new Error()
+    }
+    const user = await userService.getUserById(refreshTokenDoc.sub, config.database)
     if (!user) {
       throw new Error()
     }
@@ -66,7 +69,10 @@ export const resetPassword = async (
       tokenTypes.RESET_PASSWORD,
       config.jwt.secret
     )
-    const userId = Number(resetPasswordTokenDoc.sub)
+    if (!resetPasswordTokenDoc.sub) {
+      throw new Error()
+    }
+    const userId = resetPasswordTokenDoc.sub
     const user = await userService.getUserById(userId, config.database)
     if (!user) {
       throw new Error()
@@ -84,7 +90,10 @@ export const verifyEmail = async (verifyEmailToken: string, config: Config): Pro
       tokenTypes.VERIFY_EMAIL,
       config.jwt.secret
     )
-    const userId = Number(verifyEmailTokenDoc.sub)
+    if (!verifyEmailTokenDoc.sub) {
+      throw new Error()
+    }
+    const userId = verifyEmailTokenDoc.sub
     const user = await userService.getUserById(userId, config.database)
     if (!user) {
       throw new Error()
@@ -109,7 +118,7 @@ export const loginOrCreateUserWithOauth = async (
 }
 
 export const linkUserWithOauth = async (
-  userId: number,
+  userId: string,
   providerUser: OAuthUserModel,
   databaseConfig: Config['database']
 ): Promise<void> => {
@@ -136,7 +145,7 @@ export const linkUserWithOauth = async (
 }
 
 export const deleteOauthLink = async (
-  userId: number,
+  userId: string,
   provider: AuthProviderType,
   databaseConfig: Config['database']
 ): Promise<void> => {

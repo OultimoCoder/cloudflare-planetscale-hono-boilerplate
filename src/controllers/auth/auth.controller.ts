@@ -6,6 +6,7 @@ import * as authService from '../../services/auth.service'
 import * as emailService from '../../services/email.service'
 import * as tokenService from '../../services/token.service'
 import * as userService from '../../services/user.service'
+import { ApiError } from '../../utils/ApiError'
 import * as authValidation from '../../validations/auth.validation'
 
 export const register: Handler<Environment> = async (c) => {
@@ -68,7 +69,10 @@ export const resetPassword: Handler<Environment> = async (c) => {
 export const sendVerificationEmail: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
   const payload = c.get('payload')
-  const userId = Number(payload.sub)
+  const userId = payload.sub
+  if (!userId) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
+  }
   // Don't let bad actors know if the email is registered by returning an error if the email
   // is already verified
   try {
@@ -99,7 +103,10 @@ export const verifyEmail: Handler<Environment> = async (c) => {
 export const getAuthorisations: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
   const payload = c.get('payload')
-  const userId = Number(payload.sub)
+  if (!payload.sub) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
+  }
+  const userId = payload.sub
   const authorisations = await userService.getAuthorisations(userId, config.database)
   return c.json(authorisations, httpStatus.OK)
 }

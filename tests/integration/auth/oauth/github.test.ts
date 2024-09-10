@@ -36,10 +36,9 @@ describe('Oauth routes', () => {
       )
     })
     test('should return 403 if user has not verified their email', async () => {
-      const ids = await insertUsers([userTwo], config.database)
-      const userId = ids[0]
+      await insertUsers([userTwo], config.database)
       const accessToken = await getAccessToken(
-        userId,
+        userTwo.id,
         userTwo.role,
         config.jwt,
         tokenTypes.ACCESS,
@@ -68,9 +67,8 @@ describe('Oauth routes', () => {
     })
     afterEach(() => fetchMock.assertNoPendingInterceptors())
     test('should return 200 and successfully link github account', async () => {
-      const ids = await insertUsers([userOne], config.database)
-      const userId = ids[0]
-      const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
+      await insertUsers([userOne], config.database)
+      const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
 
       const githubApiMock = fetchMock.get('https://api.github.com')
       githubApiMock.intercept({ method: 'GET', path: '/user' }).reply(200, JSON.stringify(newUser))
@@ -80,7 +78,7 @@ describe('Oauth routes', () => {
         .reply(200, JSON.stringify({ access_token: '1234' }))
 
       const providerId = '123456'
-      const res = await request(`/v1/auth/github/${userId}`, {
+      const res = await request(`/v1/auth/github/${userOne.id}`, {
         method: 'POST',
         body: JSON.stringify({ code: providerId }),
         headers: {
@@ -93,7 +91,7 @@ describe('Oauth routes', () => {
       const dbUser = await client
         .selectFrom('user')
         .selectAll()
-        .where('user.id', '=', userId)
+        .where('user.id', '=', userOne.id)
         .executeTakeFirst()
 
       expect(dbUser).toBeDefined()
@@ -112,7 +110,7 @@ describe('Oauth routes', () => {
         .selectFrom('authorisations')
         .selectAll()
         .where('authorisations.provider_type', '=', authProviders.GITHUB)
-        .where('authorisations.user_id', '=', userId)
+        .where('authorisations.user_id', '=', userOne.id)
         .where('authorisations.provider_user_id', '=', String(newUser.id))
         .executeTakeFirst()
 
@@ -121,10 +119,9 @@ describe('Oauth routes', () => {
     })
 
     test('should return 401 if user does not exist when linking', async () => {
-      const ids = await insertUsers([userOne], config.database)
-      const userId = ids[0]
-      const userOneAccessToken = await getAccessToken(userId, userOne.role, config.jwt)
-      await client.deleteFrom('user').where('user.id', '=', userId).execute()
+      await insertUsers([userOne], config.database)
+      const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
+      await client.deleteFrom('user').where('user.id', '=', userOne.id).execute()
 
       const githubApiMock = fetchMock.get('https://api.github.com')
       githubApiMock.intercept({ method: 'GET', path: '/user' }).reply(200, JSON.stringify(newUser))
@@ -134,7 +131,7 @@ describe('Oauth routes', () => {
         .reply(200, JSON.stringify({ access_token: '1234' }))
 
       const providerId = '123456'
-      const res = await request(`/v1/auth/github/${userId}`, {
+      const res = await request(`/v1/auth/github/${userOne.id}`, {
         method: 'POST',
         body: JSON.stringify({ code: providerId }),
         headers: {
@@ -148,7 +145,7 @@ describe('Oauth routes', () => {
         .selectFrom('authorisations')
         .selectAll()
         .where('authorisations.provider_type', '=', authProviders.GITHUB)
-        .where('authorisations.user_id', '=', userId)
+        .where('authorisations.user_id', '=', userOne.id)
         .where('authorisations.provider_user_id', '=', String(newUser.id))
         .executeTakeFirst()
 
@@ -156,9 +153,8 @@ describe('Oauth routes', () => {
     })
 
     test('should return 401 if code is invalid', async () => {
-      const ids = await insertUsers([userOne], config.database)
-      const userId = ids[0]
-      const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
+      await insertUsers([userOne], config.database)
+      const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
 
       const githubMock = fetchMock.get('https://github.com')
       githubMock
@@ -166,7 +162,7 @@ describe('Oauth routes', () => {
         .reply(httpStatus.UNAUTHORIZED, JSON.stringify({ error: 'error' }))
 
       const providerId = '123456'
-      const res = await request(`/v1/auth/github/${userId}`, {
+      const res = await request(`/v1/auth/github/${userOne.id}`, {
         method: 'POST',
         body: JSON.stringify({ code: providerId }),
         headers: {
@@ -178,9 +174,8 @@ describe('Oauth routes', () => {
     })
 
     test('should return 403 if linking different user', async () => {
-      const ids = await insertUsers([userOne], config.database)
-      const userId = ids[0]
-      const userOneAccessToken = await getAccessToken(userId, userOne.role, config.jwt)
+      await insertUsers([userOne], config.database)
+      const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
 
       const providerId = '123456'
       const res = await request('/v1/auth/github/5298', {
@@ -195,11 +190,10 @@ describe('Oauth routes', () => {
     })
 
     test('should return 400 if no code provided', async () => {
-      const ids = await insertUsers([userOne], config.database)
-      const userId = ids[0]
-      const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
+      await insertUsers([userOne], config.database)
+      const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
 
-      const res = await request(`/v1/auth/github/${userId}`, {
+      const res = await request(`/v1/auth/github/${userOne.id}`, {
         method: 'POST',
         body: JSON.stringify({}),
         headers: {
@@ -221,10 +215,9 @@ describe('Oauth routes', () => {
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
     })
     test('should return 403 if user has not verified their email', async () => {
-      const ids = await insertUsers([userTwo], config.database)
-      const userId = ids[0]
+      await insertUsers([userTwo], config.database)
       const accessToken = await getAccessToken(
-        userId,
+        userTwo.id,
         userTwo.role,
         config.jwt,
         tokenTypes.ACCESS,
@@ -244,13 +237,12 @@ describe('Oauth routes', () => {
 
   describe('DELETE /v1/auth/github/:userId', () => {
     test('should return 200 and successfully remove github account link', async () => {
-      const ids = await insertUsers([userOne], config.database)
-      const userId = ids[0]
-      const userOneAccessToken = await getAccessToken(ids[0], userOne.role, config.jwt)
-      const githubUser = githubAuthorisation(userId)
+      await insertUsers([userOne], config.database)
+      const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
+      const githubUser = githubAuthorisation(userOne.id)
       await insertAuthorisations([githubUser], config.database)
 
-      const res = await request(`/v1/auth/github/${userId}`, {
+      const res = await request(`/v1/auth/github/${userOne.id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${userOneAccessToken}`
@@ -262,7 +254,7 @@ describe('Oauth routes', () => {
         .selectFrom('authorisations')
         .selectAll()
         .where('authorisations.provider_type', '=', authProviders.GITHUB)
-        .where('authorisations.user_id', '=', userId)
+        .where('authorisations.user_id', '=', userOne.id)
         .executeTakeFirst()
 
       expect(oauthUser).toBeUndefined()
@@ -271,13 +263,12 @@ describe('Oauth routes', () => {
 
     test('should return 400 if user does not have a local login and only 1 link', async () => {
       const newUser = { ...userOne, password: null }
-      const ids = await insertUsers([newUser], config.database)
-      const userId = ids[0]
-      const userOneAccessToken = await getAccessToken(ids[0], newUser.role, config.jwt)
-      const githubUser = githubAuthorisation(userId)
+      await insertUsers([newUser], config.database)
+      const userOneAccessToken = await getAccessToken(newUser.id, newUser.role, config.jwt)
+      const githubUser = githubAuthorisation(newUser.id)
       await insertAuthorisations([githubUser], config.database)
 
-      const res = await request(`/v1/auth/github/${userId}`, {
+      const res = await request(`/v1/auth/github/${newUser.id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${userOneAccessToken}`
@@ -289,7 +280,7 @@ describe('Oauth routes', () => {
         .selectFrom('authorisations')
         .selectAll()
         .where('authorisations.provider_type', '=', authProviders.GITHUB)
-        .where('authorisations.user_id', '=', userId)
+        .where('authorisations.user_id', '=', newUser.id)
         .executeTakeFirst()
 
       expect(oauthUser).toBeDefined()
@@ -297,15 +288,14 @@ describe('Oauth routes', () => {
 
     test('should return 400 if user does not have github link', async () => {
       const newUser = { ...userOne, password: null }
-      const ids = await insertUsers([newUser], config.database)
-      const userId = ids[0]
-      const userOneAccessToken = await getAccessToken(ids[0], newUser.role, config.jwt)
-      const googleUser = googleAuthorisation(userId)
+      await insertUsers([newUser], config.database)
+      const userOneAccessToken = await getAccessToken(newUser.id, newUser.role, config.jwt)
+      const googleUser = googleAuthorisation(newUser.id)
       await insertAuthorisations([googleUser], config.database)
-      const facebookUser = facebookAuthorisation(userId)
+      const facebookUser = facebookAuthorisation(newUser.id)
       await insertAuthorisations([facebookUser], config.database)
 
-      const res = await request(`/v1/auth/github/${userId}`, {
+      const res = await request(`/v1/auth/github/${newUser.id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${userOneAccessToken}`
@@ -316,11 +306,10 @@ describe('Oauth routes', () => {
 
     test('should return 400 if user only has a local login', async () => {
       const newUser = { ...userOne, password: null }
-      const ids = await insertUsers([newUser], config.database)
-      const userId = ids[0]
-      const userOneAccessToken = await getAccessToken(ids[0], newUser.role, config.jwt)
+      await insertUsers([newUser], config.database)
+      const userOneAccessToken = await getAccessToken(newUser.id, newUser.role, config.jwt)
 
-      const res = await request(`/v1/auth/discord/${userId}`, {
+      const res = await request(`/v1/auth/github/${newUser.id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${userOneAccessToken}`
@@ -331,14 +320,13 @@ describe('Oauth routes', () => {
 
     test('should return 200 if user does not have a local login and 2 links', async () => {
       const newUser = { ...userOne, password: null }
-      const ids = await insertUsers([newUser], config.database)
-      const userId = ids[0]
-      const userOneAccessToken = await getAccessToken(ids[0], newUser.role, config.jwt)
-      const githubUser = githubAuthorisation(userId)
-      const facebookUser = facebookAuthorisation(userId)
+      await insertUsers([newUser], config.database)
+      const userOneAccessToken = await getAccessToken(newUser.id, newUser.role, config.jwt)
+      const githubUser = githubAuthorisation(newUser.id)
+      const facebookUser = facebookAuthorisation(newUser.id)
       await insertAuthorisations([githubUser, facebookUser], config.database)
 
-      const res = await request(`/v1/auth/github/${userId}`, {
+      const res = await request(`/v1/auth/github/${newUser.id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${userOneAccessToken}`
@@ -350,7 +338,7 @@ describe('Oauth routes', () => {
         .selectFrom('authorisations')
         .selectAll()
         .where('authorisations.provider_type', '=', authProviders.GITHUB)
-        .where('authorisations.user_id', '=', userId)
+        .where('authorisations.user_id', '=', newUser.id)
         .executeTakeFirst()
 
       expect(oauthGithubUser).toBeUndefined()
@@ -359,16 +347,15 @@ describe('Oauth routes', () => {
         .selectFrom('authorisations')
         .selectAll()
         .where('authorisations.provider_type', '=', authProviders.FACEBOOK)
-        .where('authorisations.user_id', '=', userId)
+        .where('authorisations.user_id', '=', newUser.id)
         .executeTakeFirst()
 
       expect(oauthFacebookUser).toBeDefined()
     })
 
     test('should return 403 if unlinking different user', async () => {
-      const ids = await insertUsers([userOne], config.database)
-      const userId = ids[0]
-      const userOneAccessToken = await getAccessToken(userId, userOne.role, config.jwt)
+      await insertUsers([userOne], config.database)
+      const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
 
       const res = await request('/v1/auth/github/5298', {
         method: 'DELETE',
@@ -463,9 +450,8 @@ describe('Oauth routes', () => {
     })
 
     test('should return 200 and successfully login user if already created', async () => {
-      const ids = await insertUsers([userOne], config.database)
-      const userId = ids[0]
-      const githubUser = githubAuthorisation(userId)
+      await insertUsers([userOne], config.database)
+      const githubUser = githubAuthorisation(userOne.id)
       await insertAuthorisations([githubUser], config.database)
       newUser.id = parseInt(githubUser.provider_user_id)
 
@@ -488,7 +474,7 @@ describe('Oauth routes', () => {
       expect(res.status).toBe(httpStatus.OK)
       expect(body.user).not.toHaveProperty('password')
       expect(body.user).toEqual({
-        id: userId,
+        id: userOne.id,
         name: userOne.name,
         email: userOne.email,
         role: userOne.role,

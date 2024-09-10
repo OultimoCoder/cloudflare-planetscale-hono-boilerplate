@@ -16,7 +16,7 @@ export interface TokenResponse {
 }
 
 export const getAccessToken = async (
-  userId: number,
+  userId: string,
   role: Role,
   jwtConfig: Config['jwt'],
   type: TokenType = tokenTypes.ACCESS,

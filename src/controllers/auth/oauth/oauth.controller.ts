@@ -35,7 +35,10 @@ export const oauthLink = async <T extends AuthProviderType>(
   providerType: T
 ): Promise<Response> => {
   const payload = c.get('payload')
-  const userId = Number(payload.sub)
+  const userId = payload.sub
+  if (!userId) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
+  }
   const config = getConfig(c.env)
   let providerUser: OAuthUserModel
   try {
@@ -55,7 +58,10 @@ export const deleteOauthLink = async (
   provider: AuthProviderType
 ): Promise<Response> => {
   const payload = c.get('payload')
-  const userId = Number(payload.sub)
+  const userId = payload.sub
+  if (!userId) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
+  }
   const config = getConfig(c.env)
   await authService.deleteOauthLink(userId, provider, config.database)
   c.status(httpStatus.NO_CONTENT)

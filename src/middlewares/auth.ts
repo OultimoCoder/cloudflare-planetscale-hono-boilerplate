@@ -37,7 +37,7 @@ export const auth =
     const jwtToken = parts[1]
     const { authorized, payload } = await authenticate(jwtToken, config.jwt.secret)
 
-    if (!authorized || !payload) {
+    if (!authorized || !payload || !payload.sub) {
       throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
     }
 
@@ -51,7 +51,7 @@ export const auth =
       }
     }
     if (!payload.isEmailVerified) {
-      const user = await getUserById(Number(payload.sub), config['database'])
+      const user = await getUserById(payload.sub, config['database'])
       if (!user) {
         throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate')
       }

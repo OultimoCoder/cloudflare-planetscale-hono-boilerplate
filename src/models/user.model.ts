@@ -5,7 +5,7 @@ import { UserTable } from '../tables/user.table'
 import { BaseModel } from './base.model'
 
 export class User extends BaseModel implements Selectable<UserTable> {
-  id: number
+  id: string
   name: string | null
   email: string
   is_email_verified: boolean
