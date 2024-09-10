@@ -39,8 +39,8 @@
   "scripts": {
     "build": "node ./build.js",
     "dev": "wrangler dev dist/index.mjs --live-reload --port 8787",
-    "tests": "npm run build && vitest",
-    "tests:coverage": "npm run build && vitest --coverage --coverage.provider istanbul --coverage.include src/",
+    "tests": "npm run build && vitest run",
+    "tests:coverage": "npm run build && vitest run --coverage --coverage.provider istanbul --coverage.include src/",
     "migrate:test:latest": "node --experimental-specifier-resolution=node --loader ts-node/esm ./scripts/migrate.ts test latest",
     "migrate:test:none": "node --experimental-specifier-resolution=node --loader ts-node/esm ./scripts/migrate.ts test none",
     "migrate:test:down": "node --experimental-specifier-resolution=node --loader ts-node/esm ./scripts/migrate.ts test down",
