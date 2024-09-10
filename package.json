@@ -1,6 +1,6 @@
 {
   "name": "create-cf-planetscale-app",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Create a Cloudflare workers app for building production ready RESTful APIs using Hono",
   "main": "dist/index.mjs",
   "engines": {
