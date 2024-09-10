@@ -1,4 +1,4 @@
-import { Kysely } from 'kysely'
+import { Kysely, sql } from 'kysely'
 import { Database } from '../src/config/database'
 
 export async function up(db: Kysely<Database>) {
@@ -10,6 +10,10 @@ export async function up(db: Kysely<Database>) {
     .addColumn('email', 'varchar(255)', (col) => col.notNull().unique())
     .addColumn('is_email_verified', 'boolean', (col) => col.defaultTo(false))
     .addColumn('role', 'varchar(255)', (col) => col.defaultTo('user'))
+    .addColumn('created_at', 'timestamp', (col) => col.defaultTo(sql`NOW()`))
+    .addColumn('updated_at', 'timestamp', (col) => {
+      return col.defaultTo(sql`NOW()`).modifyEnd(sql`ON UPDATE NOW()`)
+    })
     .execute()
 
   await db.schema
@@ -19,6 +23,10 @@ export async function up(db: Kysely<Database>) {
     .addColumn('user_id', 'varchar(255)', (col) => col.notNull())
     .addPrimaryKeyConstraint('primary_key', ['provider_type', 'provider_user_id', 'user_id'])
     .addUniqueConstraint('unique_provider_user', ['provider_type', 'provider_user_id'])
+    .addColumn('created_at', 'timestamp', (col) => col.defaultTo(sql`NOW()`))
+    .addColumn('updated_at', 'timestamp', (col) => {
+      return col.defaultTo(sql`NOW()`).modifyEnd(sql`ON UPDATE NOW()`)
+    })
     .execute()
 
   await db.schema.createIndex('user_email_index').on('user').column('email').execute()

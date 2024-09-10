@@ -12,7 +12,7 @@ export class User extends BaseModel implements Selectable<UserTable> {
   role: Role
   password: string | null
 
-  private_fields = ['password']
+  private_fields = ['password', 'created_at', 'updated_at']
 
   constructor(user: Selectable<UserTable>) {
     super()
@@ -28,9 +28,5 @@ export class User extends BaseModel implements Selectable<UserTable> {
   isPasswordMatch = async (userPassword: string): Promise<boolean> => {
     if (!this.password) throw 'No password connected to user'
     return await bcrypt.compare(userPassword, this.password)
-  }
-
-  canAccessPrivateFields(): boolean {
-    return this.role === 'admin'
   }
 }

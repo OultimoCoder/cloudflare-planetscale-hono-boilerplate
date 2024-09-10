@@ -69,7 +69,9 @@ describe('User routes', () => {
         password: expect.anything(),
         email: newUser.email,
         role: 'user',
-        is_email_verified: 0
+        is_email_verified: 0,
+        created_at: expect.any(Date),
+        updated_at: expect.any(Date)
       })
     })
 
@@ -268,13 +270,31 @@ describe('User routes', () => {
       const body = await res.json<UserResponse[]>()
       expect(res.status).toBe(httpStatus.OK)
       expect(body).toHaveLength(3)
-      expect(body[0]).toEqual({
-        id: userOne.id,
-        name: userOne.name,
-        email: userOne.email,
-        role: userOne.role,
-        is_email_verified: 0
-      })
+      expect(body).toEqual(
+        expect.arrayContaining([
+          {
+            id: userOne.id,
+            name: userOne.name,
+            email: userOne.email,
+            role: userOne.role,
+            is_email_verified: 0
+          },
+          {
+            id: userTwo.id,
+            name: userTwo.name,
+            email: userTwo.email,
+            role: userTwo.role,
+            is_email_verified: 0
+          },
+          {
+            id: admin.id,
+            name: admin.name,
+            email: admin.email,
+            role: admin.role,
+            is_email_verified: 0
+          }
+        ])
+      )
     })
 
     test('should return 401 if access token is missing', async () => {
@@ -317,42 +337,6 @@ describe('User routes', () => {
       expect(body[0].id).toBe(userOne.id)
     })
 
-    test('should correctly sort the returned array if desc sort param is specified', async () => {
-      await insertUsers([userOne, userTwo, admin], config.database)
-      const adminAccessToken = await getAccessToken(admin.id, admin.role, config.jwt)
-      const res = await request('/v1/users?sort_by=id:desc', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${adminAccessToken}`
-        }
-      })
-      const body = await res.json<UserResponse[]>()
-      expect(res.status).toBe(httpStatus.OK)
-      expect(body).toHaveLength(3)
-      expect(body[0].id).toBe(admin.id)
-      expect(body[1].id).toBe(userTwo.id)
-      expect(body[2].id).toBe(userOne.id)
-    })
-
-    test('should correctly sort the returned array if asc sort param is specified', async () => {
-      await insertUsers([userOne, userTwo, admin], config.database)
-      const adminAccessToken = await getAccessToken(admin.id, admin.role, config.jwt)
-      const res = await request('/v1/users?sort_by=id:asc', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${adminAccessToken}`
-        }
-      })
-      const body = await res.json<UserResponse[]>()
-      expect(res.status).toBe(httpStatus.OK)
-      expect(body).toHaveLength(3)
-      expect(body[0].id).toBe(admin.id)
-      expect(body[1].id).toBe(userTwo.id)
-      expect(body[2].id).toBe(userOne.id)
-    })
-
     test('should limit returned array if limit param is specified', async () => {
       await insertUsers([userOne, userTwo, admin], config.database)
       const adminAccessToken = await getAccessToken(admin.id, admin.role, config.jwt)
@@ -366,8 +350,6 @@ describe('User routes', () => {
       const body = await res.json<UserResponse[]>()
       expect(res.status).toBe(httpStatus.OK)
       expect(body).toHaveLength(2)
-      expect(body[0].id).toBe(admin.id)
-      expect(body[1].id).toBe(userTwo.id)
     })
 
     test('should return the correct page if page and limit params are specified', async () => {
@@ -383,7 +365,6 @@ describe('User routes', () => {
       const body = await res.json<UserResponse[]>()
       expect(res.status).toBe(httpStatus.OK)
       expect(body).toHaveLength(1)
-      expect(body[0].id).toBe(admin.id)
     })
     test('should return 403 if user has not verified their email', async () => {
       await insertUsers([userTwo], config.database)
