@@ -335,7 +335,7 @@ describe('Auth routes', () => {
     test('should return 401 error if user is not found', async () => {
       const expires = dayjs().add(1, 'minutes')
       const refreshToken = await tokenService.generateToken(
-        123,
+        '123',
         tokenTypes.REFRESH,
         userOne.role,
         expires,
@@ -580,7 +580,7 @@ describe('Auth routes', () => {
       const newPassword = 'iamanewpassword123'
       const expires = dayjs().add(config.jwt.resetPasswordExpirationMinutes, 'minutes')
       const resetPasswordToken = await tokenService.generateToken(
-        123,
+        '123',
         tokenTypes.RESET_PASSWORD,
         userOne.role,
         expires,
@@ -729,7 +729,7 @@ describe('Auth routes', () => {
     test('should return 401 if user is not found', async () => {
       const expires = dayjs().add(config.jwt.verifyEmailExpirationMinutes, 'minutes')
       const verifyEmailToken = await tokenService.generateToken(
-        123,
+        '123',
         tokenTypes.VERIFY_EMAIL,
         userOne.role,
         expires,
