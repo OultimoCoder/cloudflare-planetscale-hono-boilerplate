@@ -1,16 +1,8 @@
 import bcrypt from 'bcryptjs'
-import { Generated, Selectable } from 'kysely'
+import { Selectable } from 'kysely'
 import { Role } from '../config/roles'
+import { UserTable } from '../tables/user.table'
 import { BaseModel } from './base.model'
-
-export interface UserTable {
-  id: Generated<number>
-  name: string | null // null if not available on oauth account linking
-  email: string
-  password: string | null // null if user is created via OAuth
-  is_email_verified: boolean
-  role: Role
-}
 
 export class User extends BaseModel implements Selectable<UserTable> {
   id: number

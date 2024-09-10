@@ -1,7 +1,7 @@
 import { Kysely } from 'kysely'
 import { PlanetScaleDialect } from 'kysely-planetscale'
-import { AuthProviderTable } from '../models/oauth/oauthBase.model'
-import { UserTable } from '../models/user.model'
+import { AuthProviderTable } from '../tables/oauth.table'
+import { UserTable } from '../tables/user.table'
 import { Config } from './config'
 
 let dbClient: Kysely<Database>

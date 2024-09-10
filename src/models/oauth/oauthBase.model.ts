@@ -1,12 +1,6 @@
 import { AuthProviderType, OAuthUserType } from '../../types/oauth.types'
 import { BaseModel } from '../base.model'
 
-export interface AuthProviderTable {
-  provider_user_id: string
-  provider_type: string
-  user_id: number
-}
-
 export class OAuthUserModel extends BaseModel implements OAuthUserType {
   _id: string
   _email: string
