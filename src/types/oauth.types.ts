@@ -1,10 +1,10 @@
 import { authProviders } from '../config/authProviders'
-import { AppleUser } from '../models/oauth/appleUser.model'
-import { DiscordUser } from '../models/oauth/discordUser.model'
-import { FacebookUser } from '../models/oauth/facebookUser.model'
-import { GithubUser } from '../models/oauth/githubUser.model'
-import { GoogleUser } from '../models/oauth/googleUser.model'
-import { SpotifyUser } from '../models/oauth/spotifyUser.model'
+import { AppleUser } from '../models/oauth/apple-user.model'
+import { DiscordUser } from '../models/oauth/discord-user.model'
+import { FacebookUser } from '../models/oauth/facebook-user.model'
+import { GithubUser } from '../models/oauth/github-user.model'
+import { GoogleUser } from '../models/oauth/google-user.model'
+import { SpotifyUser } from '../models/oauth/spotify-user.model'
 
 export type AuthProviderType = (typeof authProviders)[keyof typeof authProviders]
 

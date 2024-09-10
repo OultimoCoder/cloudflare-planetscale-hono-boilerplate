@@ -1,6 +1,6 @@
 import { authProviders } from '../../config/authProviders'
 import { SpotifyUserType } from '../../types/oauth.types'
-import { OAuthUserModel } from './oauthBase.model'
+import { OAuthUserModel } from './oauth-base.model'
 
 export class SpotifyUser extends OAuthUserModel {
   constructor(user: SpotifyUserType) {

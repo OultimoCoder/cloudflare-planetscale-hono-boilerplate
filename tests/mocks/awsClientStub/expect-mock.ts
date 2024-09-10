@@ -1,4 +1,4 @@
-import { AwsStub } from './awsClientStub'
+import { AwsStub } from './aws-client-stub'
 
 // eslint-disable-next-line
 export function toHaveReceivedCommandTimes(mock: AwsStub<any, any, any>, command: unknown, times: number) {

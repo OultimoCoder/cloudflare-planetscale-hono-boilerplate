@@ -1,6 +1,6 @@
 import { authProviders } from '../../config/authProviders'
 import { GithubUserType } from '../../types/oauth.types'
-import { OAuthUserModel } from './oauthBase.model'
+import { OAuthUserModel } from './oauth-base.model'
 
 export class GithubUser extends OAuthUserModel {
   constructor(user: GithubUserType) {

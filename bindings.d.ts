@@ -1,6 +1,6 @@
 import type { JwtPayload } from '@tsndr/cloudflare-worker-jwt'
 import type { Toucan } from 'toucan-js'
-import type { RateLimiter } from './src/durable-objects/rateLimiter.do'
+import type { RateLimiter } from './src/durable-objects/rate-limiter.do'
 
 type Environment = {
   Bindings: {

@@ -3,11 +3,11 @@ import httpStatus from 'http-status'
 import { Environment } from '../../../../bindings'
 import { getConfig } from '../../../config/config'
 import { providerUserFactory } from '../../../factories/oauth.factory'
-import { OAuthUserModel } from '../../../models/oauth/oauthBase.model'
+import { OAuthUserModel } from '../../../models/oauth/oauth-base.model'
 import * as authService from '../../../services/auth.service'
 import * as tokenService from '../../../services/token.service'
 import { AuthProviderType, OauthUserTypes } from '../../../types/oauth.types'
-import { ApiError } from '../../../utils/ApiError'
+import { ApiError } from '../../../utils/api-error'
 import * as authValidation from '../../../validations/auth.validation'
 
 export const oauthCallback = async <T extends AuthProviderType>(

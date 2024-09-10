@@ -6,7 +6,7 @@ import * as authService from '../../services/auth.service'
 import * as emailService from '../../services/email.service'
 import * as tokenService from '../../services/token.service'
 import * as userService from '../../services/user.service'
-import { ApiError } from '../../utils/ApiError'
+import { ApiError } from '../../utils/api-error'
 import * as authValidation from '../../validations/auth.validation'
 
 export const register: Handler<Environment> = async (c) => {

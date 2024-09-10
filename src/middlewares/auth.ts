@@ -6,7 +6,7 @@ import { getConfig } from '../config/config'
 import { roleRights, Permission, Role } from '../config/roles'
 import { tokenTypes } from '../config/tokens'
 import { getUserById } from '../services/user.service'
-import { ApiError } from '../utils/ApiError'
+import { ApiError } from '../utils/api-error'
 
 const authenticate = async (jwtToken: string, secret: string) => {
   let authorized = false

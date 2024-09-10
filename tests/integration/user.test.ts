@@ -9,8 +9,8 @@ import { CreateUser } from '../../src/validations/user.validation'
 import { getAccessToken } from '../fixtures/token.fixture'
 import { UserResponse } from '../fixtures/user.fixture'
 import { userOne, userTwo, admin, insertUsers } from '../fixtures/user.fixture'
-import { clearDBTables } from '../utils/clearDBTables'
-import { request } from '../utils/testRequest'
+import { clearDBTables } from '../utils/clear-db-tables'
+import { request } from '../utils/test-request'
 
 const config = getConfig(env)
 const client = getDBClient(config.database)

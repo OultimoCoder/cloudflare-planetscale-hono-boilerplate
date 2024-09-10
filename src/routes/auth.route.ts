@@ -8,7 +8,7 @@ import * as githubController from '../controllers/auth/oauth/github.controller'
 import * as googleController from '../controllers/auth/oauth/google.controller'
 import * as spotifyController from '../controllers/auth/oauth/spotify.controller'
 import { auth } from '../middlewares/auth'
-import { rateLimit } from '../middlewares/rateLimiter'
+import { rateLimit } from '../middlewares/rate-limiter'
 
 export const route = new Hono<Environment>()
 

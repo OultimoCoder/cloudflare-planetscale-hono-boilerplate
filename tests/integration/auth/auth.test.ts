@@ -24,8 +24,8 @@ import {
 import { getAccessToken, TokenResponse } from '../../fixtures/token.fixture'
 import { userOne, insertUsers, UserResponse, userTwo } from '../../fixtures/user.fixture'
 import { expectExtension, mockClient } from '../../mocks/awsClientStub'
-import { clearDBTables } from '../../utils/clearDBTables'
-import { request } from '../../utils/testRequest'
+import { clearDBTables } from '../../utils/clear-db-tables'
+import { request } from '../../utils/test-request'
 
 const config = getConfig(env)
 const client = getDBClient(config.database)

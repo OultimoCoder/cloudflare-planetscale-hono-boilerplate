@@ -1,7 +1,7 @@
 import httpStatus from 'http-status'
 import { ZodError, z } from 'zod'
 import { Environment } from '../../bindings'
-import { ApiError } from '../utils/ApiError'
+import { ApiError } from '../utils/api-error'
 import { generateZodErrorMessage } from '../utils/zod'
 
 const envVarsSchema = z.object({

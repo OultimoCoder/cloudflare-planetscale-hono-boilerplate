@@ -1,6 +1,6 @@
 import { authProviders } from '../../config/authProviders'
 import { AppleUserType } from '../../types/oauth.types'
-import { OAuthUserModel } from './oauthBase.model'
+import { OAuthUserModel } from './oauth-base.model'
 
 export class AppleUser extends OAuthUserModel {
   constructor(user: AppleUserType) {

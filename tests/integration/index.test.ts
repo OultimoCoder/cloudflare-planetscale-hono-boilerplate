@@ -1,6 +1,6 @@
 import httpStatus from 'http-status'
 import { test, describe, expect } from 'vitest'
-import { request } from '../utils/testRequest'
+import { request } from '../utils/test-request'
 
 describe('Basic routing', () => {
   test('should return 404 if route not found', async () => {

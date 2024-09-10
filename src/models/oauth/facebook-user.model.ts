@@ -1,6 +1,6 @@
 import { authProviders } from '../../config/authProviders'
 import { FacebookUserType } from '../../types/oauth.types'
-import { OAuthUserModel } from './oauthBase.model'
+import { OAuthUserModel } from './oauth-base.model'
 
 export class FacebookUser extends OAuthUserModel {
   constructor(user: FacebookUserType) {

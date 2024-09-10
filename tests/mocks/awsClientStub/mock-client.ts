@@ -1,6 +1,6 @@
 import { Client, MetadataBearer } from '@smithy/types'
 import { vi } from 'vitest'
-import { AwsClientStub, AwsStub } from './awsClientStub'
+import { AwsClientStub, AwsStub } from './aws-client-stub'
 
 /**
  * Creates and attaches a stub of the `Client#send()` method. Only this single method is mocked.

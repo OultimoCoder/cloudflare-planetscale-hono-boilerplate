@@ -5,8 +5,8 @@ import httpStatus from 'http-status'
 import { Environment } from '../bindings'
 import { errorHandler } from './middlewares/error'
 import { defaultRoutes } from './routes'
-import { ApiError } from './utils/ApiError'
-export { RateLimiter } from './durable-objects/rateLimiter.do'
+import { ApiError } from './utils/api-error'
+export { RateLimiter } from './durable-objects/rate-limiter.do'
 
 const app = new Hono<Environment>()
 

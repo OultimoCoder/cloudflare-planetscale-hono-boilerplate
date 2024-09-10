@@ -3,7 +3,7 @@ import httpStatus from 'http-status'
 import { Environment } from '../../bindings'
 import { getConfig } from '../config/config'
 import * as userService from '../services/user.service'
-import { ApiError } from '../utils/ApiError'
+import { ApiError } from '../utils/api-error'
 import * as userValidation from '../validations/user.validation'
 
 export const createUser: Handler<Environment> = async (c) => {

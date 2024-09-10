@@ -1,6 +1,6 @@
 import { Client, Command, MetadataBearer } from '@smithy/types'
 import { MockInstance, vi, Mock } from 'vitest'
-import { mockClient } from './mockClient'
+import { mockClient } from './mock-client'
 
 export type AwsClientBehavior<TClient> =
   TClient extends Client<infer TInput, infer TOutput, infer TConfiguration>

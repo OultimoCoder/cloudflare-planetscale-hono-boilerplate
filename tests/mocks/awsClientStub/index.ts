@@ -1,3 +1,3 @@
-export * from './mockClient'
-export * from './awsClientStub'
-export * from './expectMock'
+export * from './mock-client'
+export * from './aws-client-stub'
+export * from './expect-mock'

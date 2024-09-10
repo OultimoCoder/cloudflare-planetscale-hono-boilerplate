@@ -5,7 +5,7 @@ import httpStatus from 'http-status'
 import type { Toucan } from 'toucan-js'
 import { ZodError } from 'zod'
 import { Environment } from '../../bindings'
-import { ApiError } from '../utils/ApiError'
+import { ApiError } from '../utils/api-error'
 import { generateZodErrorMessage } from '../utils/zod'
 
 const genericJSONErrMsg = 'Unexpected end of JSON input'
