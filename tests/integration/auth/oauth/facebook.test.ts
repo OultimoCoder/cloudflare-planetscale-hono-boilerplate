@@ -26,16 +26,36 @@ clearDBTables(['user', 'authorisations'], config.database)
 describe('Oauth Facebook routes', () => {
   describe('GET /v1/auth/facebook/redirect', () => {
     test('should return 302 and successfully redirect to facebook', async () => {
-      const urlEncodedRedirectUrl = encodeURIComponent(config.oauth.facebook.redirectUrl)
-      const res = await request('/v1/auth/facebook/redirect', {
+      const state = btoa(JSON.stringify({ platform: 'web' }))
+      const urlEncodedRedirectUrl = encodeURIComponent(config.oauth.platform.web.redirectUrl)
+      const res = await request(`/v1/auth/facebook/redirect?state=${state}`, {
         method: 'GET'
       })
       expect(res.status).toBe(httpStatus.FOUND)
       expect(res.headers.get('location')).toBe(
         'https://www.facebook.com/v4.0/dialog/oauth?auth_type=rerequest&' +
-          `client_id=${config.oauth.facebook.clientId}&display=popup&` +
-          `redirect_uri=${urlEncodedRedirectUrl}&response_type=code&scope=email%2C%20user_friends`
+          `client_id=${config.oauth.provider.facebook.clientId}&display=popup&` +
+          `redirect_uri=${urlEncodedRedirectUrl}&response_type=code&scope=email%2C%20user_friends` +
+          `&state=${state}`
       )
+    })
+    test('should return 400 error if state is not provided', async () => {
+      const res = await request('/v1/auth/facebook/redirect', { method: 'GET' })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if state platform is not provided', async () => {
+      const state = btoa(JSON.stringify({}))
+      const res = await request(`/v1/auth/facebook/redirect?state=${state}`, {
+        method: 'GET'
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if state platform is invalid', async () => {
+      const state = btoa(JSON.stringify({ platform: 'fake' }))
+      const res = await request(`/v1/auth/facebook/redirect?state=${state}`, {
+        method: 'GET'
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
     })
   })
 
@@ -59,15 +79,14 @@ describe('Oauth Facebook routes', () => {
           path: '/me?fields=id,email,first_name,last_name&access_token=1234'
         })
         .reply(200, JSON.stringify(newUser))
-      const facebookMock = fetchMock.get('https://graph.facebook.com')
-      facebookMock
+      facebookApiMock
         .intercept({ method: 'POST', path: '/v4.0/oauth/access_token' })
         .reply(200, JSON.stringify({ access_token: '1234' }))
 
       const providerId = '123456'
       const res = await request('/v1/auth/facebook/callback', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -123,7 +142,6 @@ describe('Oauth Facebook routes', () => {
       const facebookUser = facebookAuthorisation(userOne.id)
       await insertAuthorisations([facebookUser], config.database)
       newUser.id = facebookUser.provider_user_id
-
       const facebookApiMock = fetchMock.get('https://graph.facebook.com')
       facebookApiMock
         .intercept({
@@ -131,15 +149,14 @@ describe('Oauth Facebook routes', () => {
           path: '/me?fields=id,email,first_name,last_name&access_token=1234'
         })
         .reply(200, JSON.stringify(newUser))
-      const facebookMock = fetchMock.get('https://graph.facebook.com')
-      facebookMock
+      facebookApiMock
         .intercept({ method: 'POST', path: '/v4.0/oauth/access_token' })
         .reply(200, JSON.stringify({ access_token: '1234' }))
 
       const providerId = '123456'
       const res = await request('/v1/auth/facebook/callback', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -164,7 +181,6 @@ describe('Oauth Facebook routes', () => {
     test('should return 403 if user exists but has not linked their facebook', async () => {
       await insertUsers([userOne], config.database)
       newUser.email = userOne.email
-
       const facebookApiMock = fetchMock.get('https://graph.facebook.com')
       facebookApiMock
         .intercept({
@@ -172,15 +188,14 @@ describe('Oauth Facebook routes', () => {
           path: '/me?fields=id,email,first_name,last_name&access_token=1234'
         })
         .reply(200, JSON.stringify(newUser))
-      const facebookMock = fetchMock.get('https://graph.facebook.com')
-      facebookMock
+      facebookApiMock
         .intercept({ method: 'POST', path: '/v4.0/oauth/access_token' })
         .reply(200, JSON.stringify({ access_token: '1234' }))
 
       const providerId = '123456'
       const res = await request('/v1/auth/facebook/callback', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -194,15 +209,15 @@ describe('Oauth Facebook routes', () => {
     })
 
     test('should return 401 if code is invalid', async () => {
-      const facebookMock = fetchMock.get('https://graph.facebook.com')
-      facebookMock
+      const facebookApiMock = fetchMock.get('https://graph.facebook.com')
+      facebookApiMock
         .intercept({ method: 'POST', path: '/v4.0/oauth/access_token' })
         .reply(httpStatus.UNAUTHORIZED, JSON.stringify({ error: 'error' }))
 
       const providerId = '123456'
       const res = await request('/v1/auth/facebook/callback', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -213,7 +228,29 @@ describe('Oauth Facebook routes', () => {
     test('should return 400 if no code provided', async () => {
       const res = await request('/v1/auth/facebook/callback', {
         method: 'POST',
-        body: JSON.stringify({}),
+        body: JSON.stringify({ platform: 'web' }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if platform is not provided', async () => {
+      const providerId = '123456'
+      const res = await request('/v1/auth/facebook/callback', {
+        method: 'POST',
+        body: JSON.stringify({ code: providerId }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if platform is invalid', async () => {
+      const providerId = '123456'
+      const res = await request('/v1/auth/facebook/callback', {
+        method: 'POST',
+        body: JSON.stringify({ code: providerId, platform: 'wb' }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -230,11 +267,12 @@ describe('Oauth Facebook routes', () => {
         last_name: faker.person.lastName(),
         email: faker.internet.email()
       }
+      fetchMock.activate()
     })
+    afterEach(() => fetchMock.assertNoPendingInterceptors())
     test('should return 200 and successfully link facebook account', async () => {
       await insertUsers([userOne], config.database)
       const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
-
       const facebookApiMock = fetchMock.get('https://graph.facebook.com')
       facebookApiMock
         .intercept({
@@ -242,15 +280,14 @@ describe('Oauth Facebook routes', () => {
           path: '/me?fields=id,email,first_name,last_name&access_token=1234'
         })
         .reply(200, JSON.stringify(newUser))
-      const facebookMock = fetchMock.get('https://graph.facebook.com')
-      facebookMock
+      facebookApiMock
         .intercept({ method: 'POST', path: '/v4.0/oauth/access_token' })
         .reply(200, JSON.stringify({ access_token: '1234' }))
 
       const providerId = '123456'
       const res = await request(`/v1/auth/facebook/${userOne.id}`, {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -292,7 +329,6 @@ describe('Oauth Facebook routes', () => {
       await insertUsers([userOne], config.database)
       const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
       await client.deleteFrom('user').where('user.id', '=', userOne.id).execute()
-
       const facebookApiMock = fetchMock.get('https://graph.facebook.com')
       facebookApiMock
         .intercept({
@@ -300,15 +336,14 @@ describe('Oauth Facebook routes', () => {
           path: '/me?fields=id,email,first_name,last_name&access_token=1234'
         })
         .reply(200, JSON.stringify(newUser))
-      const facebookMock = fetchMock.get('https://graph.facebook.com')
-      facebookMock
+      facebookApiMock
         .intercept({ method: 'POST', path: '/v4.0/oauth/access_token' })
         .reply(200, JSON.stringify({ access_token: '1234' }))
 
       const providerId = '123456'
       const res = await request(`/v1/auth/facebook/${userOne.id}`, {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -330,16 +365,15 @@ describe('Oauth Facebook routes', () => {
     test('should return 401 if code is invalid', async () => {
       await insertUsers([userOne], config.database)
       const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
-
-      const facebookMock = fetchMock.get('https://graph.facebook.com')
-      facebookMock
+      const facebookApiMock = fetchMock.get('https://graph.facebook.com')
+      facebookApiMock
         .intercept({ method: 'POST', path: '/v4.0/oauth/access_token' })
         .reply(httpStatus.UNAUTHORIZED, JSON.stringify({ error: 'error' }))
 
       const providerId = '123456'
       const res = await request(`/v1/auth/facebook/${userOne.id}`, {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -355,7 +389,7 @@ describe('Oauth Facebook routes', () => {
       const providerId = '123456'
       const res = await request('/v1/auth/facebook/5298', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -370,7 +404,7 @@ describe('Oauth Facebook routes', () => {
 
       const res = await request(`/v1/auth/facebook/${userOne.id}`, {
         method: 'POST',
-        body: JSON.stringify({}),
+        body: JSON.stringify({ platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -407,6 +441,34 @@ describe('Oauth Facebook routes', () => {
         }
       })
       expect(res.status).toBe(httpStatus.FORBIDDEN)
+    })
+    test('should return 400 error if platform is not provided', async () => {
+      await insertUsers([userOne], config.database)
+      const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
+      const providerId = '123456'
+      const res = await request(`/v1/auth/facebook/${userOne.id}`, {
+        method: 'POST',
+        body: JSON.stringify({ code: providerId }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if platform is invalid', async () => {
+      await insertUsers([userOne], config.database)
+      const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
+      const providerId = '123456'
+      const res = await request(`/v1/auth/facebook/${userOne.id}`, {
+        method: 'POST',
+        body: JSON.stringify({ code: providerId, platform: 'wb' }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
     })
   })
 
@@ -513,7 +575,7 @@ describe('Oauth Facebook routes', () => {
         .selectFrom('authorisations')
         .selectAll()
         .where('authorisations.provider_type', '=', authProviders.FACEBOOK)
-        .where('authorisations.user_id', '=', userOne.id)
+        .where('authorisations.user_id', '=', newUser.id)
         .executeTakeFirst()
 
       expect(oauthFacebookUser).toBeUndefined()
@@ -522,7 +584,7 @@ describe('Oauth Facebook routes', () => {
         .selectFrom('authorisations')
         .selectAll()
         .where('authorisations.provider_type', '=', authProviders.GITHUB)
-        .where('authorisations.user_id', '=', userOne.id)
+        .where('authorisations.user_id', '=', newUser.id)
         .executeTakeFirst()
 
       expect(oauthGithubUser).toBeDefined()

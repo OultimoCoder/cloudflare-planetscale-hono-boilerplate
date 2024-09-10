@@ -8,7 +8,7 @@ import { getDBClient } from '../../../../src/config/database'
 import { tokenTypes } from '../../../../src/config/tokens'
 import { GoogleUserType } from '../../../../src/types/oauth.types'
 import {
-  facebookAuthorisation,
+  appleAuthorisation,
   githubAuthorisation,
   googleAuthorisation,
   insertAuthorisations
@@ -26,16 +26,36 @@ clearDBTables(['user', 'authorisations'], config.database)
 describe('Oauth Google routes', () => {
   describe('GET /v1/auth/google/redirect', () => {
     test('should return 302 and successfully redirect to google', async () => {
-      const urlEncodedRedirectUrl = encodeURIComponent(config.oauth.google.redirectUrl)
-      const res = await request('/v1/auth/google/redirect', {
+      const state = btoa(JSON.stringify({ platform: 'web' }))
+      const urlEncodedRedirectUrl = encodeURIComponent(config.oauth.platform.web.redirectUrl)
+      const res = await request(`/v1/auth/google/redirect?state=${state}`, {
         method: 'GET'
       })
       expect(res.status).toBe(httpStatus.FOUND)
       expect(res.headers.get('location')).toBe(
-        `https://accounts.google.com/o/oauth2/v2/auth?client_id=${config.oauth.google.clientId}&` +
+        'https://accounts.google.com/o/oauth2/v2/auth?client_id=' +
+          `${config.oauth.provider.google.clientId}&` +
           `include_granted_scopes=true&redirect_uri=${urlEncodedRedirectUrl}&` +
-          'response_type=code&scope=openid%20email%20profile&state=pass-through%20value'
+          `response_type=code&scope=openid%20email%20profile&state=${state}`
       )
+    })
+    test('should return 400 error if state is not provided', async () => {
+      const res = await request('/v1/auth/google/redirect', { method: 'GET' })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if state platform is not provided', async () => {
+      const state = btoa(JSON.stringify({}))
+      const res = await request(`/v1/auth/google/redirect?state=${state}`, {
+        method: 'GET'
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if state platform is invalid', async () => {
+      const state = btoa(JSON.stringify({ platform: 'fake' }))
+      const res = await request(`/v1/auth/google/redirect?state=${state}`, {
+        method: 'GET'
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
     })
   })
   describe('POST /v1/auth/google/callback', () => {
@@ -48,7 +68,7 @@ describe('Oauth Google routes', () => {
       }
       fetchMock.activate()
     })
-    afterEach(() => fetchMock.assertNoPendingInterceptors())
+    afterEach(async () => fetchMock.assertNoPendingInterceptors())
     test('should return 200 and successfully register user if request data is ok', async () => {
       const googleApiMock = fetchMock.get('https://www.googleapis.com')
       googleApiMock
@@ -62,7 +82,7 @@ describe('Oauth Google routes', () => {
       const providerId = '123456'
       const res = await request('/v1/auth/google/callback', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -101,7 +121,7 @@ describe('Oauth Google routes', () => {
         .selectAll()
         .where('authorisations.provider_type', '=', authProviders.GOOGLE)
         .where('authorisations.user_id', '=', body.user.id)
-        .where('authorisations.provider_user_id', '=', String(newUser.id))
+        .where('authorisations.provider_user_id', '=', newUser.id)
         .executeTakeFirst()
 
       expect(oauthUser).toBeDefined()
@@ -118,7 +138,6 @@ describe('Oauth Google routes', () => {
       const googleUser = googleAuthorisation(userOne.id)
       await insertAuthorisations([googleUser], config.database)
       newUser.id = googleUser.provider_user_id
-
       const googleApiMock = fetchMock.get('https://www.googleapis.com')
       googleApiMock
         .intercept({ method: 'GET', path: '/oauth2/v2/userinfo' })
@@ -131,7 +150,7 @@ describe('Oauth Google routes', () => {
       const providerId = '123456'
       const res = await request('/v1/auth/google/callback', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -156,7 +175,6 @@ describe('Oauth Google routes', () => {
     test('should return 403 if user exists but has not linked their google', async () => {
       await insertUsers([userOne], config.database)
       newUser.email = userOne.email
-
       const googleApiMock = fetchMock.get('https://www.googleapis.com')
       googleApiMock
         .intercept({ method: 'GET', path: '/oauth2/v2/userinfo' })
@@ -169,7 +187,7 @@ describe('Oauth Google routes', () => {
       const providerId = '123456'
       const res = await request('/v1/auth/google/callback', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -191,7 +209,7 @@ describe('Oauth Google routes', () => {
       const providerId = '123456'
       const res = await request('/v1/auth/google/callback', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -202,7 +220,29 @@ describe('Oauth Google routes', () => {
     test('should return 400 if no code provided', async () => {
       const res = await request('/v1/auth/google/callback', {
         method: 'POST',
-        body: JSON.stringify({}),
+        body: JSON.stringify({ platform: 'web' }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if platform is not provided', async () => {
+      const providerId = '123456'
+      const res = await request('/v1/auth/google/callback', {
+        method: 'POST',
+        body: JSON.stringify({ code: providerId }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if platform is invalid', async () => {
+      const providerId = '123456'
+      const res = await request('/v1/auth/google/callback', {
+        method: 'POST',
+        body: JSON.stringify({ code: providerId, platform: 'wb' }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -218,11 +258,12 @@ describe('Oauth Google routes', () => {
         name: faker.person.fullName(),
         email: faker.internet.email()
       }
+      fetchMock.activate()
     })
+    afterEach(async () => fetchMock.assertNoPendingInterceptors())
     test('should return 200 and successfully link google account', async () => {
       await insertUsers([userOne], config.database)
       const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
-
       const googleApiMock = fetchMock.get('https://www.googleapis.com')
       googleApiMock
         .intercept({ method: 'GET', path: '/oauth2/v2/userinfo' })
@@ -235,7 +276,7 @@ describe('Oauth Google routes', () => {
       const providerId = '123456'
       const res = await request(`/v1/auth/google/${userOne.id}`, {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -266,8 +307,8 @@ describe('Oauth Google routes', () => {
         .selectAll()
         .where('authorisations.provider_type', '=', authProviders.GOOGLE)
         .where('authorisations.user_id', '=', userOne.id)
-        .where('authorisations.provider_user_id', '=', String(newUser.id))
-        .executeTakeFirst()
+        .where('authorisations.provider_user_id', '=', newUser.id)
+        .execute()
 
       expect(oauthUser).toBeDefined()
       if (!oauthUser) return
@@ -277,7 +318,6 @@ describe('Oauth Google routes', () => {
       await insertUsers([userOne], config.database)
       const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
       await client.deleteFrom('user').where('user.id', '=', userOne.id).execute()
-
       const googleApiMock = fetchMock.get('https://www.googleapis.com')
       googleApiMock
         .intercept({ method: 'GET', path: '/oauth2/v2/userinfo' })
@@ -290,7 +330,7 @@ describe('Oauth Google routes', () => {
       const providerId = '123456'
       const res = await request(`/v1/auth/google/${userOne.id}`, {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -303,7 +343,7 @@ describe('Oauth Google routes', () => {
         .selectAll()
         .where('authorisations.provider_type', '=', authProviders.GOOGLE)
         .where('authorisations.user_id', '=', userOne.id)
-        .where('authorisations.provider_user_id', '=', String(newUser.id))
+        .where('authorisations.provider_user_id', '=', newUser.id)
         .executeTakeFirst()
 
       expect(oauthUser).toBeUndefined()
@@ -312,7 +352,6 @@ describe('Oauth Google routes', () => {
     test('should return 401 if code is invalid', async () => {
       await insertUsers([userOne], config.database)
       const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
-
       const googleMock = fetchMock.get('https://oauth2.googleapis.com')
       googleMock
         .intercept({ method: 'POST', path: '/token' })
@@ -321,7 +360,7 @@ describe('Oauth Google routes', () => {
       const providerId = '123456'
       const res = await request(`/v1/auth/google/${userOne.id}`, {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -337,7 +376,7 @@ describe('Oauth Google routes', () => {
       const providerId = '123456'
       const res = await request('/v1/auth/google/5298', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -352,7 +391,7 @@ describe('Oauth Google routes', () => {
 
       const res = await request(`/v1/auth/google/${userOne.id}`, {
         method: 'POST',
-        body: JSON.stringify({}),
+        body: JSON.stringify({ platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -389,6 +428,34 @@ describe('Oauth Google routes', () => {
         }
       })
       expect(res.status).toBe(httpStatus.FORBIDDEN)
+    })
+    test('should return 400 error if platform is not provided', async () => {
+      await insertUsers([userOne], config.database)
+      const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
+      const providerId = '123456'
+      const res = await request(`/v1/auth/google/${userOne.id}`, {
+        method: 'POST',
+        body: JSON.stringify({ code: providerId }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if platform is invalid', async () => {
+      await insertUsers([userOne], config.database)
+      const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
+      const providerId = '123456'
+      const res = await request(`/v1/auth/google/${userOne.id}`, {
+        method: 'POST',
+        body: JSON.stringify({ code: providerId, platform: 'wb' }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
     })
   })
 
@@ -449,8 +516,8 @@ describe('Oauth Google routes', () => {
       const userOneAccessToken = await getAccessToken(newUser.id, newUser.role, config.jwt)
       const githubUser = githubAuthorisation(newUser.id)
       await insertAuthorisations([githubUser], config.database)
-      const facebookUser = facebookAuthorisation(newUser.id)
-      await insertAuthorisations([facebookUser], config.database)
+      const appleUser = appleAuthorisation(newUser.id)
+      await insertAuthorisations([appleUser], config.database)
 
       const res = await request(`/v1/auth/google/${newUser.id}`, {
         method: 'DELETE',
@@ -464,9 +531,10 @@ describe('Oauth Google routes', () => {
     test('should return 400 if user only has a local login', async () => {
       const newUser = { ...userOne, password: null }
       await insertUsers([newUser], config.database)
-      const userOneAccessToken = await getAccessToken(newUser.id, newUser.role, config.jwt)
+      const userId = newUser.id
+      const userOneAccessToken = await getAccessToken(userId, newUser.role, config.jwt)
 
-      const res = await request(`/v1/auth/google/${newUser.id}`, {
+      const res = await request(`/v1/auth/google/${userId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${userOneAccessToken}`
@@ -480,8 +548,8 @@ describe('Oauth Google routes', () => {
       await insertUsers([newUser], config.database)
       const userOneAccessToken = await getAccessToken(newUser.id, newUser.role, config.jwt)
       const googleUser = googleAuthorisation(newUser.id)
-      const facebookUser = facebookAuthorisation(newUser.id)
-      await insertAuthorisations([googleUser, facebookUser], config.database)
+      const appleUser = appleAuthorisation(newUser.id)
+      await insertAuthorisations([googleUser, appleUser], config.database)
 
       const res = await request(`/v1/auth/google/${newUser.id}`, {
         method: 'DELETE',
@@ -503,7 +571,7 @@ describe('Oauth Google routes', () => {
       const oauthFacebookUser = await client
         .selectFrom('authorisations')
         .selectAll()
-        .where('authorisations.provider_type', '=', authProviders.FACEBOOK)
+        .where('authorisations.provider_type', '=', authProviders.APPLE)
         .where('authorisations.user_id', '=', newUser.id)
         .executeTakeFirst()
 

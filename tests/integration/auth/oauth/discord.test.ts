@@ -26,15 +26,35 @@ clearDBTables(['user', 'authorisations'], config.database)
 describe('Oauth Discord routes', () => {
   describe('GET /v1/auth/discord/redirect', () => {
     test('should return 302 and successfully redirect to discord', async () => {
-      const urlEncodedRedirectUrl = encodeURIComponent(config.oauth.discord.redirectUrl)
-      const res = await request('/v1/auth/discord/redirect', {
+      const state = btoa(JSON.stringify({ platform: 'web' }))
+      const urlEncodedRedirectUrl = encodeURIComponent(config.oauth.platform.web.redirectUrl)
+      const res = await request(`/v1/auth/discord/redirect?state=${state}`, {
         method: 'GET'
       })
       expect(res.status).toBe(httpStatus.FOUND)
       expect(res.headers.get('location')).toBe(
-        `https://discord.com/api/oauth2/authorize?client_id=${config.oauth.discord.clientId}&` +
-          `redirect_uri=${urlEncodedRedirectUrl}&response_type=code&scope=identify%20email`
+        'https://discord.com/api/oauth2/authorize?client_id=' +
+          `${config.oauth.provider.discord.clientId}&redirect_uri=${urlEncodedRedirectUrl}&` +
+          `response_type=code&scope=identify%20email&state=${state}`
       )
+    })
+    test('should return 400 error if state is not provided', async () => {
+      const res = await request('/v1/auth/discord/redirect', { method: 'GET' })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if state platform is not provided', async () => {
+      const state = btoa(JSON.stringify({}))
+      const res = await request(`/v1/auth/discord/redirect?state=${state}`, {
+        method: 'GET'
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if state platform is invalid', async () => {
+      const state = btoa(JSON.stringify({ platform: 'fake' }))
+      const res = await request(`/v1/auth/discord/redirect?state=${state}`, {
+        method: 'GET'
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
     })
   })
 
@@ -62,7 +82,7 @@ describe('Oauth Discord routes', () => {
       const providerId = '123456'
       const res = await request('/v1/auth/discord/callback', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -118,7 +138,6 @@ describe('Oauth Discord routes', () => {
       const discordUser = discordAuthorisation(userOne.id)
       await insertAuthorisations([discordUser], config.database)
       newUser.id = discordUser.provider_user_id
-
       const discordApiMock = fetchMock.get('https://discord.com')
       discordApiMock
         .intercept({ method: 'GET', path: '/api/users/@me' })
@@ -131,7 +150,7 @@ describe('Oauth Discord routes', () => {
       const providerId = '123456'
       const res = await request('/v1/auth/discord/callback', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -156,7 +175,6 @@ describe('Oauth Discord routes', () => {
     test('should return 403 if user exists but has not linked their discord', async () => {
       await insertUsers([userOne], config.database)
       newUser.email = userOne.email
-
       const discordApiMock = fetchMock.get('https://discord.com')
       discordApiMock
         .intercept({ method: 'GET', path: '/api/users/@me' })
@@ -169,7 +187,7 @@ describe('Oauth Discord routes', () => {
       const providerId = '123456'
       const res = await request('/v1/auth/discord/callback', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -183,6 +201,7 @@ describe('Oauth Discord routes', () => {
     })
 
     test('should return 401 if code is invalid', async () => {
+      const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
       const discordMock = fetchMock.get('https://discordapp.com')
       discordMock
         .intercept({ method: 'POST', path: '/api/oauth2/token' })
@@ -191,20 +210,52 @@ describe('Oauth Discord routes', () => {
       const providerId = '123456'
       const res = await request('/v1/auth/discord/callback', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userOneAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
     })
 
     test('should return 400 if no code provided', async () => {
+      await insertUsers([userOne], config.database)
+      const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
       const res = await request('/v1/auth/discord/callback', {
         method: 'POST',
-        body: JSON.stringify({}),
+        body: JSON.stringify({ platform: 'web' }),
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if platform is not provided', async () => {
+      await insertUsers([userOne], config.database)
+      const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
+      const providerId = '123456'
+      const res = await request('/v1/auth/discord/callback', {
+        method: 'POST',
+        body: JSON.stringify({ code: providerId }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if platform is invalid', async () => {
+      await insertUsers([userOne], config.database)
+      const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
+      const providerId = '123456'
+      const res = await request('/v1/auth/discord/callback', {
+        method: 'POST',
+        body: JSON.stringify({ code: providerId, platform: 'wb' }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userOneAccessToken}`
         }
       })
       expect(res.status).toBe(httpStatus.BAD_REQUEST)
@@ -219,11 +270,12 @@ describe('Oauth Discord routes', () => {
         username: faker.person.fullName(),
         email: faker.internet.email()
       }
+      fetchMock.activate()
     })
+    afterEach(() => fetchMock.assertNoPendingInterceptors())
     test('should return 200 and successfully link discord account', async () => {
       await insertUsers([userOne], config.database)
       const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
-
       const discordApiMock = fetchMock.get('https://discord.com')
       discordApiMock
         .intercept({ method: 'GET', path: '/api/users/@me' })
@@ -236,7 +288,7 @@ describe('Oauth Discord routes', () => {
       const providerId = '123456'
       const res = await request(`/v1/auth/discord/${userOne.id}`, {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -278,7 +330,6 @@ describe('Oauth Discord routes', () => {
       await insertUsers([userOne], config.database)
       const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
       await client.deleteFrom('user').where('user.id', '=', userOne.id).execute()
-
       const discordApiMock = fetchMock.get('https://discord.com')
       discordApiMock
         .intercept({ method: 'GET', path: '/api/users/@me' })
@@ -291,7 +342,7 @@ describe('Oauth Discord routes', () => {
       const providerId = '123456'
       const res = await request(`/v1/auth/discord/${userOne.id}`, {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -313,7 +364,6 @@ describe('Oauth Discord routes', () => {
     test('should return 401 if code is invalid', async () => {
       await insertUsers([userOne], config.database)
       const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
-
       const discordMock = fetchMock.get('https://discordapp.com')
       discordMock
         .intercept({ method: 'POST', path: '/api/oauth2/token' })
@@ -322,7 +372,7 @@ describe('Oauth Discord routes', () => {
       const providerId = '123456'
       const res = await request(`/v1/auth/discord/${userOne.id}`, {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -338,7 +388,7 @@ describe('Oauth Discord routes', () => {
       const providerId = '123456'
       const res = await request('/v1/auth/discord/5298', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -353,7 +403,7 @@ describe('Oauth Discord routes', () => {
 
       const res = await request(`/v1/auth/discord/${userOne.id}`, {
         method: 'POST',
-        body: JSON.stringify({}),
+        body: JSON.stringify({ platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -391,8 +441,35 @@ describe('Oauth Discord routes', () => {
       })
       expect(res.status).toBe(httpStatus.FORBIDDEN)
     })
+    test('should return 400 error if platform is not provided', async () => {
+      await insertUsers([userOne], config.database)
+      const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
+      const providerId = '123456'
+      const res = await request(`/v1/auth/discord/${userOne.id}`, {
+        method: 'POST',
+        body: JSON.stringify({ code: providerId }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if platform is invalid', async () => {
+      await insertUsers([userOne], config.database)
+      const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
+      const providerId = '123456'
+      const res = await request(`/v1/auth/discord/${userOne.id}`, {
+        method: 'POST',
+        body: JSON.stringify({ code: providerId, platform: 'wb' }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
   })
-
   describe('DELETE /v1/auth/discord/:userId', () => {
     test('should return 200 and successfully remove discord account link', async () => {
       await insertUsers([userOne], config.database)

@@ -15,10 +15,6 @@ bindings = [
 tag = 'v1'
 new_classes = ['RateLimiter']
 
-[miniflare]
-kv_persist = false
-env_path = '.env.test'
-
 [vars]
 ENV = 'development'
 JWT_ACCESS_EXPIRATION_MINUTES=30
@@ -39,8 +35,11 @@ OAUTH_GOOGLE_CLIENT_ID='myclientid'
 OAUTH_GOOGLE_REDIRECT_URL='https://frontend.com/login'
 OAUTH_FACEBOOK_CLIENT_ID='myclientid'
 OAUTH_FACEBOOK_REDIRECT_URL='https://frontend.com/login'
-OAUTH_APPLE_CLIENT_ID='myclientid'
-OAUTH_APPLE_REDIRECT_URL='https://frontend.com/login'
+OAUTH_APPLE_CLIENT_ID='com.your.app'
+OAUTH_APPLE_KEY_ID='randomid'
+OAUTH_APPLE_TEAM_ID='randomid'
+OAUTH_APPLE_JWT_ACCESS_EXPIRATION_MINUTES=30
+OAUTH_APPLE_REDIRECT_URL='https://api.com/v1/auth/apple/callback'
 
 [build]
 command = 'npm run build'
@@ -55,4 +54,4 @@ command = 'npm run build'
 # OAUTH_SPOTIFY_CLIENT_SECRET
 # OAUTH_GOOGLE_CLIENT_SECRET
 # OAUTH_FACEBOOK_CLIENT_SECRET
-# OAUTH_APPLE_CLIENT_SECRET
+# OAUTH_APPLE_PRIVATE_KEY

@@ -41,6 +41,23 @@ export const changePassword = z.strictObject({
   newPassword: z.string().superRefine(password).transform(hashPassword)
 })
 
-export const oauthCallback = z.strictObject({
+export const oauthCallback = z.object({
+  code: z.string(),
+  platform: z.union([z.literal('web'), z.literal('ios'), z.literal('android')])
+})
+
+export const linkApple = z.object({
   code: z.string()
+})
+
+export const oauthRedirect = z.object({
+  state: z.string()
+})
+
+export const validateOneTimeCode = z.object({
+  code: z.string()
+})
+
+export const stateValidation = z.object({
+  platform: z.union([z.literal('web'), z.literal('ios'), z.literal('android')])
 })

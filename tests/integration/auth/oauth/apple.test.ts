@@ -10,37 +10,58 @@ import { tokenTypes } from '../../../../src/config/tokens'
 import { AppleUserType } from '../../../../src/types/oauth.types'
 import {
   appleAuthorisation,
-  facebookAuthorisation,
   githubAuthorisation,
+  googleAuthorisation,
   insertAuthorisations
 } from '../../../fixtures/authorisations.fixture'
-import { getAccessToken, TokenResponse } from '../../../fixtures/token.fixture'
-import { userOne, insertUsers, UserResponse, userTwo } from '../../../fixtures/user.fixture'
+import { getAccessToken } from '../../../fixtures/token.fixture'
+import { userOne, insertUsers, userTwo } from '../../../fixtures/user.fixture'
 import { clearDBTables } from '../../../utils/clear-db-tables'
 import { request } from '../../../utils/test-request'
 
 const config = getConfig(env)
 const client = getDBClient(config.database)
 
-clearDBTables(['user', 'authorisations'], config.database)
+clearDBTables(['authorisations', 'user'], config.database)
 
 describe('Oauth Apple routes', () => {
   describe('GET /v1/auth/apple/redirect', () => {
     test('should return 302 and successfully redirect to apple', async () => {
-      const urlEncodedRedirectUrl = encodeURIComponent(config.oauth.apple.redirectUrl)
-      const res = await request('/v1/auth/apple/redirect', {
+      const state = btoa(JSON.stringify({ platform: 'web' }))
+      const urlEncodedRedirectUrl = encodeURIComponent(config.oauth.provider.apple.redirectUrl)
+      const res = await request(`/v1/auth/apple/redirect?state=${state}`, {
         method: 'GET'
       })
       expect(res.status).toBe(httpStatus.FOUND)
       expect(res.headers.get('location')).toContain(
         'https://appleid.apple.com/auth/authorize?client_id=myclientid&redirect_uri=' +
-          `${urlEncodedRedirectUrl}&response_mode=query&response_type=code&scope=`
+          `${urlEncodedRedirectUrl}&response_mode=form_post&response_type=code&scope=email` +
+          `&state=${state}`
       )
+    })
+    test('should return 400 error if state is not provided', async () => {
+      const res = await request('/v1/auth/apple/redirect', { method: 'GET' })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if state platform is not provided', async () => {
+      const state = btoa(JSON.stringify({}))
+      const res = await request(`/v1/auth/apple/redirect?state=${state}`, {
+        method: 'GET'
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if state platform is invalid', async () => {
+      const state = btoa(JSON.stringify({ platform: 'fake' }))
+      const res = await request(`/v1/auth/apple/redirect?state=${state}`, {
+        method: 'GET'
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
     })
   })
 
   describe('POST /v1/auth/apple/callback', () => {
     let newUser: AppleUserType
+    let state: string
     beforeAll(async () => {
       newUser = {
         sub: faker.number.int().toString(),
@@ -48,37 +69,57 @@ describe('Oauth Apple routes', () => {
         email: faker.internet.email()
       }
       fetchMock.activate()
+      state = btoa(JSON.stringify({ platform: 'web' }))
     })
     afterEach(() => fetchMock.assertNoPendingInterceptors())
-    test('should return 200 and successfully register user if request data is ok', async () => {
+    test('should return 200 and successfully register + redirect with one time code', async () => {
       const mockJWT = await jwt.sign(newUser, 'randomSecret')
       const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
         .intercept({ method: 'POST', path: '/auth/token' })
-        .reply(200, JSON.stringify({ access_token: mockJWT }))
+        .reply(200, JSON.stringify({ id_token: mockJWT }))
       const providerId = '123456'
-      const res = await request('/v1/auth/apple/callback', {
-        method: 'POST',
-        body: JSON.stringify({ code: providerId }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      const body = await res.json<{ user: UserResponse; tokens: TokenResponse }>()
-      expect(res.status).toBe(httpStatus.OK)
-      expect(body.user).not.toHaveProperty('password')
-      expect(body.user).toEqual({
-        id: expect.anything(),
-        name: newUser.name,
-        email: newUser.email,
-        role: 'user',
-        is_email_verified: 1
+      const formData = new FormData()
+      formData.append('code', providerId)
+      formData.append('state', state)
+      const res = await request('/v1/auth/apple/callback', { method: 'POST', body: formData })
+      expect(res.status).toBe(httpStatus.FOUND)
+      expect(res.headers.get('location')).toContain(
+        `${config.oauth.platform.ios.redirectUrl}?oneTimeCode=`
+      )
+      const location = res.headers.get('location')
+      const oneTimeCode = location?.split('=')[1].split('&')[0]
+      expect(oneTimeCode).toBeDefined()
+      if (!oneTimeCode) return
+
+      const returnedState = location?.split('=')[2]
+      expect(returnedState).toBe(state)
+
+      const dbOneTimeCode = await client
+        .selectFrom('one_time_oauth_code')
+        .selectAll()
+        .where('one_time_oauth_code.code', '=', oneTimeCode)
+        .executeTakeFirst()
+
+      expect(dbOneTimeCode).toBeDefined()
+      if (!dbOneTimeCode) return
+
+      expect(dbOneTimeCode).toEqual({
+        code: oneTimeCode,
+        user_id: expect.any(String),
+        access_token: expect.any(String),
+        access_token_expires_at: expect.any(Date),
+        refresh_token: expect.any(String),
+        refresh_token_expires_at: expect.any(Date),
+        expires_at: expect.any(Date),
+        created_at: expect.any(Date),
+        updated_at: expect.any(Date)
       })
 
       const dbUser = await client
         .selectFrom('user')
         .selectAll()
-        .where('user.id', '=', body.user.id)
+        .where('user.id', '=', dbOneTimeCode.user_id)
         .executeTakeFirst()
 
       expect(dbUser).toBeDefined()
@@ -97,20 +138,15 @@ describe('Oauth Apple routes', () => {
         .selectFrom('authorisations')
         .selectAll()
         .where('authorisations.provider_type', '=', authProviders.APPLE)
-        .where('authorisations.user_id', '=', body.user.id)
+        .where('authorisations.user_id', '=', dbOneTimeCode.user_id)
         .where('authorisations.provider_user_id', '=', newUser.sub)
         .executeTakeFirst()
 
       expect(oauthUser).toBeDefined()
       if (!oauthUser) return
-
-      expect(body.tokens).toEqual({
-        access: { token: expect.anything(), expires: expect.anything() },
-        refresh: { token: expect.anything(), expires: expect.anything() }
-      })
     })
 
-    test('should return 200 and successfully login user if already created', async () => {
+    test('should redirect and successfully login user if already created', async () => {
       await insertUsers([userOne], config.database)
       const appleUser = appleAuthorisation(userOne.id)
       await insertAuthorisations([appleUser], config.database)
@@ -120,101 +156,117 @@ describe('Oauth Apple routes', () => {
       const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
         .intercept({ method: 'POST', path: '/auth/token' })
-        .reply(200, JSON.stringify({ access_token: mockJWT }))
+        .reply(200, JSON.stringify({ id_token: mockJWT }))
 
       const providerId = '123456'
-      const res = await request('/v1/auth/apple/callback', {
-        method: 'POST',
-        body: JSON.stringify({ code: providerId }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      const body = await res.json<{ user: UserResponse; tokens: TokenResponse }>()
-      expect(res.status).toBe(httpStatus.OK)
-      expect(body.user).not.toHaveProperty('password')
-      expect(body.user).toEqual({
-        id: userOne.id,
-        name: userOne.name,
-        email: userOne.email,
-        role: userOne.role,
-        is_email_verified: 0
-      })
-
-      expect(body.tokens).toEqual({
-        access: { token: expect.anything(), expires: expect.anything() },
-        refresh: { token: expect.anything(), expires: expect.anything() }
-      })
+      const formData = new FormData()
+      formData.append('code', providerId)
+      formData.append('state', state)
+      const res = await request('/v1/auth/apple/callback', { method: 'POST', body: formData })
+      expect(res.status).toBe(httpStatus.FOUND)
+      expect(res.headers.get('location')).toContain(
+        `${config.oauth.platform.ios.redirectUrl}?oneTimeCode=`
+      )
+      expect(res.headers.get('location')).toContain(`state=${state}`)
     })
-
-    test('should return 403 if user exists but has not linked their apple', async () => {
+    test('should redirect with error if user exists but has not linked their apple', async () => {
       await insertUsers([userOne], config.database)
       newUser.email = userOne.email
-
       const mockJWT = await jwt.sign(newUser, 'randomSecret')
       const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
         .intercept({ method: 'POST', path: '/auth/token' })
-        .reply(200, JSON.stringify({ access_token: mockJWT }))
+        .reply(200, JSON.stringify({ id_token: mockJWT }))
 
       const providerId = '123456'
-      const res = await request('/v1/auth/apple/callback', {
-        method: 'POST',
-        body: JSON.stringify({ code: providerId }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      const body = await res.json<{ user: UserResponse; tokens: TokenResponse }>()
-      expect(res.status).toBe(httpStatus.FORBIDDEN)
-      expect(body).toEqual({
-        code: httpStatus.FORBIDDEN,
-        message: 'Cannot signup with apple, user already exists with that email'
-      })
+      const formData = new FormData()
+      formData.append('code', providerId)
+      formData.append('state', state)
+      const res = await request('/v1/auth/apple/callback', { method: 'POST', body: formData })
+      expect(res.status).toBe(httpStatus.FOUND)
+      const encodedError =
+        'Cannot%20signup%20with%20apple,' + '%20user%20already%20exists%20with%20that%20email'
+      expect(res.headers.get('location')).toBe(
+        `${config.oauth.platform.ios.redirectUrl}?error=${encodedError}&state=${state}`
+      )
     })
-    test('should return xxx if no apple email is provided', async () => {
+    //TODO: return custom error message for this scenario
+    test('should redirect with error if no apple email is provided', async () => {
       delete newUser.email
       const mockJWT = await jwt.sign(newUser, 'randomSecret')
       const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
         .intercept({ method: 'POST', path: '/auth/token' })
-        .reply(200, JSON.stringify({ access_token: mockJWT }))
+        .reply(200, JSON.stringify({ id_token: mockJWT }))
       const providerId = '123456'
-      const res = await request('/v1/auth/apple/callback', {
-        method: 'POST',
-        body: JSON.stringify({ code: providerId }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      expect(res.status).toBe(httpStatus.UNAUTHORIZED)
+      const formData = new FormData()
+      formData.append('state', state)
+      formData.append('code', providerId)
+      const res = await request('/v1/auth/apple/callback', { method: 'POST', body: formData })
+      expect(res.status).toBe(httpStatus.FOUND)
+      expect(res.headers.get('location')).toBe(
+        `${config.oauth.platform.ios.redirectUrl}?error=Unauthorized&state=${state}`
+      )
     })
-    test('should return 401 if code is invalid', async () => {
+    test('should redirect with error if code is invalid', async () => {
       const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
         .intercept({ method: 'POST', path: '/auth/token' })
         .reply(httpStatus.UNAUTHORIZED, JSON.stringify({ error: 'error' }))
 
       const providerId = '123456'
-      const res = await request('/v1/auth/apple/callback', {
-        method: 'POST',
-        body: JSON.stringify({ code: providerId }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      expect(res.status).toBe(httpStatus.UNAUTHORIZED)
+      const formData = new FormData()
+      formData.append('code', providerId)
+      formData.append('state', state)
+      const res = await request('/v1/auth/apple/callback', { method: 'POST', body: formData })
+      expect(res.status).toBe(httpStatus.FOUND)
+      expect(res.headers.get('location')).toBe(
+        `${config.oauth.platform.ios.redirectUrl}?error=Unauthorized&state=${state}`
+      )
     })
 
-    test('should return 400 if no code provided', async () => {
-      const res = await request('/v1/auth/apple/callback', {
-        method: 'POST',
-        body: JSON.stringify({}),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    test('should redirect with error if no code provided', async () => {
+      const formData = new FormData()
+      formData.append('state', state)
+      const res = await request('/v1/auth/apple/callback', { method: 'POST', body: formData })
+      expect(res.status).toBe(httpStatus.FOUND)
+      expect(res.headers.get('location')).toBe(
+        `${config.oauth.platform.ios.redirectUrl}?error=Bad%20request&state=${state}`
+      )
+    })
+    test('should return 400 error if state is not provided', async () => {
+      const providerId = '123456'
+      const formData = new FormData()
+      formData.append('code', providerId)
+      const res = await request('/v1/auth/apple/callback', { method: 'POST', body: formData })
+      expect(res.status).toBe(httpStatus.FOUND)
+      expect(res.headers.get('location')).toBe(
+        `${config.oauth.platform.web.redirectUrl}?error=Something%20went%20wrong`
+      )
+    })
+    test('should return 400 error if platform is not provided', async () => {
+      const providerId = '123456'
+      const formData = new FormData()
+      state = btoa(JSON.stringify({}))
+      formData.append('code', providerId)
+      formData.append('state', state)
+      const res = await request('/v1/auth/apple/callback', { method: 'POST', body: formData })
+      expect(res.status).toBe(httpStatus.FOUND)
+      expect(res.headers.get('location')).toBe(
+        `${config.oauth.platform.web.redirectUrl}?error=Bad%20request&state=${state}`
+      )
+    })
+    test('should return 400 error if platform is invalid', async () => {
+      const providerId = '123456'
+      const formData = new FormData()
+      state = btoa(JSON.stringify({ platform: 'wb' }))
+      formData.append('code', providerId)
+      formData.append('state', state)
+      const res = await request('/v1/auth/apple/callback', { method: 'POST', body: formData })
+      expect(res.status).toBe(httpStatus.FOUND)
+      expect(res.headers.get('location')).toBe(
+        `${config.oauth.platform.web.redirectUrl}?error=Bad%20request&state=${state}`
+      )
     })
   })
 
@@ -226,7 +278,9 @@ describe('Oauth Apple routes', () => {
         name: faker.person.fullName(),
         email: faker.internet.email()
       }
+      fetchMock.activate()
     })
+    afterEach(() => fetchMock.assertNoPendingInterceptors())
     test('should return 200 and successfully link apple account', async () => {
       await insertUsers([userOne], config.database)
       const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
@@ -235,7 +289,7 @@ describe('Oauth Apple routes', () => {
       const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
         .intercept({ method: 'POST', path: '/auth/token' })
-        .reply(200, JSON.stringify({ access_token: mockJWT }))
+        .reply(200, JSON.stringify({ id_token: mockJWT }))
 
       const providerId = '123456'
       const res = await request(`/v1/auth/apple/${userOne.id}`, {
@@ -287,7 +341,7 @@ describe('Oauth Apple routes', () => {
       const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
         .intercept({ method: 'POST', path: '/auth/token' })
-        .reply(200, JSON.stringify({ access_token: mockJWT }))
+        .reply(200, JSON.stringify({ id_token: mockJWT }))
 
       const providerId = '123456'
       const res = await request(`/v1/auth/apple/${userOne.id}`, {
@@ -314,7 +368,6 @@ describe('Oauth Apple routes', () => {
     test('should return 401 if code is invalid', async () => {
       await insertUsers([userOne], config.database)
       const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
-
       const appleMock = fetchMock.get('https://appleid.apple.com')
       appleMock
         .intercept({ method: 'POST', path: '/auth/token' })
@@ -451,8 +504,8 @@ describe('Oauth Apple routes', () => {
       const userOneAccessToken = await getAccessToken(newUser.id, newUser.role, config.jwt)
       const githubUser = githubAuthorisation(newUser.id)
       await insertAuthorisations([githubUser], config.database)
-      const facebookUser = facebookAuthorisation(newUser.id)
-      await insertAuthorisations([facebookUser], config.database)
+      const googleUser = googleAuthorisation(newUser.id)
+      await insertAuthorisations([googleUser], config.database)
 
       const res = await request(`/v1/auth/apple/${newUser.id}`, {
         method: 'DELETE',
@@ -482,8 +535,8 @@ describe('Oauth Apple routes', () => {
       await insertUsers([newUser], config.database)
       const userOneAccessToken = await getAccessToken(newUser.id, newUser.role, config.jwt)
       const appleUser = appleAuthorisation(newUser.id)
-      const facebookUser = facebookAuthorisation(newUser.id)
-      await insertAuthorisations([appleUser, facebookUser], config.database)
+      const githubUser = githubAuthorisation(newUser.id)
+      await insertAuthorisations([appleUser, githubUser], config.database)
 
       const res = await request(`/v1/auth/apple/${newUser.id}`, {
         method: 'DELETE',
@@ -505,7 +558,7 @@ describe('Oauth Apple routes', () => {
       const oauthFacebookUser = await client
         .selectFrom('authorisations')
         .selectAll()
-        .where('authorisations.provider_type', '=', authProviders.FACEBOOK)
+        .where('authorisations.provider_type', '=', authProviders.GITHUB)
         .where('authorisations.user_id', '=', newUser.id)
         .executeTakeFirst()
 

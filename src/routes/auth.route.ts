@@ -6,6 +6,7 @@ import * as discordController from '../controllers/auth/oauth/discord.controller
 import * as facebookController from '../controllers/auth/oauth/facebook.controller'
 import * as githubController from '../controllers/auth/oauth/github.controller'
 import * as googleController from '../controllers/auth/oauth/google.controller'
+import * as oauthController from '../controllers/auth/oauth/oauth.controller'
 import * as spotifyController from '../controllers/auth/oauth/spotify.controller'
 import { auth } from '../middlewares/auth'
 import { rateLimit } from '../middlewares/rate-limiter'
@@ -56,3 +57,5 @@ route.delete('/discord/:userId', auth('manageUsers'), discordController.deleteDi
 route.delete('/google/:userId', auth('manageUsers'), googleController.deleteGoogleLink)
 route.delete('/facebook/:userId', auth('manageUsers'), facebookController.deleteFacebookLink)
 route.delete('/apple/:userId', auth('manageUsers'), appleController.deleteAppleLink)
+
+route.post('/validate', oauthController.validateOauthOneTimeCode)

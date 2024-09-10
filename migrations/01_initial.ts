@@ -36,9 +36,25 @@ export async function up(db: Kysely<Database>) {
     .on('authorisations')
     .column('user_id')
     .execute()
+
+  await db.schema
+    .createTable('one_time_oauth_code')
+    .addColumn('code', 'varchar(255)', (col) => col.primaryKey())
+    .addColumn('user_id', 'varchar(255)', (col) => col.notNull())
+    .addColumn('access_token', 'varchar(255)', (col) => col.notNull())
+    .addColumn('access_token_expires_at', 'timestamp', (col) => col.notNull())
+    .addColumn('refresh_token', 'varchar(255)', (col) => col.notNull())
+    .addColumn('refresh_token_expires_at', 'timestamp', (col) => col.notNull())
+    .addColumn('expires_at', 'timestamp', (col) => col.notNull())
+    .addColumn('created_at', 'timestamp', (col) => col.defaultTo(sql`NOW()`))
+    .addColumn('updated_at', 'timestamp', (col) => {
+      return col.defaultTo(sql`NOW()`).modifyEnd(sql`ON UPDATE NOW()`)
+    })
+    .execute()
 }
 
 export async function down(db: Kysely<Database>) {
   await db.schema.dropTable('user').ifExists().execute()
   await db.schema.dropTable('authorisations').ifExists().execute()
+  await db.schema.dropTable('one_time_oauth_code').ifExists().execute()
 }

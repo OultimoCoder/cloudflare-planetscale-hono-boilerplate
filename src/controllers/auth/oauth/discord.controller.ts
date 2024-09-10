@@ -5,14 +5,24 @@ import { Environment } from '../../../../bindings'
 import { authProviders } from '../../../config/authProviders'
 import { getConfig } from '../../../config/config'
 import { DiscordUserType } from '../../../types/oauth.types'
-import { oauthCallback, oauthLink, deleteOauthLink, validateCallbackBody } from './oauth.controller'
+import * as authValidation from '../../../validations/auth.validation'
+import {
+  oauthCallback,
+  oauthLink,
+  deleteOauthLink,
+  validateCallbackBody,
+  getRedirectUrl
+} from './oauth.controller'
 
 export const discordRedirect: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
+  const { state } = authValidation.oauthRedirect.parse(c.req.query())
+  const redirectUrl = getRedirectUrl(state, config)
   const location = await discord.redirect({
     options: {
-      clientId: config.oauth.discord.clientId,
-      redirectUrl: config.oauth.discord.redirectUrl,
+      clientId: config.oauth.provider.discord.clientId,
+      redirectUrl: redirectUrl,
+      state: state,
       scope: 'identify email'
     }
   })
@@ -21,12 +31,15 @@ export const discordRedirect: Handler<Environment> = async (c) => {
 
 export const discordCallback: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
-  const request = await validateCallbackBody(c)
+  const bodyParse = await c.req.json()
+  const { platform, code } = authValidation.oauthCallback.parse(bodyParse)
+  const redirectUrl = config.oauth.platform[platform].redirectUrl
+  const request = await validateCallbackBody(c, code)
   const oauthRequest = discord.users({
     options: {
-      clientId: config.oauth.discord.clientId,
-      clientSecret: config.oauth.discord.clientSecret,
-      redirectUrl: config.oauth.discord.redirectUrl
+      clientId: config.oauth.provider.discord.clientId,
+      clientSecret: config.oauth.provider.discord.clientSecret,
+      redirectUrl: redirectUrl
     },
     request
   }) as Promise<{ user: DiscordUserType; tokens: unknown }>
@@ -35,12 +48,15 @@ export const discordCallback: Handler<Environment> = async (c) => {
 
 export const linkDiscord: Handler<Environment> = async (c) => {
   const config = getConfig(c.env)
-  const request = await validateCallbackBody(c)
+  const bodyParse = await c.req.json()
+  const { platform, code } = authValidation.oauthCallback.parse(bodyParse)
+  const redirectUrl = config.oauth.platform[platform].redirectUrl
+  const request = await validateCallbackBody(c, code)
   const oauthRequest = discord.users({
     options: {
-      clientId: config.oauth.discord.clientId,
-      clientSecret: config.oauth.discord.clientSecret,
-      redirectUrl: config.oauth.discord.redirectUrl
+      clientId: config.oauth.provider.discord.clientId,
+      clientSecret: config.oauth.provider.discord.clientSecret,
+      redirectUrl: redirectUrl
     },
     request
   }) as Promise<{ user: DiscordUserType; tokens: unknown }>

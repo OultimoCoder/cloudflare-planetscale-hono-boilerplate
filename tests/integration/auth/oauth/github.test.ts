@@ -8,7 +8,7 @@ import { getDBClient } from '../../../../src/config/database'
 import { tokenTypes } from '../../../../src/config/tokens'
 import { GithubUserType } from '../../../../src/types/oauth.types'
 import {
-  facebookAuthorisation,
+  appleAuthorisation,
   githubAuthorisation,
   googleAuthorisation,
   insertAuthorisations
@@ -26,32 +26,35 @@ clearDBTables(['user', 'authorisations'], config.database)
 describe('Oauth routes', () => {
   describe('GET /v1/auth/github/redirect', () => {
     test('should return 302 and successfully redirect to github', async () => {
-      const res = await request('/v1/auth/github/redirect', {
+      const state = btoa(JSON.stringify({ platform: 'web' }))
+      const urlEncodedRedirectUrl = encodeURIComponent(config.oauth.platform.web.redirectUrl)
+      const res = await request(`/v1/auth/github/redirect?state=${state}`, {
         method: 'GET'
       })
       expect(res.status).toBe(httpStatus.FOUND)
       expect(res.headers.get('location')).toBe(
         'https://github.com/login/oauth/authorize?allow_signup=true&' +
-          `client_id=${config.oauth.github.clientId}&scope=read%3Auser%20user%3Aemail`
+          `client_id=${config.oauth.provider.github.clientId}&` +
+          `redirect_uri=${urlEncodedRedirectUrl}&scope=read%3Auser%20user%3Aemail&state=${state}`
       )
     })
-    test('should return 403 if user has not verified their email', async () => {
-      await insertUsers([userTwo], config.database)
-      const accessToken = await getAccessToken(
-        userTwo.id,
-        userTwo.role,
-        config.jwt,
-        tokenTypes.ACCESS,
-        userTwo.is_email_verified
-      )
-      const res = await request('/v1/auth/github/5298', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`
-        }
+    test('should return 400 error if state is not provided', async () => {
+      const res = await request('/v1/auth/github/redirect', { method: 'GET' })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if state platform is not provided', async () => {
+      const state = btoa(JSON.stringify({}))
+      const res = await request(`/v1/auth/github/redirect?state=${state}`, {
+        method: 'GET'
       })
-      expect(res.status).toBe(httpStatus.FORBIDDEN)
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if state platform is invalid', async () => {
+      const state = btoa(JSON.stringify({ platform: 'fake' }))
+      const res = await request(`/v1/auth/github/redirect?state=${state}`, {
+        method: 'GET'
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
     })
   })
 
@@ -80,7 +83,7 @@ describe('Oauth routes', () => {
       const providerId = '123456'
       const res = await request(`/v1/auth/github/${userOne.id}`, {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -122,7 +125,6 @@ describe('Oauth routes', () => {
       await insertUsers([userOne], config.database)
       const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
       await client.deleteFrom('user').where('user.id', '=', userOne.id).execute()
-
       const githubApiMock = fetchMock.get('https://api.github.com')
       githubApiMock.intercept({ method: 'GET', path: '/user' }).reply(200, JSON.stringify(newUser))
       const githubMock = fetchMock.get('https://github.com')
@@ -133,7 +135,7 @@ describe('Oauth routes', () => {
       const providerId = '123456'
       const res = await request(`/v1/auth/github/${userOne.id}`, {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -155,7 +157,6 @@ describe('Oauth routes', () => {
     test('should return 401 if code is invalid', async () => {
       await insertUsers([userOne], config.database)
       const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
-
       const githubMock = fetchMock.get('https://github.com')
       githubMock
         .intercept({ method: 'POST', path: '/login/oauth/access_token' })
@@ -164,7 +165,7 @@ describe('Oauth routes', () => {
       const providerId = '123456'
       const res = await request(`/v1/auth/github/${userOne.id}`, {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -180,7 +181,7 @@ describe('Oauth routes', () => {
       const providerId = '123456'
       const res = await request('/v1/auth/github/5298', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -195,7 +196,7 @@ describe('Oauth routes', () => {
 
       const res = await request(`/v1/auth/github/${userOne.id}`, {
         method: 'POST',
-        body: JSON.stringify({}),
+        body: JSON.stringify({ platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -232,6 +233,34 @@ describe('Oauth routes', () => {
         }
       })
       expect(res.status).toBe(httpStatus.FORBIDDEN)
+    })
+    test('should return 400 error if platform is not provided', async () => {
+      await insertUsers([userOne], config.database)
+      const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
+      const providerId = '123456'
+      const res = await request(`/v1/auth/github/${userOne.id}`, {
+        method: 'POST',
+        body: JSON.stringify({ code: providerId }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if platform is invalid', async () => {
+      await insertUsers([userOne], config.database)
+      const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
+      const providerId = '123456'
+      const res = await request(`/v1/auth/github/${userOne.id}`, {
+        method: 'POST',
+        body: JSON.stringify({ code: providerId, platform: 'wb' }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
     })
   })
 
@@ -292,8 +321,8 @@ describe('Oauth routes', () => {
       const userOneAccessToken = await getAccessToken(newUser.id, newUser.role, config.jwt)
       const googleUser = googleAuthorisation(newUser.id)
       await insertAuthorisations([googleUser], config.database)
-      const facebookUser = facebookAuthorisation(newUser.id)
-      await insertAuthorisations([facebookUser], config.database)
+      const appleUser = appleAuthorisation(newUser.id)
+      await insertAuthorisations([appleUser], config.database)
 
       const res = await request(`/v1/auth/github/${newUser.id}`, {
         method: 'DELETE',
@@ -323,8 +352,8 @@ describe('Oauth routes', () => {
       await insertUsers([newUser], config.database)
       const userOneAccessToken = await getAccessToken(newUser.id, newUser.role, config.jwt)
       const githubUser = githubAuthorisation(newUser.id)
-      const facebookUser = facebookAuthorisation(newUser.id)
-      await insertAuthorisations([githubUser, facebookUser], config.database)
+      const appleUser = appleAuthorisation(newUser.id)
+      await insertAuthorisations([githubUser, appleUser], config.database)
 
       const res = await request(`/v1/auth/github/${newUser.id}`, {
         method: 'DELETE',
@@ -346,7 +375,7 @@ describe('Oauth routes', () => {
       const oauthFacebookUser = await client
         .selectFrom('authorisations')
         .selectAll()
-        .where('authorisations.provider_type', '=', authProviders.FACEBOOK)
+        .where('authorisations.provider_type', '=', authProviders.APPLE)
         .where('authorisations.user_id', '=', newUser.id)
         .executeTakeFirst()
 
@@ -376,6 +405,24 @@ describe('Oauth routes', () => {
       })
       expect(res.status).toBe(httpStatus.UNAUTHORIZED)
     })
+    test('should return 403 if user has not verified their email', async () => {
+      await insertUsers([userTwo], config.database)
+      const accessToken = await getAccessToken(
+        userTwo.id,
+        userTwo.role,
+        config.jwt,
+        tokenTypes.ACCESS,
+        userTwo.is_email_verified
+      )
+      const res = await request('/v1/auth/github/5298', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.FORBIDDEN)
+    })
   })
 
   describe('POST /v1/auth/github/callback', () => {
@@ -386,7 +433,9 @@ describe('Oauth routes', () => {
         name: faker.person.fullName(),
         email: faker.internet.email()
       }
+      fetchMock.activate()
     })
+    afterEach(async () => fetchMock.assertNoPendingInterceptors())
     test('should return 200 and successfully register user if request data is ok', async () => {
       const githubApiMock = fetchMock.get('https://api.github.com')
       githubApiMock.intercept({ method: 'GET', path: '/user' }).reply(200, JSON.stringify(newUser))
@@ -398,7 +447,7 @@ describe('Oauth routes', () => {
       const providerId = '123456'
       const res = await request('/v1/auth/github/callback', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -454,7 +503,6 @@ describe('Oauth routes', () => {
       const githubUser = githubAuthorisation(userOne.id)
       await insertAuthorisations([githubUser], config.database)
       newUser.id = parseInt(githubUser.provider_user_id)
-
       const githubApiMock = fetchMock.get('https://api.github.com')
       githubApiMock.intercept({ method: 'GET', path: '/user' }).reply(200, JSON.stringify(newUser))
       const githubMock = fetchMock.get('https://github.com')
@@ -465,7 +513,7 @@ describe('Oauth routes', () => {
       const providerId = '123456'
       const res = await request('/v1/auth/github/callback', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -490,7 +538,6 @@ describe('Oauth routes', () => {
     test('should return 403 if user exists but has not linked their github', async () => {
       await insertUsers([userOne], config.database)
       newUser.email = userOne.email
-
       const githubApiMock = fetchMock.get('https://api.github.com')
       githubApiMock.intercept({ method: 'GET', path: '/user' }).reply(200, JSON.stringify(newUser))
       const githubMock = fetchMock.get('https://github.com')
@@ -501,7 +548,7 @@ describe('Oauth routes', () => {
       const providerId = '123456'
       const res = await request('/v1/auth/github/callback', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -515,15 +562,10 @@ describe('Oauth routes', () => {
     })
 
     test('should return 401 if code is invalid', async () => {
-      const githubMock = fetchMock.get('https://github.com')
-      githubMock
-        .intercept({ method: 'POST', path: '/login/oauth/access_token' })
-        .reply(httpStatus.UNAUTHORIZED, JSON.stringify({ error: 'error' }))
-
       const providerId = '123456'
       const res = await request('/v1/auth/github/callback', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -535,6 +577,28 @@ describe('Oauth routes', () => {
       const res = await request('/v1/auth/github/callback', {
         method: 'POST',
         body: JSON.stringify({}),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if platform is not provided', async () => {
+      const providerId = '123456'
+      const res = await request('/v1/auth/github/callback', {
+        method: 'POST',
+        body: JSON.stringify({ code: providerId }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if platform is invalid', async () => {
+      const providerId = '123456'
+      const res = await request('/v1/auth/github/callback', {
+        method: 'POST',
+        body: JSON.stringify({ code: providerId, platform: 'wb' }),
         headers: {
           'Content-Type': 'application/json'
         }

@@ -20,22 +20,42 @@ import { request } from '../../../utils/test-request'
 
 const config = getConfig(env)
 const client = getDBClient(config.database)
-const urlEncodedRedirectUrl = encodeURIComponent(config.oauth.spotify.redirectUrl)
+const urlEncodedRedirectUrl = encodeURIComponent(config.oauth.platform.web.redirectUrl)
 
 clearDBTables(['user', 'authorisations'], config.database)
 
 describe('Oauth Spotify routes', () => {
   describe('GET /v1/auth/spotify/redirect', () => {
     test('should return 302 and successfully redirect to spotify', async () => {
-      const res = await request('/v1/auth/spotify/redirect', {
+      const state = btoa(JSON.stringify({ platform: 'web' }))
+      const res = await request(`/v1/auth/spotify/redirect?state=${state}`, {
         method: 'GET'
       })
       expect(res.status).toBe(httpStatus.FOUND)
       expect(res.headers.get('location')).toBe(
-        `https://accounts.spotify.com/authorize?client_id=${config.oauth.spotify.clientId}&` +
+        'https://accounts.spotify.com/authorize?client_id=' +
+          `${config.oauth.provider.spotify.clientId}&` +
           `redirect_uri=${urlEncodedRedirectUrl}&response_type=code&` +
-          'scope=user-library-read%20playlist-modify-private&show_dialog=false'
+          `scope=user-read-email&show_dialog=false&state=${state}`
       )
+    })
+    test('should return 400 error if state is not provided', async () => {
+      const res = await request('/v1/auth/spotify/redirect', { method: 'GET' })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if state platform is not provided', async () => {
+      const state = btoa(JSON.stringify({}))
+      const res = await request(`/v1/auth/spotify/redirect?state=${state}`, {
+        method: 'GET'
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if state platform is invalid', async () => {
+      const state = btoa(JSON.stringify({ platform: 'fake' }))
+      const res = await request(`/v1/auth/spotify/redirect?state=${state}`, {
+        method: 'GET'
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
     })
   })
 
@@ -52,7 +72,6 @@ describe('Oauth Spotify routes', () => {
     afterEach(() => fetchMock.assertNoPendingInterceptors())
     test('should return 200 and successfully register user if request data is ok', async () => {
       const providerId = '123456'
-
       const spotifyApiMock = fetchMock.get('https://api.spotify.com')
       spotifyApiMock
         .intercept({ method: 'GET', path: '/v1/me' })
@@ -69,7 +88,7 @@ describe('Oauth Spotify routes', () => {
 
       const res = await request('/v1/auth/spotify/callback', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -126,7 +145,6 @@ describe('Oauth Spotify routes', () => {
       await insertAuthorisations([spotifyUser], config.database)
       newUser.id = spotifyUser.provider_user_id
       const providerId = '123456'
-
       const spotifyApiMock = fetchMock.get('https://api.spotify.com')
       spotifyApiMock
         .intercept({ method: 'GET', path: '/v1/me' })
@@ -143,7 +161,7 @@ describe('Oauth Spotify routes', () => {
 
       const res = await request('/v1/auth/spotify/callback', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -169,7 +187,6 @@ describe('Oauth Spotify routes', () => {
       await insertUsers([userOne], config.database)
       newUser.email = userOne.email
       const providerId = '123456'
-
       const spotifyApiMock = fetchMock.get('https://api.spotify.com')
       spotifyApiMock
         .intercept({ method: 'GET', path: '/v1/me' })
@@ -186,7 +203,7 @@ describe('Oauth Spotify routes', () => {
 
       const res = await request('/v1/auth/spotify/callback', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -201,7 +218,6 @@ describe('Oauth Spotify routes', () => {
 
     test('should return 401 if code is invalid', async () => {
       const providerId = '123456'
-
       const spotifyMock = fetchMock.get('https://accounts.spotify.com')
       spotifyMock
         .intercept({
@@ -214,7 +230,7 @@ describe('Oauth Spotify routes', () => {
 
       const res = await request('/v1/auth/spotify/callback', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -225,7 +241,29 @@ describe('Oauth Spotify routes', () => {
     test('should return 400 if no code provided', async () => {
       const res = await request('/v1/auth/spotify/callback', {
         method: 'POST',
-        body: JSON.stringify({}),
+        body: JSON.stringify({ platform: 'web' }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if platform is not provided', async () => {
+      const providerId = '123456'
+      const res = await request('/v1/auth/spotify/callback', {
+        method: 'POST',
+        body: JSON.stringify({ code: providerId }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if platform is invalid', async () => {
+      const providerId = '123456'
+      const res = await request('/v1/auth/spotify/callback', {
+        method: 'POST',
+        body: JSON.stringify({ code: providerId, platform: 'wb' }),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -241,12 +279,13 @@ describe('Oauth Spotify routes', () => {
         display_name: faker.person.fullName(),
         email: faker.internet.email()
       }
+      fetchMock.activate()
     })
+    afterEach(() => fetchMock.assertNoPendingInterceptors())
     test('should return 200 and successfully link spotify account', async () => {
       await insertUsers([userOne], config.database)
       const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
       const providerId = '123456'
-
       const spotifyApiMock = fetchMock.get('https://api.spotify.com')
       spotifyApiMock
         .intercept({ method: 'GET', path: '/v1/me' })
@@ -263,7 +302,7 @@ describe('Oauth Spotify routes', () => {
 
       const res = await request(`/v1/auth/spotify/${userOne.id}`, {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -306,7 +345,6 @@ describe('Oauth Spotify routes', () => {
       const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
       await client.deleteFrom('user').where('user.id', '=', userOne.id).execute()
       const providerId = '123456'
-
       const spotifyApiMock = fetchMock.get('https://api.spotify.com')
       spotifyApiMock
         .intercept({ method: 'GET', path: '/v1/me' })
@@ -323,7 +361,7 @@ describe('Oauth Spotify routes', () => {
 
       const res = await request(`/v1/auth/spotify/${userOne.id}`, {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -346,7 +384,6 @@ describe('Oauth Spotify routes', () => {
       await insertUsers([userOne], config.database)
       const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
       const providerId = '123456'
-
       const spotifyMock = fetchMock.get('https://accounts.spotify.com')
       spotifyMock
         .intercept({
@@ -359,7 +396,7 @@ describe('Oauth Spotify routes', () => {
 
       const res = await request(`/v1/auth/spotify/${userOne.id}`, {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -375,7 +412,7 @@ describe('Oauth Spotify routes', () => {
       const providerId = '123456'
       const res = await request('/v1/auth/spotify/5298', {
         method: 'POST',
-        body: JSON.stringify({ code: providerId }),
+        body: JSON.stringify({ code: providerId, platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -390,7 +427,7 @@ describe('Oauth Spotify routes', () => {
 
       const res = await request(`/v1/auth/spotify/${userOne.id}`, {
         method: 'POST',
-        body: JSON.stringify({}),
+        body: JSON.stringify({ platform: 'web' }),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${userOneAccessToken}`
@@ -427,6 +464,34 @@ describe('Oauth Spotify routes', () => {
         }
       })
       expect(res.status).toBe(httpStatus.FORBIDDEN)
+    })
+    test('should return 400 error if platform is not provided', async () => {
+      await insertUsers([userOne], config.database)
+      const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
+      const providerId = '123456'
+      const res = await request(`/v1/auth/spotify/${userOne.id}`, {
+        method: 'POST',
+        body: JSON.stringify({ code: providerId }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
+    })
+    test('should return 400 error if platform is invalid', async () => {
+      await insertUsers([userOne], config.database)
+      const userOneAccessToken = await getAccessToken(userOne.id, userOne.role, config.jwt)
+      const providerId = '123456'
+      const res = await request(`/v1/auth/spotify/${userOne.id}`, {
+        method: 'POST',
+        body: JSON.stringify({ code: providerId, platform: 'wb' }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userOneAccessToken}`
+        }
+      })
+      expect(res.status).toBe(httpStatus.BAD_REQUEST)
     })
   })
 
